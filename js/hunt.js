@@ -657,6 +657,17 @@ window.CAIN = window.CAIN || {};
 		return { events: events, ok: true, id: agendaDef.id };
 	}
 
+	// A custom blasphemy's colours: two hex colours and the black-page switch.
+	function cleanTheme(t) {
+		t = t || {};
+		var hex = /^#[0-9a-f]{6}$/i;
+		return {
+			color: hex.test(t.color || "") ? t.color.toLowerCase() : "#8a8a8a",
+			color2: hex.test(t.color2 || "") ? t.color2.toLowerCase() : "#4a4a4a",
+			dark: !!t.dark
+		};
+	}
+
 	// Creates or updates a player-made blasphemy on this character.
 	// def: { id?, name, summary, passive: { name, text }, powers: [{ id?, key?, name, text,
 	// burst, tags: { duration, effect, range } }] }.
@@ -676,6 +687,7 @@ window.CAIN = window.CAIN || {};
 			custom: true,
 			summary: (def.summary || "").trim(),
 			flavor: "",
+			theme: cleanTheme(def.theme),
 			passive: { id: "passive", name: (passive.name || "").trim() || "Passive", text: (passive.text || "").trim() },
 			powers: (def.powers || []).filter(function (p) { return (p.name || "").trim(); }).map(function (p) {
 				var tags = p.tags || {};

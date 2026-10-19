@@ -22,10 +22,10 @@ move them as files or text:
 
 ## Status
 
-Test build: two agendas (Guardian, Firebug), two blasphemies (Tension, Gate),
-two sin marks (Eyes, Arms or Hands) and two kit items, used to prove every
-system before the rest of the book's content goes in. See
-[BUILD_PLAN.md](BUILD_PLAN.md) for the milestones.
+All 16 agendas and all 12 blasphemies from CAIN 1.4.5, each blasphemy in the
+colours of its pages in the book. Sin marks (Eyes, Arms or Hands) and kit are
+still the two-item test set. See [BUILD_PLAN.md](BUILD_PLAN.md) for the
+milestones.
 
 - **Registry** - the home screen: your exorcists, Register exorcist,
   Quick exorcist (a random legal character, straight to review) and Import.

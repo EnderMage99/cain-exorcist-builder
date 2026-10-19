@@ -178,13 +178,12 @@ window.CAIN = window.CAIN || {};
 		return label ? h("label", { class: "select-field" }, h("span", { class: "field-label" }, label), el) : el;
 	}
 
-	// The book's power symbol: a curved four-point star. Black when the power needs a
-	// psyche burst (with a + for one or more), outlined when it needs none or only
-	// on success.
+	// The book's power symbol: a curved four-point star when the power spends a
+	// psyche burst (with a + for one or more), outlined with an X when it needs none.
 	var SVG_NS = "http://www.w3.org/2000/svg";
 	function burstIcon(burst) {
 		var kind = (CAIN.core.burstKinds.filter(function (k) { return k.id === burst; })[0]) || CAIN.core.burstKinds[0];
-		var filled = burst === "required" || burst === "multiple";
+		var filled = burst !== "none";
 		var svg = document.createElementNS(SVG_NS, "svg");
 		svg.setAttribute("viewBox", "0 0 24 24");
 		svg.setAttribute("class", "burst-star" + (filled ? " filled" : ""));
@@ -192,6 +191,12 @@ window.CAIN = window.CAIN || {};
 		var path = document.createElementNS(SVG_NS, "path");
 		path.setAttribute("d", "M12 1.5C12.9 8.6 15.4 11.1 22.5 12C15.4 12.9 12.9 15.4 12 22.5C11.1 15.4 8.6 12.9 1.5 12C8.6 11.1 11.1 8.6 12 1.5Z");
 		svg.appendChild(path);
+		if (!filled) {
+			var cross = document.createElementNS(SVG_NS, "path");
+			cross.setAttribute("class", "burst-cross");
+			cross.setAttribute("d", "M8.5 8.5L15.5 15.5M15.5 8.5L8.5 15.5");
+			svg.appendChild(cross);
+		}
 		return h("span", { class: "burst-mark", title: kind.label, role: "img", "aria-label": kind.label },
 			svg, burst === "multiple" ? h("span", { class: "burst-plus", "aria-hidden": "true" }, "+") : null);
 	}
@@ -213,8 +218,28 @@ window.CAIN = window.CAIN || {};
 		return h("div", { class: "power-tags" }, parts);
 	}
 
+	function luminance(hex) {
+		var m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
+		if (!m) return 0;
+		var n = parseInt(m[1], 16);
+		return 0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255);
+	}
+
+	// A blasphemy's book colours as attributes for its container: --blas (accent),
+	// --blas-2 (second colour) and --blas-title (the brighter one, for the name
+	// plate on black). Custom blasphemies without a theme get grey.
+	function blasTheme(b) {
+		var t = (b && b.theme) || {};
+		var c = /^#[0-9a-f]{6}$/i.test(t.color || "") ? t.color : "#8a8a8a";
+		var c2 = /^#[0-9a-f]{6}$/i.test(t.color2 || "") ? t.color2 : c;
+		var title = luminance(c2) > luminance(c) ? c2 : c;
+		if (luminance(title) < 45) title = "#c9c4b8";
+		return { class: "blas-themed" + (t.dark ? " blas-dark" : ""), style: "--blas:" + c + ";--blas-2:" + c2 + ";--blas-title:" + title };
+	}
+
 	CAIN.powerHead = powerHead;
 	CAIN.powerTags = powerTags;
+	CAIN.blasTheme = blasTheme;
 	CAIN.burstIcon = burstIcon;
 	CAIN.stepper = stepper;
 	CAIN.select = select;

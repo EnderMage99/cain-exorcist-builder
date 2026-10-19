@@ -294,11 +294,13 @@ window.CAIN = window.CAIN || {};
 		var mine = ch.blasphemies.filter(function (x) { return x.id === b.id; })[0];
 		var open = b.powers.filter(function (p) { return !mine || mine.powers.indexOf(p.id) < 0; });
 		var total = ch.blasphemies.reduce(function (n, x) { return n + x.powers.length; }, 0);
+		var th = CAIN.blasTheme(b);
 		return panel(ctx, "Add a power", total >= 5 ? "You already have 5 powers. The rules cap it at 5, so remove one on the sheet, or add anyway." : null,
 			row(CAIN.select("From blasphemy", from, list.map(function (x) { return { value: x.id, label: x.name + (x.custom ? " (yours)" : "") + (owned.indexOf(x.id) >= 0 ? "" : " (new blasphemy)") }; }),
 				function (v) { st.addFrom = v; ctx.save(true); }),
 				ch.advances > 0 ? chip("Use up 1 advance (" + ch.advances + ")", st.useAdvance, function () { st.useAdvance = !st.useAdvance; ctx.save(true); }) : null,
 				btn("Create your own blasphemy", function () { ctx.open("customBlasphemy"); }, { small: true, ghost: true })),
+			h("div", { class: "blas-pick " + th.class, style: th.style },
 			!mine ? h("div", { class: "passive" },
 				h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
 				h("p", { class: "note" }, "A new blasphemy brings its passive, crosses out a sin box and adds 1 to XP to advance."),
@@ -315,7 +317,7 @@ window.CAIN = window.CAIN || {};
 					CAIN.powerHead(p),
 					CAIN.powerTags(p, cat),
 					CAIN.richText(p.text, cat))));
-			})) : h("p", { class: "note" }, "You have every " + b.name + " power."));
+			})) : h("p", { class: "note" }, "You have every " + b.name + " power.")));
 	}
 
 	function stressPanel(ch, ctx) {

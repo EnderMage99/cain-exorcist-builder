@@ -202,6 +202,7 @@ window.CAIN = window.CAIN || {};
 				return h("article", { class: "card pick-card" + (selected ? " selected" : "") + (allowed.ok ? "" : " locked") },
 					h("div", { class: "card-head" }, h("h2", null, a.name), h("span", { class: "label" }, selected ? "Selected" : "Agenda")),
 					allowed.ok ? null : h("p", { class: "tag stamp" }, allowed.reason),
+					a.note ? h("p", { class: "agenda-note" }, a.note) : null,
 					h("ul", { class: "items" }, a.items.map(function (it) { return h("li", { class: it.bold ? "bold" : null }, it.text); })),
 					h("div", { class: "label" }, "Choose 1 ability"),
 					h("ul", { class: "options" }, a.abilities.map(function (ab) {
@@ -228,8 +229,9 @@ window.CAIN = window.CAIN || {};
 			h("div", { class: "grid" }, CAIN.blasphemies.map(function (b) {
 				var selected = !!owned && owned.id === b.id;
 				var count = selected ? owned.powers.length : 0;
-				return h("article", { class: "card pick-card" + (selected ? " selected" : "") },
-					h("div", { class: "card-head" }, h("h2", null, b.name), h("span", { class: "label" }, selected ? count + " / 2 powers" : "Blasphemy " + b.numeral)),
+				var th = CAIN.blasTheme(b);
+				return h("article", { class: "card pick-card blas-card " + th.class + (selected ? " selected" : ""), style: th.style },
+					h("div", { class: "card-head" }, h("h2", { class: "blas-title" }, b.name), h("span", { class: "label" }, selected ? count + " / 2 powers" : "Blasphemy " + b.numeral)),
 					h("p", { class: "note" }, b.summary),
 					h("div", { class: "passive" },
 						h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),

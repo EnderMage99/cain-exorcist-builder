@@ -811,7 +811,9 @@ label.btn { user-select: none; }
 
 .pick-card.selected { border: 2px solid var(--ink); }
 
-.pick-card.locked { opacity: 0.6; }
+.pick-card.locked { border-style: dashed; }
+
+.pick-card.locked .options { opacity: 0.55; }
 
 .options { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
 
@@ -1646,6 +1648,8 @@ label.btn { user-select: none; }
 
 .burst-star.filled path { fill: var(--ink); }
 
+.burst-star .burst-cross { stroke-width: 1.8; stroke-linecap: round; }
+
 .burst-plus { font-weight: 900; font-size: 12px; margin-left: -1px; margin-top: -3px; }
 
 .power-name { display: flex; align-items: center; gap: 8px; }
@@ -2212,7 +2216,107 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
    following the official sheet's order. */
 @page { size: letter; margin: 10mm; }
 
+/* Blasphemy colours, after each blasphemy's pages in the book: the name in
+   blackletter on a black plate with stripes of its colours, and powers edged
+   and tinted with them. --blas-ink is the accent darkened (or lightened, in
+   dark mode) toward the text colour so it stays readable on paper. */
+.blas-themed {
+	--blas-ink: color-mix(in srgb, var(--blas) 55%, var(--ink));
+	--blas-wash: color-mix(in srgb, var(--blas) 9%, transparent);
+	--blas-line: color-mix(in srgb, var(--blas) 70%, var(--ink-soft));
+}
+
+.blas-plate {
+	position: relative;
+	overflow: hidden;
+	background:
+		linear-gradient(115deg, transparent 62%, var(--blas) 62%, var(--blas) 70%, transparent 70%, transparent 76%, var(--blas-2) 76%, var(--blas-2) 81%, transparent 81%),
+		#0d0d0d;
+	color: var(--blas-title);
+	border: 2px solid var(--blas);
+	border-radius: 12px;
+	padding: 4px 64px 2px 16px;
+	font-family: var(--font-goth2);
+	font-weight: 800;
+	font-size: 28px;
+	line-height: 1.15;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	box-shadow: 3px 3px 0 var(--blas-2);
+}
+
+.blas-dark .blas-plate { box-shadow: 3px 3px 0 #000; }
+
+.blas-themed .passive {
+	background: var(--blas-wash);
+	border: 1.5px dashed var(--blas-line);
+}
+
+.blas-themed .passive .tag.stamp { background: var(--ink); border-color: var(--blas); color: var(--paper); }
+
+.blas-themed .power-box {
+	border: 2px solid var(--blas-line);
+	background: var(--blas-wash);
+}
+
+.blas-themed .power-side {
+	background: var(--blas);
+	color: #0d0d0d;
+	border-left: 0;
+	font-weight: 700;
+}
+
+.blas-dark .power-side { background: #0d0d0d; color: var(--blas-title); }
+
+.blas-themed .power-name { color: var(--blas-ink); }
+
+.blas-themed .burst-star path { stroke: var(--blas-ink); }
+
+.blas-themed .burst-star.filled path { fill: var(--blas-ink); }
+
+.blas-themed .burst-star .burst-cross { stroke: var(--blas-ink); }
+
+.blas-themed .burst-plus { color: var(--blas-ink); }
+
+/* Doctrine and registration cards: a coloured band across the top, the name in
+   blackletter, and the powers tinted. */
+.blas-card {
+	background:
+		linear-gradient(115deg, var(--blas) 0 55%, #0d0d0d 55% 62%, var(--blas-2) 62%) top / 100% 10px no-repeat,
+		var(--paper);
+	padding-top: 26px;
+}
+
+.blas-card .blas-title { font-family: var(--font-goth2); font-weight: 800; font-size: 30px; letter-spacing: 0.03em; color: var(--blas-ink); text-transform: uppercase; }
+
+.blas-card .entries > .entry, .blas-card .options .option, .blas-pick .options .option { border-left: 4px solid var(--blas-line); }
+
+.blas-card .entries > .entry { padding-left: 10px; background: var(--blas-wash); border-radius: 0 10px 10px 0; padding-top: 6px; padding-bottom: 6px; }
+
+.blas-pick > .passive { margin-top: 10px; }
+
+/* Custom blasphemy colour pickers */
+.color-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+
+.color-pick { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+
+.color-input { width: 40px; height: 32px; padding: 0; border: 1.5px solid var(--line); border-radius: 8px; background: none; cursor: pointer; }
+
+.blas-preview { display: inline-flex; }
+
+/* Agenda special rules (Doomed, Departed, Survivor...) */
+.agenda-note {
+	font-size: 12.5px;
+	margin: 6px 0 10px;
+	padding: 8px 10px;
+	border-left: 3px solid var(--stamp);
+	background: var(--paper-2);
+	border-radius: 0 8px 8px 0;
+}
+
 @media print {
+	.blas-plate, .blas-themed .power-side { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
 	:root, :root[data-theme="dark"] {
 		--bg: #ffffff;
 		--paper: #ffffff;

@@ -89,8 +89,13 @@
 		group("Data integrity");
 		var ids = {};
 		CAIN.agendas.forEach(function (a) {
-			check("agenda " + a.id + " has 2 items, 1 bold", a.items.length === 2 && a.items.filter(function (i) { return i.bold; }).length === 1);
-			check("agenda " + a.id + " has 5 abilities", a.abilities.length === 5);
+			// Departed and Survivor are one-ability agendas (with fewer items) in the book.
+			var single = a.id === "departed" || a.id === "survivor";
+			if (single) check("agenda " + a.id + " has one free ability and a note", a.abilities.length === 1 && !!a.note);
+			else {
+				check("agenda " + a.id + " has 2 items, 1 bold", a.items.length === 2 && a.items.filter(function (i) { return i.bold; }).length === 1);
+				check("agenda " + a.id + " has 5 abilities", a.abilities.length === 5);
+			}
 			a.abilities.forEach(function (ab) { ids[a.id + "/" + ab.id] = (ids[a.id + "/" + ab.id] || 0) + 1; });
 		});
 		var bursts = ["required", "onSuccess", "multiple", "none"];
@@ -100,7 +105,7 @@
 			b.powers.forEach(function (p) {
 				ids[b.id + "/" + p.id] = (ids[b.id + "/" + p.id] || 0) + 1;
 				check(b.id + "/" + p.id + " has a valid burst rule", bursts.indexOf(p.burst) >= 0, p.burst);
-				check(b.id + "/" + p.id + " has duration and range tags", !!(p.tags.duration && p.tags.range));
+				check(b.id + "/" + p.id + " has a duration tag (the book leaves range off a few)", !!p.tags.duration);
 			});
 		});
 		CAIN.sinMarks.forEach(function (m) {
@@ -114,7 +119,7 @@
 		var texts = [CAIN.blast.text];
 		CAIN.blasphemies.forEach(function (b) {
 			texts.push(b.passive.text);
-			b.powers.forEach(function (p) { texts.push(p.text, p.tags.range, p.talisman || ""); });
+			b.powers.forEach(function (p) { texts.push(p.text, p.tags.range || "", p.talisman || ""); });
 		});
 		CAIN.sinMarks.forEach(function (m) { m.abilities.forEach(function (a) { texts.push(a.text); }); });
 		var leftovers = [];
@@ -237,7 +242,7 @@
 		var opt = R.legalAdvances(fresh);
 		eq("4 agenda abilities left", opt[0].choices.length, 4);
 		eq("3 Tension powers left", opt[1].choices.length, 3);
-		eq("Gate is the new blasphemy option", opt[2].choices, ["gate"]);
+		eq("every other blasphemy is a new blasphemy option", opt[2].choices, CAIN.blasphemies.map(function (b) { return b.id; }).filter(function (id) { return id !== "tension"; }));
 		var maxed = guardianTension();
 		maxed.skills.force = 3;
 		maxed.skills.surveillance = 3;
@@ -307,7 +312,7 @@
 			seenBlasphemies[rc.blasphemies[0].id] = 1;
 		}
 		eq("300 Quick Exorcists are all legal", bad.slice(0, 3), []);
-		eq("Quick Exorcist uses every agenda", Object.keys(seenAgendas).sort(), CAIN.agendas.map(function (a) { return a.id; }).sort());
+		eq("Quick Exorcist uses every agenda a new exorcist may take", Object.keys(seenAgendas).sort(), CAIN.agendas.filter(function (a) { return !a.requires; }).map(function (a) { return a.id; }).sort());
 		eq("Quick Exorcist uses every blasphemy", Object.keys(seenBlasphemies).sort(), CAIN.blasphemies.map(function (b) { return b.id; }).sort());
 		var named = R.randomCharacter(R.makeRng(5));
 		check("Quick Exorcist fills name, looks, questions and weapons", !!(named.name && named.looks.hair && named.questions.mother && named.weaponLook));
@@ -561,8 +566,8 @@
 		check("missing fields are filled in", !filled.error && filled.characters[0].hunt.bursts === 3 && filled.characters[0].settings.psycheBursts === 3 && Array.isArray(filled.characters[0].log));
 		var future = guardianTension();
 		future.name = "Future";
-		future.agendaAbilities.push({ agenda: "beast", ability: "red-muscle" });
-		future.blasphemies.push({ id: "whisper", powers: ["omen"] });
+		future.agendaAbilities.push({ agenda: "not-an-agenda", ability: "nothing" });
+		future.blasphemies.push({ id: "not-a-blasphemy", powers: ["nothing"] });
 		var fw = T.unpack(JSON.stringify(future));
 		check("content not in this build loads with warnings", !fw.error && fw.characters.length === 1 && fw.warnings.length === 2 && fw.warnings[0].indexOf("Future") === 0);
 		var broken = guardianTension();

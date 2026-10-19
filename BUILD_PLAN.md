@@ -279,12 +279,18 @@ Each milestone ends with its test checklist passing and a push to Pages.
   themes after fixing contrast (muted grey, dark-mode stamp red, CAT
   triangle text) and the skip link's landmark.
 
+### M8 - All agendas and blasphemies (done)
+
+All 16 agendas, with each special rule shown as a note (Doomed needs a sin
+mark, Departed needs the exorcist dead, Survivor and Machine notes), and all
+12 blasphemies with their rules tables written into the passives. Burst
+symbols follow the book: a star spends a burst, a star with an X spends none.
+Each blasphemy carries the colours of its pages in the book (`theme`), shown
+as a blackletter name plate and tinted powers; custom blasphemies pick their
+own colours.
+
 ## After the test build
 
-1. Remaining content: 14 agendas (including Doomed's sin-mark gate and the
-   Departed / Survivor special cases), 10 blasphemies (with Whisper's
-   Shadow, Bind's Sin, Flux's Temporal Instability table, Smother's
-   Absentia table, Sympathy's resonance table), the other 4 sin-mark
-   locations, the full kit shop (Aesthetics, Comfort/Career, Possessions,
+1. Remaining content: the other 4 sin-mark locations, the full kit list (Aesthetics, Comfort/Career, Possessions,
    Occult/Medical).
 2. Optional Admin tools: tension and pressure talismans, a hunt tracker.

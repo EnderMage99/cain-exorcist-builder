@@ -303,6 +303,9 @@ window.CAIN = window.CAIN || {};
 		if (a.requires.sinMarks && ch.sinMarks.length < a.requires.sinMarks) {
 			return { ok: false, reason: "Requires a sin mark." };
 		}
+		if (a.requires.dead && !ch.dead) {
+			return { ok: false, reason: "Only for an exorcist who is well and truly dead." };
+		}
 		return { ok: true };
 	}
 

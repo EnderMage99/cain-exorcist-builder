@@ -40,7 +40,9 @@ window.CAIN = window.CAIN || {};
 		{ id: "M4", text: "Play mode", done: true },
 		{ id: "M5", text: "Sessions, missions, advances", done: true },
 		{ id: "M6", text: "Export and import", done: true },
-		{ id: "M7", text: "Print view and polish", done: true }
+		{ id: "M7", text: "Print view and polish", done: true },
+		{ id: "M8", text: "All agendas and blasphemies, book colours", done: true },
+		{ id: "M9", text: "All sin marks and kit", done: false }
 	];
 
 	// Import state for the registry: result messages, characters waiting on a
@@ -211,12 +213,12 @@ window.CAIN = window.CAIN || {};
 			list,
 			h("div", { class: "grid", style: "margin-top:24px" },
 				h("section", { class: "card" },
-					h("div", { class: "card-head" }, h("h2", null, "Build status"), h("span", { class: "label" }, "Test build")),
+					h("div", { class: "card-head" }, h("h2", null, "Build status"), h("span", { class: "label" }, "In progress")),
 					h("ul", { class: "status-list" }, milestones.map(function (m) {
 						return h("li", null, h("span", { class: m.done ? "done" : "todo" }, m.id + "  " + m.text), h("span", { class: "label" }, m.done ? "Done" : "Planned"));
 					}))),
 				h("section", { class: "card" },
-					h("div", { class: "card-head" }, h("h2", null, "Loaded doctrine"), h("span", { class: "label" }, "Test content")),
+					h("div", { class: "card-head" }, h("h2", null, "Loaded doctrine"), h("span", { class: "label" }, "CAIN 1.4.5")),
 					h("ul", { class: "status-list" },
 						h("li", null, "Agendas", h("span", null, CAIN.agendas.map(function (a) { return a.name; }).join(", "))),
 						h("li", null, "Agenda abilities", h("span", null, String(abilities))),
@@ -252,6 +254,7 @@ window.CAIN = window.CAIN || {};
 	function agendaCard(a, cat) {
 		return h("article", { class: "card" },
 			h("div", { class: "card-head" }, h("h2", null, a.name), h("span", { class: "label" }, "Registered agenda")),
+			a.note ? h("p", { class: "agenda-note" }, a.note) : null,
 			h("div", { class: "label" }, "Items"),
 			h("ul", { class: "items" }, a.items.map(function (it) {
 				return h("li", { class: it.bold ? "bold" : null }, it.text);
@@ -270,9 +273,10 @@ window.CAIN = window.CAIN || {};
 	}
 
 	function blasphemyCard(b, cat) {
-		return h("article", { class: "card" },
+		var th = CAIN.blasTheme(b);
+		return h("article", { class: "card blas-card " + th.class, style: th.style },
 			h("div", { class: "card-head" },
-				h("h2", null, b.name),
+				h("h2", { class: "blas-title" }, b.name),
 				h("span", { class: "label" }, b.numeral ? "Blasphemy " + b.numeral : "All exorcists")),
 			b.flavor ? h("p", { class: "note" }, b.flavor) : null,
 			b.passive ? h("div", { class: "passive" },

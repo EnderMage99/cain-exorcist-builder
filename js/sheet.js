@@ -499,6 +499,7 @@ window.CAIN = window.CAIN || {};
 				a && a.custom ? h("div", { class: "subrow" }, h("span", { class: "label" }, "Custom agenda"),
 					this.editable && this.openPanel ? h("button", { class: "mini-btn", type: "button", onclick: function () { self.openPanel("customAgenda", a.id); } }, "Edit") : null) : null,
 				h("p", { class: "tiny" }, "Swap agendas between missions. Keep any bolded items. Spend an advance to gain a new ability. 5 abilities max."),
+				a && a.note ? h("p", { class: "agenda-note" }, a.note) : null,
 				h("div", { class: "label" }, "Agenda items"),
 				a ? h("ul", { class: "items" }, a.items.map(function (it) { return h("li", { class: it.bold ? "bold" : null }, it.text); }),
 					ch.boldItems.map(function (t, i) {
@@ -519,9 +520,10 @@ window.CAIN = window.CAIN || {};
 		var blocks = ch.blasphemies.map(function (owned, bi) {
 			var b = R.blasphemy(owned.id);
 			if (!b) return null;
-			return h("div", { class: "blas-block" },
+			var th = CAIN.blasTheme(b);
+			return h("div", { class: "blas-block " + th.class, style: th.style },
 				h("div", { class: "blas-head" },
-					h("span", { class: "sticker" }, b.name),
+					h("span", { class: "sticker blas-plate" }, b.name),
 					h("span", { class: "label" }, b.custom ? "Custom blasphemy" : "Blasphemy " + b.numeral),
 					b.custom && self.editable && self.openPanel ? h("button", { class: "mini-btn", type: "button", onclick: function () { self.openPanel("customBlasphemy", b.id); } }, "Edit") : null,
 					self.editable ? removeBtn(b.name, function () { ch.blasphemies.splice(bi, 1); self.onChange(true); }) : null),
@@ -544,7 +546,7 @@ window.CAIN = window.CAIN || {};
 		var legend = h("p", { class: "tiny burst-legend" },
 			CAIN.burstIcon("required"), " needs a psyche burst   ",
 			CAIN.burstIcon("multiple"), " one or more   ",
-			CAIN.burstIcon("none"), " no burst, or only on success");
+			CAIN.burstIcon("none"), " no burst");
 		return section("blasphemy", "Blasphemy", "Observed powers " + total + " / 5",
 			h("p", { class: "tiny" }, "Keep sticker attached at all times. Spend an advance to gain a new power, or a new blasphemy: gain its passive, cross out a sin box, and increase XP to advance by +1."),
 			legend,

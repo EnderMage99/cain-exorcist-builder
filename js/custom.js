@@ -190,6 +190,34 @@ window.CAIN = window.CAIN || {};
 		return CAIN.select(label, value, options, onSet, { placeholder: "None" });
 	}
 
+	// The blasphemy's colours, like the book's pages: accent, second colour and
+	// whether it sits on black. Shows the name plate as it will look.
+	function themeField(def, ctx) {
+		def.theme = def.theme || { color: "#8a8a8a", color2: "#4a4a4a", dark: false };
+		var t = def.theme;
+		var plate = h("span", { class: "sticker blas-plate" }, def.name || "Blasphemy");
+		var wrap = h("div", { class: "blas-preview" }, plate);
+		function paint() {
+			var th = CAIN.blasTheme(def);
+			wrap.className = "blas-preview " + th.class;
+			wrap.setAttribute("style", th.style);
+			plate.textContent = def.name || "Blasphemy";
+		}
+		function picker(key, label) {
+			var el = h("input", { class: "color-input", type: "color", value: t[key], "aria-label": label });
+			el.addEventListener("input", function () { t[key] = el.value; paint(); });
+			el.addEventListener("change", function () { ctx.save(); });
+			return h("label", { class: "color-pick" }, el, h("span", null, label));
+		}
+		paint();
+		return h("div", { class: "field" }, h("span", { class: "field-label" }, "Colours"),
+			h("div", { class: "color-row" },
+				picker("color", "Accent"),
+				picker("color2", "Second colour"),
+				chip("Black page", !!t.dark, function () { t.dark = !t.dark; ctx.save(true); }),
+				wrap));
+	}
+
 	function blasphemyPanel(ch, ctx) {
 		var id = ctx.panelArg;
 		var draft = blasphemyDraft(ch, id);
@@ -221,9 +249,10 @@ window.CAIN = window.CAIN || {};
 				catText(p, "text", cat, "What it does", 5));
 		});
 		return panelShell(ctx, id ? "Edit blasphemy" : "Create a blasphemy",
-			"A blasphemy is your exorcist's psychic power: a passive everyone with it gets, and powers to pick from. The book's have six to seven powers.",
+			"A blasphemy is your exorcist's psychic power: a passive everyone with it gets, and powers to pick from. The book's have five powers.",
 			h("div", { class: "field" }, h("span", { class: "field-label" }, "Name"), textInput(def, "name", "e.g. Rust", "Blasphemy name")),
 			h("div", { class: "field" }, h("span", { class: "field-label" }, "Summary"), textInput(def, "summary", "One line, e.g. Decay anything you touch", "Blasphemy summary")),
+			themeField(def, ctx),
 			h("div", { class: "subhead" }, "Passive"),
 			h("div", { class: "custom-block" },
 				textInput(def.passive, "name", "Passive name", "Passive name"),
@@ -232,7 +261,7 @@ window.CAIN = window.CAIN || {};
 			h("p", { class: "tiny burst-legend" },
 				CAIN.burstIcon("required"), " needs a psyche burst   ",
 				CAIN.burstIcon("multiple"), " one or more   ",
-				CAIN.burstIcon("none"), " no burst, or only on success"),
+				CAIN.burstIcon("none"), " no burst"),
 			h("ul", { class: "custom-list" }, powers),
 			h("div", { class: "btn-row" }, btn("+ Power", function () { def.powers.push(blankPower()); ctx.save(true); }, { small: true, ghost: true })),
 			h("div", { class: "subrow" }, chip("My exorcist has this blasphemy", draft.have, function () { draft.have = !draft.have; ctx.save(true); }, { title: "Gives you its passive. Untick to keep it only as a saved design." })),
