@@ -23,17 +23,21 @@ system before the rest of the book's content goes in. See
 - **Registration** - character creation, step by step: Concept, Skills,
   Agenda, Blasphemy, Kit, Review. Next stays locked until a step is legal,
   and the draft saves itself so you can leave and come back.
-- **Exorcist sheet** - laid out like the official sheet. Text saves as you
-  type; steppers correct numbers by hand. Tap an underlined term for its
-  rule. Duplicate, Export and Delete live at the top.
-- **Play** - during a hunt: start the hunt (Oilfinger and Jack! handled),
-  take stress (roll-over into injuries, Painkiller, Iron Soul, nonlethal,
-  brink of death, instant death and defying fate), psyche bursts or 1d3 sin,
-  sin and pathos, the action roller (skills or PSYCHE, setup, burst,
-  ability and circumstance dice capped at +3, Divine Agony past the cap,
-  hard, risky with the risk die, 0D keeps the lowest of 2), hooks,
-  afflictions, kit points and consumables, resting with 2d3 to assign, and
-  the sin overflow flow ending in a rolled sin mark.
+- **Exorcist sheet** - laid out like the official sheet, and fully editable:
+  text saves as you type, every number has a - / + stepper, and agenda,
+  abilities, blasphemies, powers, sin marks and kit can be added or removed
+  freely. Rule problems show as warnings, never locks. Tap an underlined
+  term for its rule. Duplicate, Export and Delete live at the top.
+- **Play** - during a hunt. **The site never rolls dice**: roll at the
+  table where the Admin can see, and enter what you rolled. It covers
+  starting the hunt (Oilfinger's d3, Jack!), taking stress (roll-over into
+  injuries, Painkiller, Iron Soul with your d6, nonlethal, brink of death,
+  instant death and defying fate), psyche bursts or the 1d3 sin you rolled,
+  the dice pool (tells you how many dice to roll, then records your
+  successes and spends the burst or Divine Agony), hooks, afflictions, kit
+  points and consumables, resting with your 2d3, and the sin overflow check
+  and sin mark with your d6s. Every value can also be set by hand, and those
+  changes are logged.
 - **Between missions** - end of session (the four XP questions, advances
   when the track fills), spending advances (only legal options, replacing
   one at the cap of 5), closing the mission (pay, halve sin, missions

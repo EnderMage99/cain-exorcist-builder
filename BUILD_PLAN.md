@@ -156,6 +156,17 @@ never stored.
 
 ## Rules decisions
 
+- **No dice are rolled on the site.** Every roll happens at the table (or a
+  dice bot) where the Admin can see and check it. The site works out the
+  pool ("roll 4d6, 4+ succeeds") and records what was rolled: successes, the
+  d3 for sin, Oilfinger, Red Herb and resting, the d6 for Iron Soul, the
+  overflow check and sin marks. The risk die is the Admin's and isn't
+  tracked.
+- **Full manual control.** Every tracked number has a - / + stepper, and the
+  Sheet tab can add or remove abilities, powers, blasphemies, sin marks and
+  kit freely. Rule problems show as warnings, never as locks. Changes made
+  by hand during play are written to the log as "set by hand".
+
 - **Sin overflow resist:** book version. No sin marks = automatic pass.
   Otherwise roll d6 + sin marks: 6 or less passes, 7+ fails, a natural 1
   always passes. No sin boxes left = automatic fail. (The official sheet and

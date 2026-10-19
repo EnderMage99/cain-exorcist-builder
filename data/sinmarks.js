@@ -37,3 +37,6 @@ CAIN.sinMarks = [
 
 // Location face 6 on the d6 means "choose any location".
 CAIN.sinMarkChooseFace = 6;
+
+// Names for every location face, including ones not loaded in this build.
+CAIN.core.sinMarkLocations = ["Eyes", "Jaw", "Back or chest", "Arms or hands", "Skin, hair, or legs", "Choose"];

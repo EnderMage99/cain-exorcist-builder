@@ -1234,6 +1234,74 @@ label.btn { user-select: none; }
 
 .log-time { color: var(--muted); flex: none; }
 
+/* Die entry, manual adjustments, build editor */
+.stepper.small .step-btn { width: 28px; height: 28px; font-size: 15px; }
+
+.stepper.small .stepper-value { min-width: 1.8em; font-size: 16px; }
+
+.subrow > .stepper { flex-direction: row; align-items: center; gap: 10px; }
+
+.manual {
+	margin-top: 12px;
+	padding-top: 10px;
+	border-top: 1px dashed var(--line);
+}
+
+.manual > .label { margin-bottom: 4px; }
+
+.inline-ask {
+	border: 2px solid var(--accent);
+	border-radius: var(--radius-sm);
+	padding: 10px 12px;
+	margin: 8px 0;
+	font-size: 14px;
+}
+
+.inline-ask p { margin-bottom: 4px; }
+
+.pool-toggles { margin: 8px 0 4px; }
+
+.pool-instruction {
+	background: var(--paper-2);
+	border-radius: var(--radius-sm);
+	padding: 10px 12px;
+	margin: 8px 0;
+	font-weight: 700;
+}
+
+.select { width: auto; max-width: 100%; padding: 6px 8px; cursor: pointer; }
+
+.select-field { display: inline-flex; flex-direction: column; gap: 4px; min-width: 0; max-width: 100%; }
+
+.add-row .select { flex: 1; min-width: 0; }
+
+.row-tools { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: flex-end; }
+
+.kit-list li .row-tools { flex: none; }
+
+.use-row { flex-wrap: wrap; }
+
+.edit-tools {
+	margin-top: 12px;
+	padding-top: 10px;
+	border-top: 1px dashed var(--line);
+	display: grid;
+	gap: 8px;
+}
+
+.mark-ability {
+	display: grid;
+	gap: 4px;
+	padding: 6px 0;
+	border-top: 1px dotted var(--line);
+}
+
+.entry-name .mini-btn, .blas-name .mini-btn, .items .mini-btn { margin-left: auto; font-family: var(--font-type); font-weight: 400; letter-spacing: 0; text-transform: none; }
+
+.blas-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+
+.items li .mini-btn { margin-left: 8px; }
+
 /* Footer */
 .footer {
 	border-top: 1px solid var(--line);

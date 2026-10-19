@@ -123,6 +123,44 @@ window.CAIN = window.CAIN || {};
 		setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
 	}
 
+	// - value + control. onSet(newValue) is called with the clamped value.
+	// opts: { suffix, title, small }. max may be Infinity.
+	function stepper(label, value, min, max, onSet, opts) {
+		opts = opts || {};
+		function set(v) { onSet(Math.max(min, Math.min(max, v))); }
+		var name = label || opts.aria || "value";
+		return h("span", { class: "stepper" + (opts.small ? " small" : ""), title: opts.title || null },
+			label ? h("span", { class: "field-label" }, label) : null,
+			h("span", { class: "stepper-controls" },
+				h("button", { class: "step-btn", type: "button", "aria-label": "Lower " + name, disabled: value <= min, onclick: function () { set(value - 1); } }, "-"),
+				h("span", { class: "stepper-value", "aria-live": "polite" }, String(value) + (opts.suffix || "")),
+				h("button", { class: "step-btn", type: "button", "aria-label": "Raise " + name, disabled: value >= max, onclick: function () { set(value + 1); } }, "+")));
+	}
+
+	// Dropdown. options: [{ value, label }] or [{ group, options: [...] }].
+	function select(label, value, options, onSet, opts) {
+		opts = opts || {};
+		var el = h("select", { class: "input select", "aria-label": label || opts.aria || null });
+		if (opts.placeholder) el.appendChild(h("option", { value: "" }, opts.placeholder));
+		function add(parent, o) {
+			var opt = h("option", { value: o.value, disabled: o.disabled || null }, o.label);
+			if (o.value === value) opt.selected = true;
+			parent.appendChild(opt);
+		}
+		options.forEach(function (o) {
+			if (o.group) {
+				var g = h("optgroup", { label: o.group });
+				o.options.forEach(function (x) { add(g, x); });
+				el.appendChild(g);
+			} else add(el, o);
+		});
+		if (!value && opts.placeholder) el.value = "";
+		el.addEventListener("change", function () { onSet(el.value); });
+		return label ? h("label", { class: "select-field" }, h("span", { class: "field-label" }, label), el) : el;
+	}
+
+	CAIN.stepper = stepper;
+	CAIN.select = select;
 	CAIN.term = term;
 	CAIN.closePopover = closePopover;
 	CAIN.downloadJson = downloadJson;

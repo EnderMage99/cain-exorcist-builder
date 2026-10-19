@@ -67,18 +67,8 @@ window.CAIN = window.CAIN || {};
 		opts = opts || {};
 		var self = this;
 		var value = this.ch[key];
-		var display = h("span", { class: "stepper-value" }, String(value) + (opts.suffix || ""));
-		if (!this.editable) return h("div", { class: "stepper" }, h("span", { class: "field-label" }, label), display);
-		function set(v) {
-			self.ch[key] = Math.max(min, Math.min(max, v));
-			self.onChange(true);
-		}
-		return h("div", { class: "stepper" },
-			h("span", { class: "field-label" }, label),
-			h("span", { class: "stepper-controls" },
-				h("button", { class: "step-btn", type: "button", "aria-label": "Lower " + label, disabled: value <= min, onclick: function () { set(value - 1); } }, "-"),
-				display,
-				h("button", { class: "step-btn", type: "button", "aria-label": "Raise " + label, disabled: value >= max, onclick: function () { set(value + 1); } }, "+")));
+		if (!this.editable) return h("div", { class: "stepper" }, h("span", { class: "field-label" }, label), h("span", { class: "stepper-value" }, String(value) + (opts.suffix || "")));
+		return CAIN.stepper(label, value, min, max, function (v) { self.ch[key] = v; self.onChange(true); }, opts);
 	};
 
 	Sheet.prototype.idCard = function () {
@@ -104,22 +94,27 @@ window.CAIN = window.CAIN || {};
 	};
 
 	Sheet.prototype.skills = function () {
+		var self = this;
 		var ch = this.ch;
 		var d = this.d;
 		var rows = core.skills.map(function (s) {
 			var base = ch.skills[s.id];
 			var dice = d.skillDice[s.id];
+			var control = self.editable
+				? CAIN.stepper(null, base, 0, core.skillMax, function (v) { ch.skills[s.id] = v; self.onChange(true); }, { small: true, aria: s.name })
+				: bubbles(dice, Math.max(core.skillMax, dice), { label: s.name, extraFrom: dice > core.skillMax ? core.skillMax : undefined });
 			return h("li", { class: "skill-row", title: s.text },
 				h("span", { class: "skill-name" }, s.name),
 				h("span", { class: "skill-short" }, s.short),
-				bubbles(dice, Math.max(core.skillMax, dice), { label: s.name, extraFrom: dice > core.skillMax ? core.skillMax : undefined }),
+				control,
 				h("span", { class: "skill-dice" }, dice + "D", dice !== base ? h("span", { class: "label" }, " +" + (dice - base)) : null));
 		});
 		return section("skills", "Registered skills", "TM standard 00398",
 			h("ul", { class: "skill-list" }, rows),
 			h("div", { class: "subrow" },
-				h("span", { class: "field-label" }, "Improvements"),
-				bubbles(ch.skillImprovements, core.skillImprovementLimit, { label: "Improvements" })),
+				this.editable
+					? this.stepper("Improvements used", "skillImprovements", 0, 99)
+					: [h("span", { class: "field-label" }, "Improvements"), bubbles(ch.skillImprovements, core.skillImprovementLimit, { label: "Improvements" })]),
 			h("p", { class: "note" }, "Spend 1 advance to improve a skill. Two skills at 3 max."));
 	};
 
@@ -170,48 +165,104 @@ window.CAIN = window.CAIN || {};
 			h("p", { class: "note" }, "Use your powers or gain +1D, then mark one, or gain 1d3 sin instead."));
 	};
 
+	// "Add" row for the build editor: a dropdown and a button that adds the choice.
+	Sheet.prototype.addRow = function (label, options, onAdd) {
+		var picked = "";
+		var sel = CAIN.select(null, "", options, function (v) { picked = v; }, { placeholder: label, aria: label });
+		return h("div", { class: "add-row" }, sel,
+			h("button", { class: "btn small", type: "button", onclick: function () { if (picked) onAdd(picked); } }, "Add"));
+	};
+
+	function removeBtn(what, fn) {
+		return h("button", { class: "mini-btn", type: "button", "aria-label": "Remove " + what, onclick: fn }, "Remove");
+	}
+
 	Sheet.prototype.kit = function () {
+		var self = this;
 		var ch = this.ch;
 		var d = this.d;
 		var items = core.defaultKit.map(function (k) {
 			var name = k.id === "service-weapons" ? k.name + " (CAT " + ch.weaponCat + ")" : k.name;
 			return h("li", null, h("span", null, name), h("span", { class: "label" }, k.kp + " KP"));
 		});
-		ch.purchases.forEach(function (p) {
+		ch.purchases.forEach(function (p, i) {
 			var item = R.kitItem(p.item);
 			if (!item) return;
+			var consumable = item.tags.indexOf("Consumable") >= 0;
 			items.push(h("li", null,
-				h("span", null, item.name + (p.count > 1 ? " x" + p.count : "")),
-				h("span", { class: "label" }, item.kp === null ? "Permanent" : item.kp + " KP")));
+				h("span", null, item.name + (!self.editable && p.count > 1 ? " x" + p.count : "")),
+				self.editable
+					? h("span", { class: "row-tools" },
+						consumable ? CAIN.stepper(null, p.count, 1, 99, function (v) { p.count = v; self.onChange(true); }, { small: true, aria: item.name + " count" }) : null,
+						removeBtn(item.name, function () { ch.purchases.splice(i, 1); self.onChange(true); }))
+					: h("span", { class: "label" }, item.kp === null ? "Permanent" : item.kp + " KP")));
 		});
+		var addable = CAIN.kit.filter(function (item) {
+			return item.tags.indexOf("Consumable") >= 0 || !ch.purchases.some(function (p) { return p.item === item.id; });
+		}).map(function (item) { return { value: item.id, label: item.name + " (" + item.scrip + " scrip)" }; });
 		return section("kit", "Registered kit", null,
 			h("div", { class: "subrow" },
 				h("span", { class: "field-label" }, term("Kit points"), " " + d.kitPoints),
 				bubbles(d.kitPoints, d.kitPoints, { label: "Kit points" })),
 			h("ul", { class: "kit-list" }, items),
+			this.editable && addable.length ? this.addRow("Add a kit item (no scrip spent)", addable, function (id) {
+				var owned = ch.purchases.filter(function (p) { return p.item === id; })[0];
+				if (owned) owned.count += 1; else ch.purchases.push({ item: id, count: 1 });
+				self.onChange(true);
+			}) : null,
 			this.field("Service weapons look", "weaponLook", { multiline: true, placeholder: "Describe your service weapons", wide: true }),
 			h("div", { class: "stepper-row" },
-				this.stepper("Weapon CAT", "weaponCat", 0, core.weaponUpgrade.maxCat),
+				this.stepper("Weapon CAT", "weaponCat", 0, core.catMax),
 				this.stepper("Scrip", "scrip", 0, 999)),
 			h("p", { class: "note" }, "Paid out per mission (5: success, 3: spare, -1: failure, +3 advance). Buy kit in Between missions."));
 	};
 
 	Sheet.prototype.sin = function () {
+		var self = this;
 		var ch = this.ch;
 		var d = this.d;
 		var boxes = d.sinCap + (ch.blasphemies.length - 1 > 0 ? ch.blasphemies.length - 1 : 0) + ch.sinBoxesCrossed;
 		var crossed = boxes - d.sinCap;
 		var marks = ch.sinMarks.length
-			? h("ul", { class: "entries" }, ch.sinMarks.map(function (owned) {
+			? h("ul", { class: "entries" }, ch.sinMarks.map(function (owned, mi) {
 				var m = R.sinMark(owned.mark);
 				return h("li", { class: "entry" },
-					h("div", { class: "entry-name goth-name" }, m ? m.name : owned.mark),
-					owned.abilities.map(function (a) {
+					h("div", { class: "entry-name goth-name" }, m ? m.name : owned.mark,
+						self.editable ? removeBtn("the whole mark", function () { ch.sinMarks.splice(mi, 1); self.onChange(true); }) : null),
+					owned.abilities.map(function (a, ai) {
 						var ab = R.sinMarkAbility(owned.mark, a.roll);
-						return ab ? CAIN.richText(ab.text + (a.skill ? " (chosen: " + a.skill + ")" : ""), d.cat) : null;
+						if (!ab) return null;
+						if (!self.editable) return CAIN.richText(ab.text + (a.skill ? " (chosen: " + a.skill + ")" : ""), d.cat);
+						return h("div", { class: "mark-ability" },
+							h("span", { class: "label" }, "d6: " + a.roll),
+							CAIN.richText(ab.text, d.cat),
+							h("span", { class: "row-tools" },
+								ab.skillBonus ? CAIN.select(null, a.skill, ab.skillBonus.choose.map(function (s) { return { value: s, label: s }; }), function (v) { a.skill = v; self.onChange(true); }, { aria: "Skill for this mark" }) : null,
+								removeBtn("this ability", function () {
+									owned.abilities.splice(ai, 1);
+									if (!owned.abilities.length) ch.sinMarks.splice(mi, 1);
+									self.onChange(true);
+								})));
 					}));
 			}))
 			: h("p", { class: "note" }, "None. Sin marks come from resisting sin overflow.");
+		var markAdd = null;
+		if (this.editable) {
+			var options = [];
+			CAIN.sinMarks.forEach(function (m) {
+				var have = ch.sinMarks.filter(function (o) { return o.mark === m.id; })[0];
+				var faces = have ? have.abilities.map(function (a) { return a.roll; }) : [];
+				m.abilities.forEach(function (ab) {
+					if (faces.indexOf(ab.roll) < 0) options.push({ value: m.id + ":" + ab.roll, label: m.name + " " + ab.roll + ": " + ab.text.slice(0, 48) + (ab.text.length > 48 ? "..." : "") });
+				});
+			});
+			markAdd = options.length ? this.addRow("Add a sin mark ability", options, function (v) {
+				var parts = v.split(":");
+				var events = [];
+				CAIN.hunt.gainSinMark(ch, parts[0], parseInt(parts[1], 10), events);
+				self.onChange(true);
+			}) : null;
+		}
 		return section("sin", { text: "Sin", goth: true }, "Do not let it build up",
 			h("div", { class: "subrow" },
 				h("span", { class: "field-label" }, term("Sin"), " " + ch.sin + " / " + d.sinCap),
@@ -220,7 +271,7 @@ window.CAIN = window.CAIN || {};
 				this.stepper("Sin", "sin", 0, 99),
 				this.stepper("Boxes crossed", "sinBoxesCrossed", 0, 20)),
 			h("p", { class: "note" }, "Reaching the cap means ", term("sin overflow"), " at the end of the scene."),
-			h("div", { class: "subhead" }, term("Sin marks", "sin mark")), marks);
+			h("div", { class: "subhead" }, term("Sin marks", "sin mark")), marks, markAdd);
 	};
 
 	Sheet.prototype.advancement = function () {
@@ -231,57 +282,100 @@ window.CAIN = window.CAIN || {};
 				h("span", { class: "field-label" }, "XP " + ch.xp + " / " + d.xpToAdvance),
 				bubbles(ch.xp, d.xpToAdvance, { label: "XP", extraFrom: core.base.xpToAdvance })),
 			h("div", { class: "stepper-row" },
-				this.stepper("XP", "xp", 0, d.xpToAdvance),
+				this.stepper("XP", "xp", 0, 99),
 				this.stepper("Advances banked", "advances", 0, 99)),
 			h("p", { class: "note" }, "At the end of each session, answer each question, then mark XP. Cash an ", term("advance"), " each time this fills."),
 			h("ul", { class: "plain-list" }, core.xpQuestions.map(function (q) { return h("li", null, q.text); })));
 	};
 
 	Sheet.prototype.agenda = function () {
+		var self = this;
 		var ch = this.ch;
 		var d = this.d;
 		var a = ch.agenda ? R.agenda(ch.agenda) : null;
-		var abilities = ch.agendaAbilities.map(function (ref) {
+		var abilities = ch.agendaAbilities.map(function (ref, i) {
 			var ab = R.agendaAbility(ref);
 			if (!ab) return null;
 			var from = ref.agenda !== ch.agenda ? " (from " + R.agenda(ref.agenda).name + ")" : "";
-			return h("li", { class: "entry" }, h("div", { class: "entry-name" }, ab.name + from), CAIN.richText(ab.text, d.cat));
+			return h("li", { class: "entry" },
+				h("div", { class: "entry-name" }, ab.name + from,
+					self.editable ? removeBtn(ab.name, function () { ch.agendaAbilities.splice(i, 1); self.onChange(true); }) : null),
+				CAIN.richText(ab.text, d.cat));
 		});
+		var editTools = null;
+		if (this.editable) {
+			var addOptions = CAIN.agendas.map(function (ag) {
+				return { group: ag.name, options: ag.abilities.filter(function (ab) {
+					return !ch.agendaAbilities.some(function (r) { return r.agenda === ag.id && r.ability === ab.id; });
+				}).map(function (ab) { return { value: ag.id + ":" + ab.id, label: ab.name }; }) };
+			}).filter(function (g) { return g.options.length; });
+			var boldInput = h("input", { class: "input", type: "text", placeholder: "Bolded item carried from an old agenda" });
+			editTools = h("div", { class: "edit-tools" },
+				CAIN.select("Current agenda", ch.agenda || "", CAIN.agendas.map(function (ag) { return { value: ag.id, label: ag.name }; }),
+					function (v) { ch.agenda = v || null; self.onChange(true); }, { placeholder: "None" }),
+				addOptions.length ? this.addRow("Add an agenda ability", addOptions, function (v) {
+					var parts = v.split(":");
+					ch.agendaAbilities.push({ agenda: parts[0], ability: parts[1] });
+					self.onChange(true);
+				}) : null,
+				h("div", { class: "add-row" }, boldInput, h("button", { class: "btn small", type: "button", onclick: function () {
+					var t = boldInput.value.trim();
+					if (!t) return;
+					ch.boldItems.push(t);
+					self.onChange(true);
+				} }, "Add")));
+		}
 		return section("agenda", "Agenda", a ? a.name : "None",
 			a ? [h("div", { class: "label" }, "Agenda items"),
 				h("ul", { class: "items" }, a.items.map(function (it) { return h("li", { class: it.bold ? "bold" : null }, it.text); }),
-					ch.boldItems.map(function (t) { return h("li", { class: "bold" }, t); }))] : null,
+					ch.boldItems.map(function (t, i) {
+						return h("li", { class: "bold" }, t, self.editable ? removeBtn(t, function () { ch.boldItems.splice(i, 1); self.onChange(true); }) : null);
+					}))] : null,
 			h("div", { class: "label" }, "Agenda abilities " + ch.agendaAbilities.length + " / 5"),
-			h("ul", { class: "entries" }, abilities));
+			h("ul", { class: "entries" }, abilities),
+			editTools);
 	};
 
 	Sheet.prototype.blasphemies = function () {
+		var self = this;
 		var ch = this.ch;
 		var d = this.d;
 		var total = ch.blasphemies.reduce(function (n, b) { return n + b.powers.length; }, 0);
-		var blocks = ch.blasphemies.map(function (owned) {
+		var blocks = ch.blasphemies.map(function (owned, bi) {
 			var b = R.blasphemy(owned.id);
 			if (!b) return null;
+			var open = b.powers.filter(function (p) { return owned.powers.indexOf(p.id) < 0; });
 			return h("div", { class: "blas-block" },
-				h("h3", { class: "blas-name" }, b.name, h("span", { class: "label" }, " Blasphemy " + b.numeral)),
+				h("h3", { class: "blas-name" }, b.name, h("span", { class: "label" }, " Blasphemy " + b.numeral),
+					self.editable ? removeBtn(b.name, function () { ch.blasphemies.splice(bi, 1); self.onChange(true); }) : null),
 				h("div", { class: "passive" },
 					h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
 					CAIN.richText(b.passive.text, d.cat)),
-				h("ul", { class: "entries" }, owned.powers.map(function (pid) {
+				h("ul", { class: "entries" }, owned.powers.map(function (pid, pi) {
 					var p = R.power(b.id, pid);
 					if (!p) return null;
 					var tags = [p.tags.duration, p.tags.effect, p.tags.range].filter(Boolean);
 					return h("li", { class: "entry" },
-						h("div", { class: "entry-name" }, p.name),
+						h("div", { class: "entry-name" }, p.name,
+							self.editable ? removeBtn(p.name, function () { owned.powers.splice(pi, 1); self.onChange(true); }) : null),
 						h("div", { class: "tags" },
 							tags.map(function (t) { return h("span", { class: "tag" }, CAIN.inlineText(t, d.cat)); }),
 							h("span", { class: "tag burst" }, CAIN.burstLabels[p.burst])),
 						CAIN.richText(p.text, d.cat));
-				})));
+				})),
+				self.editable && open.length ? self.addRow("Add a " + b.name + " power", open.map(function (p) { return { value: p.id, label: p.name }; }), function (pid) {
+					owned.powers.push(pid);
+					self.onChange(true);
+				}) : null);
 		});
+		var unowned = CAIN.blasphemies.filter(function (b) { return !ch.blasphemies.some(function (o) { return o.id === b.id; }); });
 		var blast = CAIN.blast;
 		return section("blasphemy", "Blasphemy", "Observed powers " + total + " / 5",
 			blocks,
+			this.editable && unowned.length ? h("div", { class: "edit-tools" }, this.addRow("Add a blasphemy (passive only; add powers after)", unowned.map(function (b) { return { value: b.id, label: b.name }; }), function (id) {
+				ch.blasphemies.push({ id: id, powers: [] });
+				self.onChange(true);
+			})) : null,
 			h("div", { class: "passive blast" },
 				h("div", { class: "entry-name" }, blast.name, h("span", { class: "tag burst" }, CAIN.burstLabels[blast.burst])),
 				CAIN.richText(blast.text, d.cat)));

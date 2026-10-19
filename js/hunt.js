@@ -1,5 +1,7 @@
 // Play and between-mission actions. Every function changes the character in place
 // and returns { events: [text] } plus any extra result. No DOM access.
+// The site never rolls game dice: every die is rolled at the table, where the
+// Admin can see it, and passed in here as a number.
 window.CAIN = window.CAIN || {};
 
 (function () {
@@ -26,19 +28,23 @@ window.CAIN = window.CAIN || {};
 		if (ch.log.length > 60) ch.log.length = 60;
 	}
 
+	// Logs a manual change so the Admin can see what was set by hand.
+	function note(ch, text) {
+		var events = [];
+		log(ch, events, text);
+		return { events: events };
+	}
+
+	function validDie(value, sides) {
+		return typeof value === "number" && value >= 1 && value <= sides && Math.floor(value) === value;
+	}
+
 	function hasAgendaAbility(ch, id) {
 		return ch.agendaAbilities.some(function (r) { return r.ability === id; });
 	}
 
 	function hasPassive(ch, id) {
 		return ch.blasphemies.some(function (b) { var x = R.blasphemy(b.id); return x && x.passive.id === id; });
-	}
-
-	// Rolls "NdM" (d3 or d6) plus a flat amount.
-	function rollExpr(dice, plus, rng) {
-		var m = /^(\d+)d(\d+)$/.exec(dice);
-		var rolls = R.rollDice(parseInt(m[1], 10), parseInt(m[2], 10), rng);
-		return { rolls: rolls, total: rolls.reduce(function (a, b) { return a + b; }, 0) + (plus || 0) };
 	}
 
 	function gainPathos(ch, events, why) {
@@ -54,27 +60,38 @@ window.CAIN = window.CAIN || {};
 
 	// Missions
 
-	// Fresh hunt: full bursts and KP, mission rolls (Oilfinger), Jack! choice.
-	function startMission(ch, opts, rng) {
+	// Abilities that need a die rolled when a hunt starts, e.g. Oilfinger's 1d3+1 KP.
+	function missionRollsNeeded(ch) {
+		var out = [];
+		ch.agendaAbilities.forEach(function (ref) {
+			var ab = R.agendaAbility(ref);
+			if (ab && ab.missionRoll) out.push({ id: ab.id, name: ab.name, dice: ab.missionRoll.dice, plus: ab.missionRoll.plus, stat: ab.missionRoll.stat });
+		});
+		return out;
+	}
+
+	// Fresh hunt: full bursts and KP. opts: { jackSkill, missionRolls: { abilityId: die } }.
+	function startMission(ch, opts) {
 		opts = opts || {};
 		var events = [];
+		var rolls = opts.missionRolls || {};
+		var needed = missionRollsNeeded(ch);
+		var missing = needed.filter(function (n) { return !validDie(rolls[n.id], 3); });
+		if (missing.length) return { events: events, ok: false, needs: missing };
 		ch.hunt = R.newHunt();
 		ch.hunt.started = true;
 		ch.hunt.bursts = burstsMax(ch);
-		ch.agendaAbilities.forEach(function (ref) {
-			var ab = R.agendaAbility(ref);
-			if (ab && ab.missionRoll) {
-				var r = rollExpr(ab.missionRoll.dice, ab.missionRoll.plus, rng);
-				if (ab.missionRoll.stat === "kitPoints") ch.hunt.kpBonus += r.total;
-				log(ch, events, ab.name + ": rolled " + r.rolls.join("+") + "+" + ab.missionRoll.plus + " = +" + r.total + " KP this mission.");
-			}
+		needed.forEach(function (n) {
+			var total = rolls[n.id] + n.plus;
+			if (n.stat === "kitPoints") ch.hunt.kpBonus += total;
+			log(ch, events, n.name + ": rolled " + rolls[n.id] + "+" + n.plus + " = +" + total + " KP this mission.");
 		});
 		if (opts.jackSkill && hasAgendaAbility(ch, "jack") && ch.skills[opts.jackSkill] === 0) {
 			ch.hunt.jackSkill = opts.jackSkill;
 			log(ch, events, "Jack!: " + opts.jackSkill + " counts as 1 this mission.");
 		}
 		log(ch, events, "Deployed on a new hunt with " + ch.hunt.bursts + " psyche bursts and " + kpLeft(ch) + " KP.");
-		return { events: events };
+		return { events: events, ok: true };
 	}
 
 	// Closes the mission. opts: { outcome: "execute" | "spare" | "fail", bodies, died }.
@@ -104,8 +121,17 @@ window.CAIN = window.CAIN || {};
 
 	// Stress and harm
 
-	// opts: { nonlethal, ironSoul }. Returns { death } when the hit kills.
-	function takeStress(ch, amount, opts, rng) {
+	// Would this hit fill the talisman with Iron Soul still available?
+	function ironSoulApplies(ch, amount, nonlethal) {
+		var h = ch.hunt;
+		return !nonlethal && hasPassive(ch, "iron-soul") && !h.ironSoulUsed && !atBrink(ch) &&
+			amount < core.base.instantDeathStress && h.stress + amount >= R.derived(ch).maxStress;
+	}
+
+	// opts: { nonlethal, ironSoulRoll }. ironSoulRoll is the player's d6 for Iron Soul,
+	// or null to decline it. If Iron Soul applies and neither is given, nothing changes
+	// and the result asks for it. Returns { death } when the hit kills.
+	function takeStress(ch, amount, opts) {
 		opts = opts || {};
 		var events = [];
 		var h = ch.hunt;
@@ -120,18 +146,20 @@ window.CAIN = window.CAIN || {};
 			log(ch, events, "Took " + (h.stress - before) + " nonlethal stress" + (h.stress - before < amount ? " (rest ignored)" : "") + ".");
 			return { events: events };
 		}
+		var useIron = ironSoulApplies(ch, amount, false);
+		if (useIron && opts.ironSoulRoll === undefined) return { events: events, ask: "ironSoul" };
 		h.stress += amount;
 		log(ch, events, "Took " + amount + " stress.");
 		while (h.stress >= (max = R.derived(ch).maxStress)) {
-			if (opts.ironSoul && !h.ironSoulUsed && hasPassive(ch, "iron-soul")) {
+			if (useIron && validDie(opts.ironSoulRoll, 6)) {
+				useIron = false;
 				h.ironSoulUsed = true;
-				var roll = R.d6(rng);
-				if (roll >= 4) {
+				if (opts.ironSoulRoll >= 4) {
 					h.stress = max - 1;
-					log(ch, events, "Iron Soul: rolled " + roll + ". Held at " + h.stress + " stress, excess ignored.");
+					log(ch, events, "Iron Soul: rolled " + opts.ironSoulRoll + ". Held at " + h.stress + " stress, excess ignored.");
 					break;
 				}
-				log(ch, events, "Iron Soul: rolled " + roll + ". It fails.");
+				log(ch, events, "Iron Soul: rolled " + opts.ironSoulRoll + ". It fails.");
 			}
 			var over = h.stress - max;
 			h.injuries += 1;
@@ -261,18 +289,18 @@ window.CAIN = window.CAIN || {};
 
 	// Psyche bursts, sin and kit
 
-	// Spend one burst, or take 1d3 sin instead. Returns { ok, sinGained }.
-	function spendBurst(ch, useSin, rng, why) {
+	// Spend one burst, or pass sinRoll (the 1d3 rolled) to take that much sin instead.
+	function spendBurst(ch, sinRoll, why) {
 		var events = [];
 		var h = ch.hunt;
 		var label = why ? " (" + why + ")" : "";
-		if (useSin) {
-			var gain = R.d3(rng);
-			ch.sin += gain;
-			log(ch, events, "Took " + gain + " sin instead of a psyche burst" + label + ". Sin " + ch.sin + ".");
-			return { events: events, ok: true, sinGained: gain };
+		if (sinRoll !== undefined && sinRoll !== null) {
+			if (!validDie(sinRoll, 3)) return { events: events, ok: false, reason: "Enter the 1d3 you rolled." };
+			ch.sin += sinRoll;
+			log(ch, events, "Took " + sinRoll + " sin instead of a psyche burst" + label + ". Sin " + ch.sin + ".");
+			return { events: events, ok: true, sinGained: sinRoll };
 		}
-		if (h.bursts <= 0) return { events: events, ok: false };
+		if (h.bursts <= 0) return { events: events, ok: false, reason: "No psyche bursts left." };
 		h.bursts -= 1;
 		log(ch, events, "Spent a psyche burst" + label + ". " + h.bursts + " left.");
 		return { events: events, ok: true, sinGained: 0 };
@@ -302,79 +330,86 @@ window.CAIN = window.CAIN || {};
 		return { events: events, ok: true };
 	}
 
-	// Uses a consumable from the kit: pays its KP, applies its effect, uses one up.
-	function useConsumable(ch, itemId, rng) {
+	// Uses a consumable: pays its KP, applies its effect with the die rolled, uses one up.
+	function useConsumable(ch, itemId, roll) {
 		var events = [];
 		var item = R.kitItem(itemId);
 		var owned = ch.purchases.filter(function (p) { return p.item === itemId; })[0];
 		if (!item || !owned || owned.count <= 0) return { events: events, ok: false };
 		if (kpLeft(ch) < item.kp) return { events: events, ok: false, reason: "Not enough KP." };
+		var heal = item.use && item.use.healStress;
+		if (heal && !validDie(roll, 3)) return { events: events, ok: false, needsRoll: heal.dice };
 		ch.hunt.kpSpent += item.kp;
 		owned.count -= 1;
 		if (owned.count <= 0) ch.purchases.splice(ch.purchases.indexOf(owned), 1);
 		log(ch, events, "Used " + item.name + " (" + item.kp + " KP).");
-		if (item.use && item.use.healStress) {
-			var r = rollExpr(item.use.healStress.dice, item.use.healStress.plus, rng);
-			healStress(ch, r.total).events.forEach(function (e) { events.push(e); });
-			log(ch, events, item.name + " rolled " + r.rolls.join("+") + "+" + item.use.healStress.plus + " = " + r.total + ".");
+		if (heal) {
+			log(ch, events, item.name + ": rolled " + roll + "+" + heal.plus + " = " + (roll + heal.plus) + ".");
+			healStress(ch, roll + heal.plus).events.forEach(function (e) { events.push(e); });
 		}
 		return { events: events, ok: true };
 	}
 
 	// Rolls
 
-	// opts: { skill (id or "psyche"), setup, ability, circumstance, burst, burstSin,
-	// agony, hard, risky }. Spends what it needs to and records the roll.
-	function roll(ch, opts, rng) {
-		var events = [];
-		var h = ch.hunt;
+	// Works out the dice pool for a roll the player is about to make.
+	// opts: { skill (id or "psyche"), setup, ability, circumstance, burst, agony, hard }.
+	function poolFor(ch, opts) {
 		var d = R.derived(ch);
 		var base = opts.skill === "psyche" ? d.psyche : d.skillDice[opts.skill];
-		var skillName = opts.skill === "psyche" ? "PSYCHE" : core.skills.filter(function (s) { return s.id === opts.skill; })[0].name;
-		var bonus = (opts.setup ? 1 : 0) + (opts.ability || 0) + (opts.circumstance || 0);
+		var bonus = (opts.setup ? 1 : 0) + (opts.ability || 0) + (opts.circumstance || 0) + (opts.burst ? 1 : 0);
+		var agony = opts.agony && !ch.hunt.divineAgonyUsed ? ch.hunt.pathos : 0;
+		var p = R.dicePool({ skill: base, bonus: bonus, agony: agony, hard: opts.hard });
+		p.skillName = opts.skill === "psyche" ? "PSYCHE" : core.skills.filter(function (s) { return s.id === opts.skill; })[0].name;
+		p.base = base;
+		p.agony = agony;
+		return p;
+	}
+
+	// Records a roll made at the table: spends the burst (or the sin rolled for it) and
+	// Divine Agony's pathos, and stores pathos on 0 successes.
+	// opts as poolFor, plus burstSinRoll (the 1d3 when paying the burst with sin).
+	function recordRoll(ch, opts, successes) {
+		var events = [];
+		var h = ch.hunt;
+		var p = poolFor(ch, opts);
+		if (!(successes >= 0 && successes <= p.maxSuccesses)) return { events: events, ok: false, reason: "Enter how many successes you rolled (0-" + p.maxSuccesses + ")." };
+		if (opts.agony && (h.divineAgonyUsed || h.pathos <= 0)) return { events: events, ok: false, reason: "Divine Agony isn't available." };
 		if (opts.burst) {
-			var b = spendBurst(ch, !!opts.burstSin, rng, "for +1D");
-			if (!b.ok) return { events: events, ok: false, reason: "No psyche bursts left. Take 1d3 sin instead?" };
+			var b = spendBurst(ch, opts.burstSinRoll, "for +1D");
+			if (!b.ok) return { events: events, ok: false, reason: b.reason };
 			b.events.forEach(function (e) { events.push(e); });
-			bonus += 1;
 		}
-		var agony = 0;
 		if (opts.agony) {
-			if (h.divineAgonyUsed || h.pathos <= 0) return { events: events, ok: false, reason: "Divine Agony isn't available." };
-			agony = h.pathos;
 			h.pathos = 0;
 			h.divineAgonyUsed = true;
-			log(ch, events, "Divine Agony: burned " + agony + " pathos for +" + agony + "D.");
+			log(ch, events, "Divine Agony: burned " + p.agony + " pathos for +" + p.agony + "D.");
 		}
-		var result = R.actionRoll({ skill: base, bonus: bonus, agony: agony, hard: !!opts.hard }, rng);
-		result.skillName = skillName;
-		result.risk = opts.risky ? R.d6(rng) : null;
-		result.riskOutcome = result.risk ? R.riskOutcome(result.risk) : null;
-		result.bonusAsked = bonus;
-		result.t = Date.now();
-		var text = skillName + " " + result.pool + "D" + (result.hard ? " hard" : "") + ": [" + result.dice.join(" ") + "]" +
-			(result.zeroPool ? " keep lowest" : "") + " = " + result.successes + " success" + (result.successes === 1 ? "" : "es") +
-			(result.risk ? ", risk die " + result.risk + " (" + result.riskOutcome.label + ")" : "");
-		log(ch, events, text);
-		if (!result.success) gainPathos(ch, events, "no successes");
-		if (result.risk === 1 && h.hooks.length) log(ch, events, "Risk die 1: slash a hook.");
-		h.rolls.unshift(result);
+		var extras = [opts.setup ? "setup" : null, opts.burst ? "burst" : null, opts.ability ? "ability +" + opts.ability : null,
+			opts.circumstance ? "circumstance +" + opts.circumstance : null, opts.agony ? "Divine Agony" : null, opts.hard ? "hard" : null].filter(Boolean);
+		var entry = { t: Date.now(), skillName: p.skillName, pool: p.pool, zeroPool: p.zeroPool, hard: p.hard, successes: successes, extras: extras };
+		log(ch, events, p.skillName + " " + p.pool + "D" + (extras.length ? " (" + extras.join(", ") + ")" : "") + ": " + successes + " success" + (successes === 1 ? "" : "es") + ".");
+		if (successes === 0) gainPathos(ch, events, "no successes");
+		h.rolls.unshift(entry);
 		if (h.rolls.length > 8) h.rolls.length = 8;
-		return { events: events, ok: true, result: result };
+		return { events: events, ok: true, roll: entry };
 	}
 
 	// Rest
 
-	// Rolls the resting dice. Assign each with assignRest.
-	function rest(ch, rng) {
+	// Records a rest with the resting dice rolled (each 1-3). Assign each with assignRest.
+	function rest(ch, values) {
 		var events = [];
 		var h = ch.hunt;
-		var dice = R.rollDice(R.derived(ch).restDice, 3, rng);
-		h.restDice = dice.map(function (v) { return { value: v, used: false }; });
+		var count = R.derived(ch).restDice;
+		if (!Array.isArray(values) || values.length !== count || !values.every(function (v) { return validDie(v, 3); })) {
+			return { events: events, ok: false, reason: "Enter all " + count + " resting dice (1-3 each)." };
+		}
+		h.restDice = values.map(function (v) { return { value: v, used: false }; });
 		h.rests += 1;
 		h.ironSoulUsed = false;
-		log(ch, events, "Rested: rolled " + dice.join(" and ") + " on the resting dice. Pressure +1 (tell the Admin).");
-		return { events: events, dice: dice };
+		log(ch, events, "Rested: resting dice " + values.join(" and ") + ". Pressure +1 (tell the Admin).");
+		return { events: events, ok: true };
 	}
 
 	// target: "bursts", "stress", or { hook: index }.
@@ -399,8 +434,8 @@ window.CAIN = window.CAIN || {};
 		return !ch.dead && (ch.sin >= R.derived(ch).sinCap || !!(ch.hunt.pending && ch.hunt.pending.type === "overflow"));
 	}
 
-	// choice: "giveUp" or "resist".
-	function resolveOverflow(ch, choice, rng) {
+	// choice: "giveUp" or "resist" (with the player's d6 when they have sin marks).
+	function resolveOverflow(ch, choice, roll) {
 		var events = [];
 		if (choice === "giveUp") {
 			ch.dead = { cause: "Gave in to sin overflow and became a sin", t: Date.now() };
@@ -408,62 +443,45 @@ window.CAIN = window.CAIN || {};
 			log(ch, events, "Gave up. The exorcist becomes a sin.");
 			return { events: events };
 		}
-		var r = R.resistOverflow(ch, rng);
+		var r = R.resistOverflow(ch, roll);
+		if (r.needsRoll) return { events: events, ok: false, needsRoll: true };
 		log(ch, events, "Resistance check: " + (r.roll === null ? "" : "rolled " + r.roll + " + " + ch.sinMarks.length + " marks = " + r.total + ". ") + r.reason);
 		if (!r.pass) {
 			ch.dead = { cause: "Lost control in sin overflow and became a sin", t: Date.now() };
 			ch.hunt.pending = null;
-			return { events: events, pass: false };
+			return { events: events, ok: true, pass: false };
 		}
 		ch.sin = 0;
 		ch.sinBoxesCrossed += 2;
 		ch.hunt.pending = { type: "sinMark" };
 		log(ch, events, "Kept control. Sin cleared, two sin boxes crossed out. A sin mark manifests.");
-		return { events: events, pass: true };
+		return { events: events, ok: true, pass: true };
 	}
 
-	function rollNewAbility(owned, rng) {
-		var have = owned.abilities.map(function (a) { return a.roll; });
-		if (have.length >= 6) return null;
-		var face;
-		do { face = R.d6(rng); } while (have.indexOf(face) >= 0);
-		return face;
+	// Ability faces a mark already has (so the player knows to reroll them).
+	function ownedMarkFaces(ch, markId) {
+		var owned = ch.sinMarks.filter(function (x) { return x.mark === markId; })[0];
+		return owned ? owned.abilities.map(function (a) { return a.roll; }) : [];
 	}
 
-	// Adds a mark at a location (new) or evolves it (owned). Returns the ability gained.
-	function addSinMark(ch, markId, rng, events) {
+	// Adds a mark (new) or evolves it (owned) with the ability die rolled.
+	// A face the mark already has is refused: the player rerolls duplicates.
+	function gainSinMark(ch, markId, face, events) {
 		events = events || [];
 		var m = R.sinMark(markId);
+		if (!m) return { events: events, ok: false, reason: "Unknown sin mark." };
+		if (!validDie(face, 6)) return { events: events, ok: false, reason: "Enter the d6 for the ability." };
+		if (ownedMarkFaces(ch, markId).indexOf(face) >= 0) return { events: events, ok: false, duplicate: true, reason: "You already have that ability. Roll again." };
 		var owned = ch.sinMarks.filter(function (x) { return x.mark === markId; })[0];
 		var isNew = !owned;
 		if (isNew) { owned = { mark: markId, abilities: [] }; ch.sinMarks.push(owned); }
-		var face = rollNewAbility(owned, rng);
-		if (face === null) {
-			log(ch, events, m.name + " has every ability already.");
-			return { events: events, ability: null };
-		}
 		var ab = R.sinMarkAbility(markId, face);
 		var entry = { roll: face };
 		if (ab.skillBonus) entry.skill = ab.skillBonus.choose[0];
 		owned.abilities.push(entry);
+		if (ch.hunt.pending && ch.hunt.pending.type === "sinMark") ch.hunt.pending = null;
 		log(ch, events, (isNew ? "Sin mark: " : "Sin mark evolves: ") + m.name + ", ability " + face + ".");
-		return { events: events, mark: markId, ability: face, choose: ab.skillBonus ? ab.skillBonus.choose : null };
-	}
-
-	// Rolls the location (a 6 means the player chooses) after a resisted overflow.
-	function rollSinMark(ch, rng, chosenMark) {
-		var events = [];
-		var markId = chosenMark;
-		if (!markId) {
-			var loc = R.rollSinMarkLocation(rng);
-			log(ch, events, "Sin mark location roll: " + loc.face + (loc.choose ? " (choose)" : "") + (loc.substituted ? " (not in this build, rerolled)" : "") + ".");
-			if (loc.choose) return { events: events, choose: true };
-			markId = loc.mark;
-		}
-		var res = addSinMark(ch, markId, rng, events);
-		ch.hunt.pending = null;
-		res.events = events;
-		return res;
+		return { events: events, ok: true, mark: markId, ability: face, choose: ab.skillBonus ? ab.skillBonus.choose : null };
 	}
 
 	function setMarkSkill(ch, markId, face, skill) {
@@ -497,9 +515,9 @@ window.CAIN = window.CAIN || {};
 
 	// choice: { kind, ... } as listed by rules.legalAdvances, with the pick filled in:
 	// agendaAbility { ability, replace }, blasphemyPower { blasphemy, power, replace },
-	// newBlasphemy { blasphemy, power, replace }, evolveSinMark { mark }, scrip, skill { skill }.
-	// replace is { agenda, ability } or { blasphemy, power } when at the cap.
-	function spendAdvance(ch, choice, rng) {
+	// newBlasphemy { blasphemy, power, replace }, evolveSinMark { mark, ability (d6) },
+	// scrip, skill { skill }. replace is { agenda, ability } or { blasphemy, power }.
+	function spendAdvance(ch, choice) {
 		var events = [];
 		if (ch.advances <= 0) return { events: events, ok: false, reason: "No advances banked." };
 		var options = R.legalAdvances(ch);
@@ -520,6 +538,7 @@ window.CAIN = window.CAIN || {};
 			ch.agendaAbilities.push({ agenda: ch.agenda, ability: choice.ability });
 			log(ch, events, "Advance: agenda ability " + R.agendaAbility({ agenda: ch.agenda, ability: choice.ability }).name + ".");
 		} else if (choice.kind === "blasphemyPower" || choice.kind === "newBlasphemy") {
+			if (choice.kind === "newBlasphemy" && !R.power(choice.blasphemy, choice.power)) return { events: events, ok: false, reason: "Pick a power from the new blasphemy." };
 			if (choice.replace) {
 				ch.blasphemies.forEach(function (b) {
 					if (b.id === choice.replace.blasphemy) b.powers = b.powers.filter(function (p) { return p !== choice.replace.power; });
@@ -527,7 +546,6 @@ window.CAIN = window.CAIN || {};
 			}
 			if (choice.kind === "newBlasphemy") {
 				var nb = R.blasphemy(choice.blasphemy);
-				if (!nb || !R.power(nb.id, choice.power)) return { events: events, ok: false, reason: "Pick a power from the new blasphemy." };
 				ch.blasphemies.push({ id: nb.id, powers: [choice.power] });
 				log(ch, events, "Advance: new blasphemy " + nb.name + " with " + R.power(nb.id, choice.power).name + ". Sin cap -1, XP to advance +1.");
 			} else {
@@ -535,7 +553,8 @@ window.CAIN = window.CAIN || {};
 				log(ch, events, "Advance: power " + R.power(choice.blasphemy, choice.power).name + ".");
 			}
 		} else if (choice.kind === "evolveSinMark") {
-			var res = addSinMark(ch, choice.mark, rng, events);
+			var res = gainSinMark(ch, choice.mark, choice.ability, events);
+			if (!res.ok) return res;
 			result.mark = res.mark;
 			result.ability = res.ability;
 			result.choose = res.choose;
@@ -588,13 +607,16 @@ window.CAIN = window.CAIN || {};
 
 	CAIN.hunt = {
 		normalize: normalize,
+		note: note,
 		kpLeft: kpLeft,
 		burstsMax: burstsMax,
 		atBrink: atBrink,
 		hasAgendaAbility: hasAgendaAbility,
 		hasPassive: hasPassive,
+		missionRollsNeeded: missionRollsNeeded,
 		startMission: startMission,
 		endMission: endMission,
+		ironSoulApplies: ironSoulApplies,
 		takeStress: takeStress,
 		resolveDeath: resolveDeath,
 		healStress: healStress,
@@ -611,12 +633,14 @@ window.CAIN = window.CAIN || {};
 		changeSin: changeSin,
 		spendKp: spendKp,
 		useConsumable: useConsumable,
-		roll: roll,
+		poolFor: poolFor,
+		recordRoll: recordRoll,
 		rest: rest,
 		assignRest: assignRest,
 		overflowDue: overflowDue,
 		resolveOverflow: resolveOverflow,
-		rollSinMark: rollSinMark,
+		ownedMarkFaces: ownedMarkFaces,
+		gainSinMark: gainSinMark,
 		setMarkSkill: setMarkSkill,
 		endSession: endSession,
 		spendAdvance: spendAdvance,

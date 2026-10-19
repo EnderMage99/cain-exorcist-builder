@@ -88,12 +88,6 @@ CAIN.core = {
 	advanceScrip: 3,
 	weaponUpgrade: { cost: 3, maxCat: 3 },
 
-	riskOutcomes: [
-		{ faces: [1], label: "Much worse", text: "The worst thing that could happen happens." },
-		{ faces: [2, 3], label: "Worse", text: "Consequences are a little worse, or the action is less effective or more complicated, even on a success." },
-		{ faces: [4, 5], label: "Expected", text: "About as expected, success or failure, with no further complications." },
-		{ faces: [6], label: "Better", text: "More effective, lighter consequences, or a sudden opportunity." }
-	],
 
 	defaultKit: [
 		{ id: "uniform", name: "Issue uniform", kp: 0, text: "Standard issue uniform, collar, shoes, button pin." },

@@ -392,9 +392,10 @@ window.CAIN = window.CAIN || {};
 		return options;
 	}
 
-	// Dice
+	// Dice. The site never rolls game dice: players roll at the table where the
+	// Admin can see, and enter the results. These helpers only do the arithmetic.
 
-	// Seeded generator (mulberry32) so tests and replays are repeatable.
+	// Seeded generator (mulberry32), only for Quick exorcist and the tests.
 	function makeRng(seed) {
 		var t = seed >>> 0;
 		return function () {
@@ -405,65 +406,40 @@ window.CAIN = window.CAIN || {};
 		};
 	}
 
-	function d6(rng) { return 1 + Math.floor((rng || Math.random)() * 6); }
-	function d3(rng) { return Math.ceil(d6(rng) / 2); }
-
-	function rollDice(count, sides, rng) {
-		var out = [];
-		for (var i = 0; i < count; i++) out.push(sides === 3 ? d3(rng) : d6(rng));
-		return out;
-	}
-
-	// An action roll. opts: { skill, bonus, agony, hard }. Bonus dice cap at +3,
-	// Divine Agony dice ignore the cap, a pool of 0 rolls 2d6 and keeps the lowest.
-	function actionRoll(opts, rng) {
+	// How many dice to roll. opts: { skill, bonus, agony, hard }. Bonus dice cap
+	// at +3, Divine Agony dice ignore the cap, a pool of 0 means roll 2 keep lowest.
+	function dicePool(opts) {
 		var bonus = Math.min(opts.bonus || 0, core.base.bonusDiceCap);
 		var pool = Math.max(0, (opts.skill || 0) + bonus + (opts.agony || 0));
-		var zeroPool = pool === 0;
-		var dice = rollDice(zeroPool ? 2 : pool, 6, rng);
-		var kept = zeroPool ? [Math.min(dice[0], dice[1])] : dice.slice();
-		var target = opts.hard ? 6 : 4;
-		var successes = kept.filter(function (v) { return v >= target; }).length;
 		return {
 			pool: pool,
 			bonusUsed: bonus,
-			zeroPool: zeroPool,
-			dice: dice,
-			kept: kept,
+			bonusCapped: (opts.bonus || 0) > core.base.bonusDiceCap,
+			zeroPool: pool === 0,
 			hard: !!opts.hard,
-			successes: successes,
-			success: successes > 0,
-			sixes: kept.filter(function (v) { return v === 6; }).length
+			target: opts.hard ? 6 : 4,
+			maxSuccesses: pool === 0 ? 1 : pool
 		};
 	}
 
-	function riskOutcome(face) {
-		for (var i = 0; i < core.riskOutcomes.length; i++) {
-			if (core.riskOutcomes[i].faces.indexOf(face) >= 0) return core.riskOutcomes[i];
-		}
-		return null;
-	}
-
-	// Sin overflow resistance check (book 1.4.5 wording).
-	function resistOverflow(ch, rng) {
+	// Sin overflow resistance check (book 1.4.5 wording) with the player's d6.
+	// Returns needsRoll when a die is required and none was given.
+	function resistOverflow(ch, roll) {
 		var marks = ch.sinMarks.length;
 		if (sinCap(ch) <= 0) return { roll: null, total: null, pass: false, reason: "No sin boxes left." };
 		if (marks === 0) return { roll: null, total: null, pass: true, reason: "No sin marks: automatic pass." };
-		var roll = d6(rng);
+		if (!(roll >= 1 && roll <= 6)) return { needsRoll: true };
 		var total = roll + marks;
 		if (roll === 1) return { roll: roll, total: total, pass: true, reason: "A 1 always passes." };
 		return { roll: roll, total: total, pass: total <= 6, reason: total <= 6 ? "6 or less: keep control." : "7 or more: give up." };
 	}
 
-	// Rolls a sin mark location. A 6 means choose; a face with no loaded
-	// location (test build) rerolls among the loaded ones.
-	function rollSinMarkLocation(rng) {
-		var face = d6(rng);
-		if (face === CAIN.sinMarkChooseFace) return { face: face, choose: true, mark: null };
+	// Sin mark location for a d6 face: { choose } on a 6, { mark } when loaded,
+	// { missing } when that location isn't in this build.
+	function markForFace(face) {
+		if (face === CAIN.sinMarkChooseFace) return { face: face, choose: true };
 		var found = CAIN.sinMarks.filter(function (m) { return m.roll === face; })[0];
-		if (found) return { face: face, choose: false, mark: found.id };
-		var pick = CAIN.sinMarks[Math.floor((rng || Math.random)() * CAIN.sinMarks.length)];
-		return { face: face, choose: false, mark: pick.id, substituted: true };
+		return found ? { face: face, mark: found.id } : { face: face, missing: true, name: core.sinMarkLocations[face - 1] };
 	}
 
 	function halveSin(sin) {
@@ -549,13 +525,9 @@ window.CAIN = window.CAIN || {};
 		validateCharacter: validateCharacter,
 		legalAdvances: legalAdvances,
 		makeRng: makeRng,
-		d6: d6,
-		d3: d3,
-		rollDice: rollDice,
-		actionRoll: actionRoll,
-		riskOutcome: riskOutcome,
+		dicePool: dicePool,
 		resistOverflow: resistOverflow,
-		rollSinMarkLocation: rollSinMarkLocation,
+		markForFace: markForFace,
 		halveSin: halveSin,
 		creationCounts: creationCounts,
 		pick: pick,
