@@ -21,6 +21,7 @@ window.CAIN = window.CAIN || {};
 		if (kind === "agenda") return { kind: kind, item: R.agenda(id) };
 		if (kind === "blasphemy") return { kind: kind, item: R.blasphemy(id) };
 		if (kind === "virtue") return { kind: kind, item: R.virtue(id) };
+		if (kind === "rules") return { kind: kind, item: CAIN.ruleSections().filter(function (r) { return CAIN.ruleSlug(r.name) === id; })[0] || null };
 		if (kind === "sinmark") return { kind: kind, item: R.sinMark(id) };
 		if (kind === "kit") return { kind: kind, item: CAIN.kit.filter(function (k) { return k.id === id; })[0] || null };
 		return { kind: kind, item: null };
@@ -96,6 +97,14 @@ window.CAIN = window.CAIN || {};
 				})));
 	}
 
+	// A rules section (virtue affinity rules, shop rules...): title and text.
+	function rulesSpread(r, cat) {
+		return h("article", { class: "spread rules-spread" },
+			h("h2", { class: "kit-spread-name" }, r.name),
+			credit(r),
+			h("div", { class: "rules-spread-text" }, CAIN.richText(r.text, cat)));
+	}
+
 	// Sin mark: the location, its look, and the six abilities by d6.
 	function sinMarkSpread(m, cat) {
 		return h("article", { class: "spread mark-spread" },
@@ -151,6 +160,7 @@ window.CAIN = window.CAIN || {};
 		var cat = currentCat();
 		if (found.kind === "blasphemy") return blasphemySpread(found.item, cat);
 		if (found.kind === "virtue") return virtueSpread(found.item, cat);
+		if (found.kind === "rules") return rulesSpread(found.item, cat);
 		if (found.kind === "sinmark") return sinMarkSpread(found.item, cat);
 		if (found.kind === "kit") return kitSpread(found.item);
 		return agendaSpread(found.item, cat);
@@ -261,7 +271,8 @@ window.CAIN = window.CAIN || {};
 		var card = e.target.closest && e.target.closest("[data-view]");
 		if (!card) return;
 		// Buttons, links, fields and fold-outs inside a card keep doing their own thing.
-		if (e.target.closest("button, a, input, select, textarea, label, summary, details")) return;
+		var inner = e.target.closest("button, a, input, select, textarea, label, summary, details");
+		if (inner && inner !== card) return;
 		if (window.getSelection && String(window.getSelection()).length > 2) return;
 		openFrom(card);
 	});

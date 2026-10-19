@@ -2700,6 +2700,23 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 	.mark-spread-roll { font-size: 90px; }
 }
 
+/* Rules sections as one row of buttons that open the viewer. */
+.rule-row { display: flex; align-items: center; gap: 10px; margin: 6px 0 18px; min-width: 0; }
+
+.rule-row > .label { flex: none; }
+
+.rule-row-chips { display: flex; gap: 8px; overflow-x: auto; padding: 6px 4px; scrollbar-width: thin; }
+
+.rule-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--paper); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: zoom-in; }
+
+.rule-row .rule-chip.fan-made { box-shadow: none !important; border-color: var(--fan-ring); }
+
+.rule-chip-src { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fan-ink, var(--muted)); }
+
+.spread.rules-spread { width: min(900px, 94vw); }
+
+.rules-spread-text { font-size: 15px; line-height: 1.65; }
+
 /* Focus viewer: hover lights a card up; clicking opens it over a darkened
    screen, laid out like the book's pages. */
 [data-view] { cursor: zoom-in; transition: transform 0.12s ease, outline-color 0.12s ease; outline: 3px solid transparent; outline-offset: 3px; }

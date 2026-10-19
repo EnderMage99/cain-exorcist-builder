@@ -268,12 +268,7 @@ window.CAIN = window.CAIN || {};
 					h("p", null, CAIN.virtueRules.stricture),
 					h("p", null, CAIN.virtueRules.highBlasphemy))),
 			CAIN.tileGrid("virtue", CAIN.virtues),
-			h("div", { class: "grid" }, (CAIN.virtueSections || []).map(function (sec) {
-				return h("article", { class: "card" + CAIN.sourceClass(sec) },
-					h("div", { class: "card-head" }, h("h2", null, sec.name), h("span", { class: "label" }, "Virtue rules")),
-					CAIN.sourceBadge(sec),
-					richText(sec.text, cat));
-			})));
+			CAIN.ruleRow("Virtue rules", CAIN.virtueSections));
 	}
 
 	function kitView() {
@@ -303,12 +298,7 @@ window.CAIN = window.CAIN || {};
 					blurbs[cat] ? h("p", { class: "note" }, blurbs[cat]) : null,
 					CAIN.tileGrid("kit", items));
 			}),
-			h("div", { class: "grid" }, (CAIN.kitSections || []).map(function (sec) {
-				return h("article", { class: "card" + CAIN.sourceClass(sec) },
-					h("div", { class: "card-head" }, h("h2", null, sec.name), h("span", { class: "label" }, "Shop rules")),
-					CAIN.sourceBadge(sec),
-					richText(sec.text, 1));
-			})));
+			CAIN.ruleRow("Shop and gear rules", CAIN.kitSections));
 	}
 
 	function catView(cat) {

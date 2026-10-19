@@ -93,6 +93,24 @@ window.CAIN = window.CAIN || {};
 		return h("div", { class: "grid tile-grid" }, items.map(function (x) { return tile(kind, x, opts ? opts(x) : null); }));
 	}
 
+	// Rules sections (virtue affinity, shop rules...) as one row of buttons; each
+	// opens its full text in the viewer.
+	function ruleSlug(name) { return String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
+	function ruleSections() { return (CAIN.virtueSections || []).concat(CAIN.kitSections || []); }
+	function ruleRow(title, sections) {
+		if (!sections || !sections.length) return null;
+		return h("section", { class: "rule-row", "aria-label": title },
+			h("span", { class: "label" }, title),
+			h("div", { class: "rule-row-chips" }, sections.map(function (sec) {
+				var src = CAIN.sourceOf(sec);
+				return h("button", { class: "rule-chip" + CAIN.sourceClass(sec), type: "button", "data-view": "rules:" + ruleSlug(sec.name),
+					title: "Read " + sec.name + (src && src.fan ? " (fan-made: " + src.name + ")" : "") }, sec.name,
+					src && src.fan ? h("span", { class: "rule-chip-src" }, src.short || src.name) : null);
+			})));
+	}
+	CAIN.ruleSlug = ruleSlug;
+	CAIN.ruleSections = ruleSections;
+	CAIN.ruleRow = ruleRow;
 	CAIN.compactTile = tile;
 	CAIN.tileGrid = tileGrid;
 })();
