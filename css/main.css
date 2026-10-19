@@ -643,6 +643,38 @@ label.btn { user-select: none; }
 
 .draft-note { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; padding: 12px 18px; }
 
+/* Export and import on the registry */
+.transfer-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: -6px 0 14px;
+}
+
+.transfer-bar > .label { margin-right: 4px; }
+
+.drop-hint { margin: 0; }
+
+.transfer-message {
+	background: var(--ink);
+	color: var(--paper);
+	border-radius: var(--radius-sm);
+	padding: 10px 14px;
+	font-size: 14px;
+	margin-bottom: 12px;
+}
+
+.card.conflict { border: 2px solid var(--accent); margin-bottom: 12px; padding: 12px 18px; }
+
+.card.conflict p { margin: 0; }
+
+.paste-box { font-size: 12px; min-height: 120px; }
+
+.registry-page { border-radius: var(--radius); transition: box-shadow 0.15s; }
+
+.registry-page.dropping { box-shadow: 0 0 0 3px var(--accent); background: var(--token-bg); }
+
 @media (max-width: 560px) {
 	.roster-card { grid-template-columns: auto 1fr; }
 	.roster-stats { grid-column: 1 / -1; flex-direction: row; gap: 12px; align-items: center; }

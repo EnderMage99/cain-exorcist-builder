@@ -112,9 +112,28 @@ window.CAIN = window.CAIN || {};
 	document.addEventListener("keydown", function (e) { if (e.key === "Escape") closePopover(); });
 	window.addEventListener("hashchange", closePopover);
 
-	// Downloads an object as a JSON file.
-	function downloadJson(filename, data) {
-		var blob = new Blob([JSON.stringify(data, null, "\t")], { type: "application/json" });
+	// Copies text to the clipboard. Calls done(ok).
+	function copyText(text, done) {
+		function fallback() {
+			var area = h("textarea", { style: "position:fixed;top:-1000px;opacity:0" });
+			area.value = text;
+			document.body.appendChild(area);
+			area.select();
+			var ok = false;
+			try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+			area.remove();
+			done(ok);
+		}
+		if (navigator.clipboard && navigator.clipboard.writeText) {
+			navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+		} else {
+			fallback();
+		}
+	}
+
+	// Downloads text as a JSON file.
+	function downloadText(filename, text) {
+		var blob = new Blob([text], { type: "application/json" });
 		var url = URL.createObjectURL(blob);
 		var a = h("a", { href: url, download: filename });
 		document.body.appendChild(a);
@@ -163,7 +182,8 @@ window.CAIN = window.CAIN || {};
 	CAIN.select = select;
 	CAIN.term = term;
 	CAIN.closePopover = closePopover;
-	CAIN.downloadJson = downloadJson;
+	CAIN.downloadText = downloadText;
+	CAIN.copyText = copyText;
 	CAIN.h = h;
 	CAIN.append = append;
 	CAIN.inlineText = inlineText;

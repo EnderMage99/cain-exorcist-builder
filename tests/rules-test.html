@@ -41,6 +41,7 @@
 <script src="../data/prompts.js"></script>
 <script src="../js/rules.js"></script>
 <script src="../js/hunt.js"></script>
+<script src="../js/transfer.js"></script>
 <script>
 (function () {
 	var R = CAIN.rules;
@@ -530,6 +531,45 @@
 		H.spendAdvance(ss, { kind: "blasphemyPower", blasphemy: "gate", power: "bloom", replace: { blasphemy: "tension", power: "stasis" } });
 		eq("replace a power at the cap", [ss.blasphemies[0].powers, ss.blasphemies[1].powers], [["aegis", "fortress"], ["tear", "maze", "bloom"]]);
 		eq("valid after all that", R.validateCharacter(ss), []);
+
+		group("Export and import");
+		var T = CAIN.transfer;
+		var hero = guardianTension();
+		hero.name = "Ines Varga";
+		H.startMission(hero, {});
+		H.addHook(hero, "Wanted by police");
+		H.addCustomItem(hero, { name: "Lighter", kp: 1, text: "Never runs out." });
+		hero.sinMarks = [{ mark: "eyes", abilities: [{ roll: 6, skill: "surveillance" }] }];
+		H.normalize(hero);
+		var text = T.pack([hero]);
+		var packed = JSON.parse(text);
+		eq("packed file is labelled and versioned", [packed.format, packed.version, packed.characters.length], ["cain-exorcist-builder", 1, 1]);
+		var back = T.unpack(text);
+		eq("round trip gives the same character", [back.error, back.warnings, JSON.stringify(back.characters[0])], [null, [], JSON.stringify(hero)]);
+		var two = T.unpack(T.pack([hero, firebugGate()]));
+		eq("several characters in one file", two.characters.length, 2);
+		var bare = T.unpack(JSON.stringify(guardianTension()));
+		check("a bare character (pre-M6 export) still imports", !bare.error && bare.characters.length === 1);
+		var list = T.unpack(JSON.stringify([guardianTension(), firebugGate()]));
+		check("a plain list of characters imports", !list.error && list.characters.length === 2);
+		check("garbage is refused with a message", !!T.unpack("not json at all").error && T.unpack("not json at all").characters.length === 0);
+		check("a JSON file that isn't characters is refused", !!T.unpack(JSON.stringify({ hello: "world" })).error);
+		check("a newer file version asks for a refresh", T.unpack(JSON.stringify({ format: "cain-exorcist-builder", version: 99, characters: [] })).error.indexOf("newer") >= 0);
+		var old = guardianTension();
+		delete old.hunt; delete old.notes; delete old.settings; delete old.kitNotes; delete old.log;
+		var filled = T.unpack(JSON.stringify(old));
+		check("missing fields are filled in", !filled.error && filled.characters[0].hunt.bursts === 3 && filled.characters[0].settings.psycheBursts === 3 && Array.isArray(filled.characters[0].log));
+		var future = guardianTension();
+		future.name = "Future";
+		future.agendaAbilities.push({ agenda: "beast", ability: "red-muscle" });
+		future.blasphemies.push({ id: "whisper", powers: ["omen"] });
+		var fw = T.unpack(JSON.stringify(future));
+		check("content not in this build loads with warnings", !fw.error && fw.characters.length === 1 && fw.warnings.length === 2 && fw.warnings[0].indexOf("Future") === 0);
+		var broken = guardianTension();
+		delete broken.skills.force;
+		var mixed = T.unpack(T.pack([broken, firebugGate()]));
+		check("a broken entry is skipped, the rest import", !mixed.error && mixed.characters.length === 1 && mixed.warnings[0].indexOf("Skipped entry 1") === 0);
+		eq("file names", [T.fileName([hero]), /^cain-exorcists-\d{4}-\d{2}-\d{2}\.cain\.json$/.test(T.fileName([hero, hero]))], ["Ines-Varga.cain.json", true]);
 
 		group("End of mission");
 		var em = guardianTension();

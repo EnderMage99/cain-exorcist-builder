@@ -39,28 +39,110 @@ window.CAIN = window.CAIN || {};
 		{ id: "M3", text: "Sheet, edit mode", done: true },
 		{ id: "M4", text: "Play mode", done: true },
 		{ id: "M5", text: "Sessions, missions, advances", done: true },
-		{ id: "M6", text: "Sharing by file and link", done: false },
+		{ id: "M6", text: "Export and import", done: true },
 		{ id: "M7", text: "Print view and polish", done: false }
 	];
 
-	var importMessage = "";
+	// Import state for the registry: result messages, characters waiting on a
+	// replace / keep both / skip choice, and the paste box.
+	var transferUi = { message: "", warnings: [], conflicts: [], pasteOpen: false, pasteText: "" };
 
-	// Reads a .cain.json file into the registry. A clashing id gets a fresh one.
+	// Saves imported characters. Ones already in this browser wait for a choice.
+	function importText(text, source) {
+		var result = CAIN.transfer.unpack(text);
+		transferUi.warnings = result.warnings;
+		if (result.error) {
+			transferUi.message = result.error;
+			render();
+			return;
+		}
+		var saved = [];
+		result.characters.forEach(function (c) {
+			if (store.get(c.id)) transferUi.conflicts.push(c);
+			else { store.save(c); saved.push(c.name || "an exorcist"); }
+		});
+		var parts = [];
+		if (saved.length) parts.push("Imported " + saved.join(", ") + " from " + source + ".");
+		if (transferUi.conflicts.length) parts.push(transferUi.conflicts.length + " already in this browser: choose below.");
+		transferUi.message = parts.join(" ");
+		transferUi.pasteOpen = false;
+		transferUi.pasteText = "";
+		render();
+	}
+
 	function importFile(file) {
 		var reader = new FileReader();
-		reader.onload = function () {
-			try {
-				var ch = JSON.parse(reader.result);
-				if (!ch || ch.schema !== 1 || !ch.skills || !ch.hunt) throw new Error("not a character");
-				if (store.get(ch.id)) ch.id = R.newCharacter().id;
-				store.save(ch);
-				importMessage = "Imported " + (ch.name || "an exorcist") + ".";
-			} catch (e) {
-				importMessage = "That file isn't a CAIN exorcist export.";
-			}
-			render();
-		};
+		reader.onload = function () { importText(String(reader.result), file.name); };
 		reader.readAsText(file);
+	}
+
+	function resolveConflict(c, choice) {
+		transferUi.conflicts = transferUi.conflicts.filter(function (x) { return x !== c; });
+		if (choice === "replace") {
+			store.save(c);
+			transferUi.message = "Replaced " + (c.name || "the exorcist") + " with the imported copy.";
+		} else if (choice === "both") {
+			c.id = R.newCharacter().id;
+			c.name = (c.name || "Unnamed") + " (imported)";
+			store.save(c);
+			transferUi.message = "Kept both: the imported one is " + c.name + ".";
+		} else {
+			transferUi.message = "Skipped " + (c.name || "the exorcist") + ".";
+		}
+		render();
+	}
+
+	function conflictCard(c) {
+		var existing = store.get(c.id);
+		var when = existing && existing.updated ? new Date(existing.updated).toLocaleString() : "unknown";
+		return h("div", { class: "card conflict" },
+			h("p", null, h("strong", null, c.name || "Unnamed"), " is already in this browser (last changed " + when + ")."),
+			h("div", { class: "btn-row" },
+				h("button", { class: "btn small", type: "button", onclick: function () { resolveConflict(c, "replace"); } }, "Replace mine"),
+				h("button", { class: "btn small ghost", type: "button", onclick: function () { resolveConflict(c, "both"); } }, "Keep both"),
+				h("button", { class: "btn small ghost", type: "button", onclick: function () { resolveConflict(c, "skip"); } }, "Skip")));
+	}
+
+	function transferArea() {
+		var out = [];
+		if (transferUi.message) out.push(h("p", { class: "transfer-message", role: "status" }, transferUi.message));
+		if (transferUi.warnings.length) {
+			out.push(h("div", { class: "card warn" },
+				h("div", { class: "label" }, "Imported with notes"),
+				h("ul", { class: "plain-list" }, transferUi.warnings.map(function (w) { return h("li", null, w); }))));
+		}
+		transferUi.conflicts.forEach(function (c) { out.push(conflictCard(c)); });
+		if (transferUi.pasteOpen) {
+			var area = h("textarea", { class: "input paste-box", rows: 6, placeholder: "Paste an exorcist copied with \"Copy as text\"", "aria-label": "Pasted exorcist", value: transferUi.pasteText });
+			area.addEventListener("input", function () { transferUi.pasteText = area.value; });
+			out.push(h("div", { class: "card" },
+				h("div", { class: "card-head" }, h("h2", null, "Paste an exorcist"),
+					h("button", { class: "mini-btn", type: "button", onclick: function () { transferUi.pasteOpen = false; render(); } }, "Close")),
+				area,
+				h("div", { class: "btn-row" }, h("button", { class: "btn small", type: "button", onclick: function () {
+					if (area.value.trim()) importText(area.value, "pasted text");
+				} }, "Import"))));
+		}
+		return out;
+	}
+
+	// Dropping a file anywhere on the registry imports it.
+	function dropZone(el) {
+		el.addEventListener("dragover", function (e) {
+			if (!e.dataTransfer || [].indexOf.call(e.dataTransfer.types, "Files") < 0) return;
+			e.preventDefault();
+			el.classList.add("dropping");
+		});
+		el.addEventListener("dragleave", function (e) {
+			if (!el.contains(e.relatedTarget)) el.classList.remove("dropping");
+		});
+		el.addEventListener("drop", function (e) {
+			e.preventDefault();
+			el.classList.remove("dropping");
+			var file = e.dataTransfer.files && e.dataTransfer.files[0];
+			if (file) importFile(file);
+		});
+		return el;
 	}
 
 	function characterCard(c) {
@@ -82,16 +164,27 @@ window.CAIN = window.CAIN || {};
 		var characters = store.list().slice().sort(function (a, b) { return (b.updated || 0) - (a.updated || 0); });
 		var draft = store.getDraft();
 		var fileInput = h("input", { type: "file", accept: ".json,application/json", class: "visually-hidden", id: "import-file",
-			onchange: function () { if (fileInput.files[0]) importFile(fileInput.files[0]); } });
+			onchange: function () { if (fileInput.files[0]) importFile(fileInput.files[0]); fileInput.value = ""; } });
 
 		var actions = h("div", { class: "head-actions" },
 			h("a", { class: "btn", href: "#/new" }, draft ? "Continue registration" : "Register exorcist"),
 			h("button", { class: "btn ghost", type: "button", title: "Roll a random legal exorcist and review it", onclick: function () {
 				CAIN.registration.quickExorcist();
 				location.hash = "#/new";
-			} }, "Quick exorcist"),
-			h("label", { class: "btn ghost", for: "import-file" }, "Import"),
-			fileInput);
+			} }, "Quick exorcist"));
+
+		var transferBar = h("div", { class: "transfer-bar" },
+			h("span", { class: "label" }, "Move exorcists between browsers or players"),
+			h("label", { class: "btn small ghost", for: "import-file", title: "Import a .cain.json file. You can also drop a file anywhere on this page." }, "Import file"),
+			fileInput,
+			h("button", { class: "btn small ghost", type: "button", onclick: function () { transferUi.pasteOpen = !transferUi.pasteOpen; render(); } }, "Paste text"),
+			characters.length ? h("button", { class: "btn small ghost", type: "button", title: "Download every exorcist in this browser as one backup file", onclick: function () {
+				var all = store.list();
+				CAIN.downloadText(CAIN.transfer.fileName(all), CAIN.transfer.pack(all));
+				transferUi.message = "Exported " + all.length + " exorcist" + (all.length === 1 ? "" : "s") + " to one file.";
+				render();
+			} }, "Export all") : null,
+			h("span", { class: "note drop-hint" }, "or drop a file on this page"));
 
 		var draftNote = draft ? h("div", { class: "card draft-note" },
 			h("span", null, "Registration in progress: ", h("strong", null, draft.character.name || "unnamed exorcist"), " (" + draft.step + " step)."),
@@ -106,13 +199,14 @@ window.CAIN = window.CAIN || {};
 		var powers = CAIN.blasphemies.reduce(function (n, b) { return n + b.powers.length; }, 0);
 		var abilities = CAIN.agendas.reduce(function (n, a) { return n + a.abilities.length; }, 0);
 
-		return [
+		return dropZone(h("div", { class: "registry-page" },
 			h("div", { class: "page-head" },
 				h("div", null,
 					h("div", { class: "kicker" }, "CASTLE personnel files"),
 					h("h1", null, "Registered exorcists")),
 				actions),
-			importMessage ? h("p", { class: "note", role: "status" }, importMessage) : null,
+			transferBar,
+			transferArea(),
 			draftNote,
 			list,
 			h("div", { class: "grid", style: "margin-top:24px" },
@@ -129,10 +223,9 @@ window.CAIN = window.CAIN || {};
 						h("li", null, "Blasphemies", h("span", null, CAIN.blasphemies.map(function (b) { return b.name; }).join(", "))),
 						h("li", null, "Blasphemy powers", h("span", null, String(powers) + " + Blast")),
 						h("li", null, "Sin marks", h("span", null, CAIN.sinMarks.map(function (m) { return m.name; }).join(", "))),
-						h("li", null, "Kit shop items", h("span", null, String(CAIN.kit.length)))),
+						h("li", null, "Kit items", h("span", null, String(CAIN.kit.length)))),
 					h("p", { class: "note", style: "margin-top:10px" }, "Browse it all under Doctrine. ",
-						h("a", { href: "tests/rules-test.html" }, "Run the rules checks"), ".")))
-		];
+						h("a", { href: "tests/rules-test.html" }, "Run the rules checks"), ".")))));
 	}
 
 	// Doctrine (content browser)
@@ -319,7 +412,7 @@ window.CAIN = window.CAIN || {};
 		if (lastRoute !== route.id) {
 			window.scrollTo(0, 0);
 			lastRoute = route.id;
-			if (route.id !== "registry") importMessage = "";
+			if (route.id !== "registry") { transferUi.message = ""; transferUi.warnings = []; }
 		} else {
 			window.scrollTo(0, y);
 		}

@@ -7,9 +7,16 @@ spirit of D&D Beyond and COMP/CON. Made for one group's campaign.
 
 ## Using it
 
-No accounts. Characters are kept in your own browser. To move one to another
-device or player, use **Export** on its sheet and **Import** on the Registry.
-Share links arrive in milestone M6.
+No accounts. Characters are kept in your own browser, so back them up and
+move them as files or text:
+
+- **On a sheet:** **Export file** downloads that exorcist as a `.cain.json`
+  file; **Copy as text** copies it to paste into Discord or a message.
+- **On the Registry:** **Import file**, or drop a file anywhere on the
+  page, or **Paste text**. **Export all** saves every exorcist in this
+  browser as one dated backup file.
+- Importing an exorcist that's already in your browser asks whether to
+  replace yours, keep both, or skip.
 
 ## Status
 
@@ -71,6 +78,7 @@ js/rules.js       rules engine: derived stats, validation, dice (no DOM)
 js/hunt.js        play and between-mission actions (no DOM)
 js/ui.js          DOM helpers, glossary popover
 js/store.js       saved characters and the registration draft
+js/transfer.js    export and import: the .cain.json format and its checks
 js/registration.js character creation steps
 js/sheet.js       the one-page exorcist sheet and the character screen
 js/actions.js     the action bar, its panels, and alerts

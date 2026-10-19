@@ -251,15 +251,19 @@ Each milestone ends with its test checklist passing and a push to Pages.
 - **Test:** take a character from creation to CAT 3 through scripted
   sessions; buy Meal Plan and see KP rise; force an overflow and gain a mark.
 
-### M6 - Sharing without accounts
-- Export / import a character as a `.json` file.
-- Share link: the character compressed into the URL fragment
-  (`#c=...`, deflate + base64url via the browser's `CompressionStream`).
-  Opening it shows a read-only sheet with "Save a copy".
-- Admin page: paste several share links to see the party side by side
-  (stress, injuries, sin, hooks). Read-only; it is a snapshot, not live.
-- **Test:** send a link from a phone to a desktop, open it, save a copy;
-  round-trip export/import gives an identical character.
+### M6 - Export and import (done)
+- A labelled, versioned `.cain.json` format holding one or more
+  characters (`js/transfer.js`). Older bare-character exports still import.
+- Sheet: **Export file** and **Copy as text** (for Discord). Registry:
+  **Import file**, drop a file anywhere on the page, **Paste text**, and
+  **Export all** as one dated backup.
+- Imports are checked: broken entries are skipped with a note, missing
+  fields are filled in, content not in this build loads with a warning.
+- A character already in the browser asks: Replace mine, Keep both, Skip.
+- **Tested:** round trips are identical; the click-through exports, copies,
+  pastes back, resolves conflicts, drops a file and refuses junk.
+- Not built: share links and an Admin party page. Possible later; files
+  and pasted text cover moving characters between players for now.
 
 ### M7 - Polish
 - Print view that follows the official sheet's page order.

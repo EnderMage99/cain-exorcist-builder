@@ -573,11 +573,6 @@ window.CAIN = window.CAIN || {};
 
 	CAIN.bubbles = bubbles;
 
-	function fileName(ch) {
-		var base = (ch.name || "exorcist").replace(/[^A-Za-z0-9 _-]+/g, "").trim().replace(/\s+/g, "-") || "exorcist";
-		return base + ".cain.json";
-	}
-
 	function duplicate(ch) {
 		var copy = JSON.parse(JSON.stringify(ch));
 		copy.id = R.newCharacter().id;
@@ -648,7 +643,15 @@ window.CAIN = window.CAIN || {};
 				h("div", { class: "head-actions" },
 					status,
 					h("button", { class: "btn ghost small", type: "button", onclick: function () { location.hash = "#/c/" + duplicate(ch).id; } }, "Duplicate"),
-					h("button", { class: "btn ghost small", type: "button", onclick: function () { CAIN.downloadJson(fileName(ch), ch); } }, "Export"),
+					h("button", { class: "btn ghost small", type: "button", title: "Download this exorcist as a .cain.json file", onclick: function () {
+						CAIN.downloadText(CAIN.transfer.fileName([ch]), CAIN.transfer.pack([ch]));
+						ctx.flash(["Exported " + (ch.name || "this exorcist") + " as " + CAIN.transfer.fileName([ch]) + ". Import it on the Registry in any browser."]);
+					} }, "Export file"),
+					h("button", { class: "btn ghost small", type: "button", title: "Copy this exorcist as text, to paste into Discord or another browser", onclick: function () {
+						CAIN.copyText(CAIN.transfer.pack([ch]), function (ok) {
+							ctx.flash([ok ? "Copied " + (ch.name || "this exorcist") + " as text. Paste it on the Registry with \"Paste text\"." : "Couldn't copy. Use Export file instead."]);
+						});
+					} }, "Copy as text"),
 					del));
 			var dead = ch.dead ? h("section", { class: "card alert" },
 				h("div", { class: "alert-title" }, "Deceased"),
@@ -669,6 +672,5 @@ window.CAIN = window.CAIN || {};
 		}
 	};
 
-	CAIN.sheetFileName = fileName;
 	CAIN.duplicateCharacter = duplicate;
 })();
