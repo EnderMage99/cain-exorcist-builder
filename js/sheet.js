@@ -381,14 +381,14 @@ window.CAIN = window.CAIN || {};
 		});
 		var markAdd = null;
 		if (this.editable) {
-			var options = [];
-			CAIN.sinMarks.forEach(function (m) {
+			// Grouped by mark with short names, so the list stays narrow and readable.
+			var options = CAIN.sinMarks.map(function (m) {
 				var have = ch.sinMarks.filter(function (o) { return o.mark === m.id; })[0];
 				var faces = have ? have.abilities.map(function (a) { return a.roll; }) : [];
-				m.abilities.forEach(function (ab) {
-					if (faces.indexOf(ab.roll) < 0) options.push({ value: m.id + ":" + ab.roll, label: m.name + " " + ab.roll + ": " + ab.text.slice(0, 48) + (ab.text.length > 48 ? "..." : "") });
-				});
-			});
+				return { group: m.name, options: m.abilities.filter(function (ab) { return faces.indexOf(ab.roll) < 0; }).map(function (ab) {
+					return { value: m.id + ":" + ab.roll, label: ab.roll + ": " + (ab.short || ab.text) };
+				}) };
+			}).filter(function (g) { return g.options.length; });
 			var picked = "";
 			markAdd = options.length ? h("div", { class: "add-row" },
 				CAIN.select(null, "", options, function (v) { picked = v; }, { placeholder: "Add a sin mark ability by hand", aria: "Add a sin mark ability" }),

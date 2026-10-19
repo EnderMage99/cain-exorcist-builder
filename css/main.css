@@ -1265,6 +1265,14 @@ label.btn { user-select: none; }
 
 .select { width: auto; max-width: 100%; padding: 6px 8px; cursor: pointer; }
 
+/* Dropdowns need solid colours: the browser draws the open list from them, and the
+   see-through focus tint made it light text on a near-white list in dark mode. */
+.select, .select:focus { background-color: var(--paper-2); color: var(--ink); }
+
+.select option, .select optgroup { background-color: var(--paper); color: var(--ink); }
+
+.select optgroup { font-style: normal; font-weight: 700; }
+
 .select-field { display: inline-flex; flex-direction: column; gap: 4px; min-width: 0; max-width: 100%; }
 
 .add-row .select { flex: 1; min-width: 0; }
