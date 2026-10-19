@@ -2425,6 +2425,19 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 
 .burst-all { font-size: 8px; letter-spacing: 0.04em; margin-top: -1px; }
 
+/* Virtue cards: bond track on the left, high blasphemy on the right. */
+@media (min-width: 900px) {
+	.virtue-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 24px; align-items: start; }
+
+	.virtue-cols .virtue-stricture { margin-top: 4px; }
+
+	.virtue-rules { columns: 3 260px; column-gap: 28px; }
+
+	.virtue-rules .card-head { column-span: all; }
+
+	.virtue-rules p { break-inside: avoid; max-width: none; }
+}
+
 /* Kit drawings from the book (Occult / Medical). */
 .entry.has-pic { display: flow-root; }
 
@@ -2700,7 +2713,7 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 }
 
 @media (min-width: 1300px) {
-	.page, .masthead-inner { max-width: 1640px; }
+	.page, .masthead-inner { max-width: 1440px; padding-left: 40px; padding-right: 40px; }
 
 	.sheet-cols { display: block; columns: 440px; column-gap: 16px; }
 

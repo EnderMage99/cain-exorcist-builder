@@ -592,19 +592,22 @@ window.CAIN = window.CAIN || {};
 						if (bonding) ch.virtueBonding = null;
 						self.onChange(true);
 					}) : null),
-				bonding ? h("div", { class: "passive virtue-stricture" },
-					h("div", { class: "entry-name" }, "Stricture", h("span", { class: "tag stamp" }, "While bonding")),
-					h("p", null, v.stricture),
-					h("p", { class: "tiny" }, "Ignore it for one roll by taking 2 nonlethal stress.")) : null,
-				CAIN.virtueBondList(v, d.cat, owned.rank),
-				CAIN.virtuePowers(v, d.cat, owned.rank, function (p) {
-					if (!p.choice || owned.rank < p.rank || !self.editable) return null;
-					return owned.chosen ? h("p", { class: "tag stamp" }, "Chosen")
-						: h("button", { class: "mini-btn", type: "button", onclick: function () {
-							owned.chosen = true;
-							self.change(p.name, "not chosen", "chosen (irreversible)");
-						} }, "Choose " + p.name + " (irreversible)");
-				}));
+				h("div", { class: "virtue-cols" },
+					h("div", null,
+						bonding ? h("div", { class: "passive virtue-stricture" },
+							h("div", { class: "entry-name" }, "Stricture", h("span", { class: "tag stamp" }, "While bonding")),
+							h("p", null, v.stricture),
+							h("p", { class: "tiny" }, "Ignore it for one roll by taking 2 nonlethal stress.")) : null,
+						CAIN.virtueBondList(v, d.cat, owned.rank)),
+					h("div", null,
+						CAIN.virtuePowers(v, d.cat, owned.rank, function (p) {
+							if (!p.choice || owned.rank < p.rank || !self.editable) return null;
+							return owned.chosen ? h("p", { class: "tag stamp" }, "Chosen")
+								: h("button", { class: "mini-btn", type: "button", onclick: function () {
+									owned.chosen = true;
+									self.change(p.name, "not chosen", "chosen (irreversible)");
+								} }, "Choose " + p.name + " (irreversible)");
+						}))));
 		});
 		var untracked = CAIN.virtues.filter(function (v) { return !ch.virtues.some(function (o) { return o.id === v.id; }); });
 		var add = this.editable && untracked.length ? h("div", { class: "subrow" },

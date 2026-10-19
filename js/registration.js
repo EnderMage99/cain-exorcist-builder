@@ -306,10 +306,9 @@ window.CAIN = window.CAIN || {};
 									}
 									changed(true);
 								} }, "Bond on first mission")))),
-					h("div", { class: "subhead" }, "Bond abilities"),
-					CAIN.virtueBondList(v, cat, owned ? owned.rank : undefined),
-					h("div", { class: "subhead" }, "High blasphemy"),
-					CAIN.virtuePowers(v, cat, owned ? owned.rank : undefined));
+					h("div", { class: "virtue-cols" },
+						h("div", null, h("div", { class: "subhead" }, "Bond abilities"), CAIN.virtueBondList(v, cat, owned ? owned.rank : undefined)),
+						h("div", null, h("div", { class: "subhead" }, "High blasphemy"), CAIN.virtuePowers(v, cat, owned ? owned.rank : undefined))));
 			})));
 	}
 

@@ -315,13 +315,16 @@ window.CAIN = window.CAIN || {};
 						h("dt", null, "Likes"), h("dd", null, v.likes.join(", ")),
 						h("dt", null, "Dislikes"), h("dd", null, v.dislikes.join(", ")),
 						h("dt", null, "Favorite food"), h("dd", null, v.food)))),
-			h("div", { class: "passive virtue-stricture" },
-				h("div", { class: "entry-name" }, "Stricture", h("span", { class: "tag stamp" }, "While bonding")),
-				h("p", null, v.stricture)),
-			h("div", { class: "subhead" }, "Bond abilities"),
-			CAIN.virtueBondList(v, cat),
-			h("div", { class: "subhead" }, "High blasphemy"),
-			CAIN.virtuePowers(v, cat));
+			h("div", { class: "virtue-cols" },
+				h("div", null,
+					h("div", { class: "passive virtue-stricture" },
+						h("div", { class: "entry-name" }, "Stricture", h("span", { class: "tag stamp" }, "While bonding")),
+						h("p", null, v.stricture)),
+					h("div", { class: "subhead" }, "Bond abilities"),
+					CAIN.virtueBondList(v, cat)),
+				h("div", null,
+					h("div", { class: "subhead" }, "High blasphemy"),
+					CAIN.virtuePowers(v, cat))));
 	}
 
 	function virtuesView(cat) {
