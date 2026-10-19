@@ -11,7 +11,9 @@ No accounts. Characters are kept in your own browser, so back them up and
 move them as files or text:
 
 - **On a sheet:** **Export file** downloads that exorcist as a `.cain.json`
-  file; **Copy as text** copies it to paste into Discord or a message.
+  file; **Copy as text** copies it to paste into Discord or a message;
+  **Print** prints the sheet on four pages in the official sheet's order
+  (or choose "Save as PDF" in the print window).
 - **On the Registry:** **Import file**, or drop a file anywhere on the
   page, or **Paste text**. **Export all** saves every exorcist in this
   browser as one dated backup file.

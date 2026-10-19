@@ -265,10 +265,19 @@ Each milestone ends with its test checklist passing and a push to Pages.
 - Not built: share links and an Admin party page. Possible later; files
   and pasted text cover moving characters between players for now.
 
-### M7 - Polish
-- Print view that follows the official sheet's page order.
-- Keyboard and screen reader pass, reduced motion.
-- **Test:** print preview of a test character fits on 3 pages.
+### M7 - Polish (done)
+- **Print** on the sheet: four printed pages in the official sheet's order
+  (exorcist; category, kit and sin; registered abilities; background),
+  black on white in either theme, site chrome and buttons hidden, text
+  boxes grown to their contents. Save as PDF from the print window.
+- Keyboard: a skip link, focus moves into a panel when it opens, Esc
+  closes it, each screen names the browser tab.
+- Screen readers: every bubble, stepper button and text box is labelled.
+- Reduced motion: no smooth scrolling or transitions when the system asks.
+- **Tested:** printed a full test character to PDF (4 pages, one per sheet
+  page); axe-core found no violations on 46 screens and panels in both
+  themes after fixing contrast (muted grey, dark-mode stamp red, CAT
+  triangle text) and the skip link's landmark.
 
 ## After the test build
 

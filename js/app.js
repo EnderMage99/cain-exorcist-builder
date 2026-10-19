@@ -40,7 +40,7 @@ window.CAIN = window.CAIN || {};
 		{ id: "M4", text: "Play mode", done: true },
 		{ id: "M5", text: "Sessions, missions, advances", done: true },
 		{ id: "M6", text: "Export and import", done: true },
-		{ id: "M7", text: "Print view and polish", done: false }
+		{ id: "M7", text: "Print view and polish", done: true }
 	];
 
 	// Import state for the registry: result messages, characters waiting on a
@@ -413,7 +413,21 @@ window.CAIN = window.CAIN || {};
 		} else {
 			window.scrollTo(0, y);
 		}
+		// The browser tab names the screen, e.g. "Ines Varga - CAIN Exorcist Registry".
+		var heading = app.querySelector("h1");
+		var name = heading ? heading.textContent.trim() : "";
+		document.title = name && route.id !== "registry" ? name + " - CAIN Exorcist Registry" : "CAIN Exorcist Registry";
 	}
+
+	// Keyboard users can jump past the top bar. It focuses the content rather than
+	// following a link, since links here change the screen.
+	var skip = h("a", { class: "skip-link", href: "#", onclick: function (e) {
+		e.preventDefault();
+		app.focus();
+		app.scrollIntoView();
+	} }, "Skip to content");
+	var header = document.querySelector(".masthead");
+	header.insertBefore(skip, header.firstChild);
 
 	CAIN.app = { render: render };
 	window.addEventListener("hashchange", render);

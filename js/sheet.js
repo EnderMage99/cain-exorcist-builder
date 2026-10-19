@@ -83,9 +83,11 @@ window.CAIN = window.CAIN || {};
 			return h("div", { class: "field" + (opts.wide ? " wide" : "") }, labelEl,
 				h("div", { class: "field-value" + (value ? "" : " empty") }, value || opts.empty || "-"));
 		}
+		// A field without a visible label still needs a name for screen readers.
+		var aria = label ? null : (opts.aria || opts.placeholder || null);
 		var input = opts.multiline
-			? h("textarea", { id: id, class: "input", rows: opts.rows || 2, placeholder: opts.placeholder || "", value: value })
-			: h("input", { id: id, class: "input", type: "text", placeholder: opts.placeholder || "", value: value, autocomplete: "off" });
+			? h("textarea", { id: id, class: "input", rows: opts.rows || 2, placeholder: opts.placeholder || "", value: value, "aria-label": aria })
+			: h("input", { id: id, class: "input", type: "text", placeholder: opts.placeholder || "", value: value, autocomplete: "off", "aria-label": aria });
 		input.addEventListener("input", function () {
 			obj[key] = input.value;
 			self.onChange(false);
@@ -343,7 +345,7 @@ window.CAIN = window.CAIN || {};
 			h("p", { class: "tiny" }, "Spend KP to pull out the following items any time:"),
 			h("div", { class: "kit-box" },
 				h("ul", { class: "kit-typed" }, items),
-				this.field(null, "kitNotes", { multiline: true, rows: 3, placeholder: "Description: anything else on your kit list", empty: "" })),
+				this.field(null, "kitNotes", { multiline: true, rows: 3, placeholder: "Description: anything else on your kit list", aria: "Other kit", empty: "" })),
 			h("div", { class: "btn-row" }, this.openButton("Add or create items...", "shop")),
 			this.field("Service weapons look", "weaponLook", { multiline: true, placeholder: "What your service weapons look like", wide: true }),
 			h("div", { class: "stepper-row" },
@@ -596,12 +598,23 @@ window.CAIN = window.CAIN || {};
 	// (e.g. which custom blasphemy to edit).
 	var openPanels = {};
 	var panelArgs = {};
+	// The exorcist on screen, so Esc can close their open panel.
+	var shownId = null;
+
+	document.addEventListener("keydown", function (e) {
+		if (e.key !== "Escape" || !shownId || !openPanels[shownId]) return;
+		if (!/^#\/c\//.test(location.hash)) return;
+		openPanels[shownId] = null;
+		panelArgs[shownId] = undefined;
+		CAIN.app.render();
+	});
 
 	// Character screen: #/c/<id>. Old /play and /between links land here too.
 	CAIN.screens.sheet = {
 		id: "registry",
 		render: function (id) {
 			var ch = CAIN.store.get(id);
+			shownId = ch ? ch.id : null;
 			if (!ch) {
 				return h("div", { class: "card empty" },
 					h("h2", null, "No such file"),
@@ -638,7 +651,13 @@ window.CAIN = window.CAIN || {};
 					openPanels[ch.id] = same && arg === undefined ? null : panel;
 					panelArgs[ch.id] = arg;
 					CAIN.app.render();
-					if (openPanels[ch.id]) window.scrollTo({ top: 0, behavior: "smooth" });
+					if (openPanels[ch.id]) {
+						var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+						window.scrollTo({ top: 0, behavior: calm ? "auto" : "smooth" });
+						// Keyboard and screen reader users land in the panel that just opened.
+						var heading = document.querySelector(".action-panel h2");
+						if (heading) { heading.setAttribute("tabindex", "-1"); heading.focus({ preventScroll: true }); }
+					}
 				},
 				close: function () { openPanels[ch.id] = null; panelArgs[ch.id] = undefined; CAIN.app.render(); },
 				// Closes the panel and shows what the action did.
@@ -673,6 +692,7 @@ window.CAIN = window.CAIN || {};
 							ctx.flash([ok ? "Copied " + (ch.name || "this exorcist") + " as text. Paste it on the Registry with \"Paste text\"." : "Couldn't copy. Use Export file instead."]);
 						});
 					} }, "Copy as text"),
+					h("button", { class: "btn ghost small", type: "button", title: "Print the sheet, or save it as a PDF from the print window", onclick: function () { window.print(); } }, "Print"),
 					del));
 			var dead = ch.dead ? h("section", { class: "card alert" },
 				h("div", { class: "alert-title" }, "Deceased"),
