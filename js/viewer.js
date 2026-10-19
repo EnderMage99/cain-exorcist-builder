@@ -21,6 +21,8 @@ window.CAIN = window.CAIN || {};
 		if (kind === "agenda") return { kind: kind, item: R.agenda(id) };
 		if (kind === "blasphemy") return { kind: kind, item: R.blasphemy(id) };
 		if (kind === "virtue") return { kind: kind, item: R.virtue(id) };
+		if (kind === "sinmark") return { kind: kind, item: R.sinMark(id) };
+		if (kind === "kit") return { kind: kind, item: CAIN.kit.filter(function (k) { return k.id === id; })[0] || null };
 		return { kind: kind, item: null };
 	}
 
@@ -94,6 +96,40 @@ window.CAIN = window.CAIN || {};
 				})));
 	}
 
+	// Sin mark: the location, its look, and the six abilities by d6.
+	function sinMarkSpread(m, cat) {
+		return h("article", { class: "spread mark-spread" },
+			h("div", { class: "mark-spread-head" },
+				h("span", { class: "mark-spread-roll" }, String(m.roll)),
+				h("div", null,
+					h("h2", { class: "spread-title" }, m.name),
+					h("p", { class: "spread-lead" }, "Sin mark, location " + m.roll + " on the d6"),
+					h("div", { class: "spread-fact" }, h("p", null, h("strong", null, "Appearance or manifestation: "), m.appearance)))),
+			h("ol", { class: "mark-spread-list" }, m.abilities.map(function (a) {
+				return h("li", null, h("span", { class: "mark-spread-num" }, String(a.roll)),
+					h("div", null, a.short ? h("h3", null, a.short) : null, CAIN.richText(a.text, cat)));
+			})));
+	}
+
+	// Kit item: its picture, prices and tags, and the full text.
+	function kitSpread(k) {
+		var pic = CAIN.kitPicture(k, "kit-spread-pic");
+		return h("article", { class: "spread kit-spread" + (pic ? "" : " no-pic") },
+			pic,
+			h("div", null,
+				h("h2", { class: "kit-spread-name" }, k.name),
+				h("p", { class: "spread-lead" }, k.category),
+				credit(k),
+				h("div", { class: "tags" },
+					h("span", { class: "tag" }, k.scrip === null ? "Auction" : k.scrip + " scrip"),
+					k.kp !== null ? h("span", { class: "tag" }, k.kp + " KP") : h("span", { class: "tag" }, "Not pulled out"),
+					(k.tags || []).map(function (t) { return h("span", { class: "tag" }, t); })),
+				h("div", { class: "kit-spread-text" }, CAIN.richText(k.text, 1)),
+				k.quote ? h("p", { class: "kit-quote" }, "201c" + k.quote + "201d") : null,
+				k.credit ? h("p", { class: "tiny" }, k.credit) : null,
+				k.stock ? h("p", { class: "tiny" }, k.stock >= 99 ? "Stock: plenty" : "Stock: " + k.stock) : null));
+	}
+
 	// Agenda: the card itself, larger.
 	function agendaSpread(a, cat) {
 		var look = CAIN.agendaLook(a);
@@ -115,6 +151,8 @@ window.CAIN = window.CAIN || {};
 		var cat = currentCat();
 		if (found.kind === "blasphemy") return blasphemySpread(found.item, cat);
 		if (found.kind === "virtue") return virtueSpread(found.item, cat);
+		if (found.kind === "sinmark") return sinMarkSpread(found.item, cat);
+		if (found.kind === "kit") return kitSpread(found.item);
 		return agendaSpread(found.item, cat);
 	}
 

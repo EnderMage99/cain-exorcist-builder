@@ -233,22 +233,6 @@ window.CAIN = window.CAIN || {};
 		render();
 	}
 
-	function agendaCard(a, cat) {
-		var look = CAIN.agendaLook(a);
-		return h("article", { class: "card " + look.class, style: look.style, "data-view": "agenda:" + a.id, tabindex: "0", "aria-label": "Open " + a.name },
-			CAIN.agendaHead(a),
-			a.items.length === 0 ? null : h("div", { class: "ag-items" }, h("span", { class: "ag-label" }, "Items:"),
-				h("ul", { class: "items" }, a.items.map(function (it) {
-					return h("li", { class: it.bold ? "bold" : null }, it.text);
-				}))),
-			h("div", { class: "ag-label" }, "Abilities:"),
-			h("ul", { class: "entries ag-abilities" }, a.abilities.map(function (ab) {
-				return h("li", { class: "entry" }, h("div", { class: "entry-name" }, ab.name), richText(ab.text, cat));
-			})),
-			a.note ? h("p", { class: "agenda-note" }, a.note) : null,
-			CAIN.agendaFoot());
-	}
-
 	function powerEntry(p, cat) {
 		return h("li", { class: "entry" },
 			CAIN.powerHead(p),
@@ -275,71 +259,21 @@ window.CAIN = window.CAIN || {};
 			CAIN.blasExtras(b, cat));
 	}
 
-	function sinMarkCard(m, cat) {
-		return h("article", { class: "card" },
-			h("div", { class: "card-head" }, h("h2", { class: "goth" }, m.name), h("span", { class: "label" }, "Location " + m.roll)),
-			h("p", { class: "note" }, m.appearance),
-			h("ul", { class: "entries" }, m.abilities.map(function (ab) {
-				return h("li", { class: "entry" }, h("div", { class: "entry-name" }, "d6: " + ab.roll), richText(ab.text, cat));
-			})));
-	}
-
-	function virtueCard(v, cat) {
-		var th = CAIN.blasTheme(v);
-		return h("article", { class: "card blas-card virtue-card " + th.class, style: th.style, "data-view": "virtue:" + v.id, tabindex: "0", "aria-label": "Open " + v.name },
-			h("div", { class: "blas-intro" },
-				CAIN.virtuePortrait(v),
-				h("div", { class: "blas-intro-text" },
-					h("div", { class: "card-head" },
-						h("h2", { class: "blas-title" }, v.name),
-						h("span", { class: "label" }, v.epithet)),
-					CAIN.sourceBadge(v),
-					h("p", { class: "note" }, v.flavor),
-					h("dl", { class: "virtue-facts" },
-						h("dt", null, "Likes"), h("dd", null, v.likes.join(", ")),
-						h("dt", null, "Dislikes"), h("dd", null, v.dislikes.join(", ")),
-						h("dt", null, "Favorite food"), h("dd", null, v.food)))),
-			h("div", { class: "virtue-cols" },
-				h("div", null,
-					h("div", { class: "passive virtue-stricture" },
-						h("div", { class: "entry-name" }, "Stricture", h("span", { class: "tag stamp" }, "While bonding")),
-						h("p", null, v.stricture),
-						v.strictureCost ? h("p", { class: "tiny" }, v.strictureCost) : null),
-					h("div", { class: "subhead" }, "Bond abilities"),
-					CAIN.virtueBondList(v, cat)),
-				h("div", null,
-					h("div", { class: "subhead" }, "High blasphemy"),
-					CAIN.virtuePowers(v, cat))));
-	}
-
 	function virtuesView(cat) {
-		return h("div", { class: "grid" },
-			h("article", { class: "card virtue-rules" },
-				h("div", { class: "card-head" }, h("h2", null, "Virtue bonds"), h("span", { class: "label" }, "Games for Freaks, issue 1")),
-				h("p", null, "Virtues are CAIN's six living weapons of last resort, background mentors your exorcist can study under or emulate between missions. At the start of any mission, pick a virtue to bond with: you gain its rank 0 ability at once. Survive the mission and the bond rises by 1, to III, granting each ability in turn. Bonds are permanent, and you can bond with a different virtue each mission, so you can hold several."),
-				h("p", null, CAIN.virtueRules.stricture),
-				h("p", null, CAIN.virtueRules.highBlasphemy)),
-			CAIN.virtues.map(function (v) { return virtueCard(v, cat); }),
-			(CAIN.virtueSections || []).map(function (sec) {
+		return h("div", { class: "virtues-view" },
+			h("div", { class: "grid" },
+				h("article", { class: "card virtue-rules" },
+					h("div", { class: "card-head" }, h("h2", null, "Virtue bonds"), h("span", { class: "label" }, "Games for Freaks, issue 1")),
+					h("p", null, "Virtues are CAIN's six living weapons of last resort, background mentors your exorcist can study under or emulate between missions. At the start of any mission, pick a virtue to bond with: you gain its rank 0 ability at once. Survive the mission and the bond rises by 1, to III, granting each ability in turn. Bonds are permanent, and you can bond with a different virtue each mission, so you can hold several."),
+					h("p", null, CAIN.virtueRules.stricture),
+					h("p", null, CAIN.virtueRules.highBlasphemy))),
+			CAIN.tileGrid("virtue", CAIN.virtues),
+			h("div", { class: "grid" }, (CAIN.virtueSections || []).map(function (sec) {
 				return h("article", { class: "card" + CAIN.sourceClass(sec) },
 					h("div", { class: "card-head" }, h("h2", null, sec.name), h("span", { class: "label" }, "Virtue rules")),
 					CAIN.sourceBadge(sec),
 					richText(sec.text, cat));
-			}));
-	}
-
-	function kitEntry(k) {
-		return h("li", { class: "entry" + (k.image ? " has-pic" : "") + CAIN.sourceClass(k) },
-			CAIN.kitPicture(k),
-			h("div", { class: "entry-name" }, k.name, CAIN.sourceBadge(k, true)),
-			h("div", { class: "tags" },
-				h("span", { class: "tag" }, k.scrip === null ? "Auction" : k.scrip + " scrip"),
-				k.kp !== null ? h("span", { class: "tag" }, k.kp + " KP") : null,
-				k.tags.map(function (t) { return h("span", { class: "tag" }, t); })),
-			h("div", { class: "entry-text" }, h("p", null, k.text)),
-			k.quote ? h("p", { class: "kit-quote" }, "\u201c" + k.quote + "\u201d") : null,
-			k.credit ? h("p", { class: "tiny" }, k.credit) : null,
-			k.stock ? h("p", { class: "tiny" }, k.stock >= 99 ? "Stock: plenty" : "Stock: " + k.stock) : null);
+			})));
 	}
 
 	function kitView() {
@@ -349,31 +283,32 @@ window.CAIN = window.CAIN || {};
 			"Possessions": "Spend 1 KP to pull out anything on a kit list once you have access to it.",
 			"Occult / Medical": "Items cultivated by TEMERITY for field use. Approval required. May be cursed."
 		};
-		return h("div", { class: "grid" },
-			h("article", { class: "card" },
-				h("div", { class: "card-head" }, h("h2", null, "Registered kit"), h("span", { class: "label" }, core.base.kitPoints + " KP")),
-				h("ul", { class: "entries" }, core.defaultKit.map(function (k) {
-					return h("li", { class: "entry" },
-						h("div", { class: "entry-name" }, k.name, h("span", { class: "tag" }, k.kp + " KP")),
-						h("div", { class: "entry-text" }, h("p", null, k.text)));
-				}),
-				h("li", { class: "entry" },
-					h("div", { class: "entry-name" }, "Service weapon upgrade"),
-					h("div", { class: "tags" }, h("span", { class: "tag" }, core.weaponUpgrade.cost + " scrip per CAT")),
-					h("div", { class: "entry-text" }, h("p", null, "Upgrade both service weapons by +1 CAT, to a max of CAT " + core.weaponUpgrade.maxCat + ". Weapons start at CAT 0; choose their look freely."))))),
+		return h("div", { class: "kit-view" },
+			h("div", { class: "grid" },
+				h("article", { class: "card" },
+					h("div", { class: "card-head" }, h("h2", null, "Registered kit"), h("span", { class: "label" }, core.base.kitPoints + " KP")),
+					h("ul", { class: "entries" }, core.defaultKit.map(function (k) {
+						return h("li", { class: "entry" },
+							h("div", { class: "entry-name" }, k.name, h("span", { class: "tag" }, k.kp + " KP")),
+							h("div", { class: "entry-text" }, h("p", null, k.text)));
+					}),
+					h("li", { class: "entry" },
+						h("div", { class: "entry-name" }, "Service weapon upgrade"),
+						h("div", { class: "tags" }, h("span", { class: "tag" }, core.weaponUpgrade.cost + " scrip per CAT")),
+						h("div", { class: "entry-text" }, h("p", null, "Upgrade both service weapons by +1 CAT, to a max of CAT " + core.weaponUpgrade.maxCat + ". Weapons start at CAT 0; choose their look freely.")))))),
 			CAIN.kitCategories.map(function (cat) {
-				return h("article", { class: "card" + CAIN.sourceClass(CAIN.kit.filter(function (k) { return k.category === cat; })[0])  },
-					h("div", { class: "card-head" }, h("h2", null, cat), h("span", { class: "label" }, "Kit expansion")),
-					CAIN.sourceBadge(CAIN.kit.filter(function (k) { return k.category === cat; })[0]),
+				var items = CAIN.kit.filter(function (k) { return k.category === cat; });
+				return h("section", { class: "kit-group", "data-group": cat },
+					h("h2", { class: "kit-group-title" }, cat, CAIN.sourceBadge(items[0], true)),
 					blurbs[cat] ? h("p", { class: "note" }, blurbs[cat]) : null,
-					h("ul", { class: "entries" }, CAIN.kit.filter(function (k) { return k.category === cat; }).map(kitEntry)));
+					CAIN.tileGrid("kit", items));
 			}),
-			(CAIN.kitSections || []).map(function (sec) {
+			h("div", { class: "grid" }, (CAIN.kitSections || []).map(function (sec) {
 				return h("article", { class: "card" + CAIN.sourceClass(sec) },
 					h("div", { class: "card-head" }, h("h2", null, sec.name), h("span", { class: "label" }, "Shop rules")),
 					CAIN.sourceBadge(sec),
 					richText(sec.text, 1));
-			}));
+			})));
 	}
 
 	function catView(cat) {
@@ -418,6 +353,13 @@ window.CAIN = window.CAIN || {};
 			var fan = card.classList.contains("fan-made");
 			var want = doctrine.src || "all";
 			var srcOk = want === "all" ? true : want === "fan" ? fan : want === "core" ? !fan : card.classList.contains("src-" + want);
+			if (card.classList.contains("compact-tile")) {
+				var all = ((card.getAttribute("data-search") || "") + " " + card.textContent).toLowerCase();
+				var ok = srcOk && words.every(function (w) { return all.indexOf(w) >= 0; });
+				card.classList.toggle("is-hidden", !ok);
+				if (ok) shown += 1;
+				return;
+			}
 			var parts = [].slice.call(card.querySelectorAll(".entries > .entry, .passive, .virtue-bonds > li"));
 			var head = [].slice.call(card.querySelectorAll(".card-head, .ag-head, :scope > .note, .ag-items"));
 			var whole = !words.length || head.some(hit);
@@ -430,6 +372,9 @@ window.CAIN = window.CAIN || {};
 			var visible = srcOk && (whole || any || parts.some(function (p) { return !p.classList.contains("is-hidden"); }));
 			card.classList.toggle("is-hidden", !visible);
 			if (visible) shown += 1;
+		});
+		[].forEach.call(body.querySelectorAll("[data-group]"), function (g) {
+			g.classList.toggle("is-hidden", !g.querySelector(".card:not(.is-hidden)"));
 		});
 		status.textContent = words.length || (doctrine.src && doctrine.src !== "all") ? (shown ? shown + (shown === 1 ? " match" : " matches") : "Nothing matches \"" + docQuery + "\".") : "";
 	}
@@ -483,10 +428,10 @@ window.CAIN = window.CAIN || {};
 	function renderDoctrine() {
 		var cat = doctrine.cat;
 		var body;
-		if (doctrine.tab === "agendas") body = h("div", { class: "grid" }, CAIN.agendas.map(function (a) { return agendaCard(a, cat); }));
-		else if (doctrine.tab === "blasphemies") body = h("div", { class: "grid" }, blasphemyCard(CAIN.blast, cat), CAIN.blasphemies.map(function (b) { return blasphemyCard(b, cat); }));
+		if (doctrine.tab === "agendas") body = CAIN.tileGrid("agenda", CAIN.agendas);
+		else if (doctrine.tab === "blasphemies") body = h("div", null, h("div", { class: "grid" }, blasphemyCard(CAIN.blast, cat)), CAIN.tileGrid("blasphemy", CAIN.blasphemies));
 		else if (doctrine.tab === "virtues") body = virtuesView(cat);
-		else if (doctrine.tab === "sinmarks") body = h("div", { class: "grid" }, CAIN.sinMarks.map(function (m) { return sinMarkCard(m, cat); }));
+		else if (doctrine.tab === "sinmarks") body = CAIN.tileGrid("sinmark", CAIN.sinMarks);
 		else if (doctrine.tab === "kit") body = kitView();
 		else if (doctrine.tab === "cat") body = catView(cat);
 		else body = glossaryView();

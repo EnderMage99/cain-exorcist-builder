@@ -2564,6 +2564,138 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 
 .size-value { min-width: 3.4em; font-weight: 800; font-size: 13px; }
 
+/* Compact tiles: picture on the left (35%), key facts on the right. */
+.grid.tile-grid, .tile-grid {
+	display: grid;
+	columns: auto;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+	gap: 12px;
+	align-items: stretch;
+	margin-bottom: 18px;
+}
+
+.grid.tile-grid > * { margin: 0; break-inside: auto; }
+
+.card.compact-tile {
+	display: grid;
+	grid-template-columns: 35% minmax(0, 1fr);
+	padding: 0;
+	min-height: 168px;
+	overflow: hidden;
+	border-radius: 16px;
+}
+
+.compact-tile .ct-pic { position: relative; min-height: 100%; background: #0d0d0d; overflow: hidden; }
+
+.compact-tile .ct-pic > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
+
+.compact-tile .ct-emblem { display: flex; align-items: center; justify-content: center; background: var(--paper-2); border-radius: 0; box-shadow: none; padding: 10px; }
+
+.compact-tile .ct-emblem.agenda-look { padding: 10px; border-radius: 0; box-shadow: none; }
+
+.compact-tile .ct-emblem > img, .compact-tile .ct-emblem .ag-emblem-blank { position: static; width: min(100%, 104px); height: auto; aspect-ratio: 1; border-radius: 50%; object-fit: contain; box-shadow: 0 0 0 3px #e9e6df, 0 0 0 4px rgba(0, 0, 0, 0.4); }
+
+.compact-tile .ct-pic-text { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: #0d0d0d; color: #e9e6df; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; padding: 8px; }
+
+.compact-tile .ct-big { font-family: var(--font-goth2); font-weight: 800; font-size: 54px; line-height: 1; color: var(--stamp); text-transform: none; letter-spacing: 0; }
+
+.compact-tile .ct-kitpic { display: flex; align-items: center; justify-content: center; background: var(--paper-2); padding: 10px; }
+
+.compact-tile .ct-kitpic .kit-pic { float: none; margin: 0; width: 100%; height: 100%; max-height: 130px; }
+
+.compact-tile .ct-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 12px 14px 12px; }
+
+.compact-tile .ct-name { margin: 0; font-family: var(--font-head); font-weight: 900; font-size: 22px; line-height: 1.05; text-transform: uppercase; overflow-wrap: anywhere; }
+
+.ct-blasphemy .ct-name { font-family: var(--font-goth2); font-weight: 800; text-transform: none; font-size: 28px; color: var(--blas-ink); }
+
+.ct-virtue .ct-name { font-stretch: 62%; font-size: 32px; color: var(--blas-ink); }
+
+.ct-agenda .ct-name { font-family: "Permanent Marker", var(--font-head), cursive; font-weight: 400; font-size: 24px; }
+
+.ct-sinmark .ct-name { font-family: var(--font-goth2); font-weight: 800; text-transform: none; font-size: 26px; }
+
+.compact-tile .ct-sub { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+.compact-tile .ct-sub .tag { margin: 0; }
+
+.compact-tile .ct-clamp { margin: 0; font-size: 12.5px; line-height: 1.4; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+
+.compact-tile .ct-line { margin: 0; font-size: 12.5px; }
+
+.compact-tile .ct-items { list-style: none; margin: 0; padding: 0; font-size: 12.5px; }
+
+.compact-tile .ct-items li::before { content: "\25B8\00a0"; font-size: 0.8em; }
+
+.compact-tile .ct-items li.bold { font-weight: 700; }
+
+.compact-tile .ct-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+
+.compact-tile .ct-chip { font-size: 10.5px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper-2); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+.ct-blasphemy .ct-chip, .ct-virtue .ct-chip { border-color: var(--blas-line); }
+
+.compact-tile .ct-locked { margin: 0; font-size: 11.5px; color: var(--stamp); font-weight: 700; }
+
+.compact-tile .ct-actions { margin-top: auto; padding-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+.compact-tile.selected { outline: 3px solid var(--stamp); outline-offset: 2px; }
+
+.compact-tile.locked .ct-pic { filter: grayscale(1); opacity: 0.6; }
+
+.pick-detail-wrap { margin: 6px 0 18px; scroll-margin-top: 16px; }
+
+.pick-detail { scroll-margin-top: 16px; }
+
+/* Kit in Doctrine: one group per category, like the book's sections. */
+.kit-group { margin: 18px 0 6px; }
+
+.kit-view > .grid:first-child { display: block; columns: auto; }
+
+.kit-view > .grid:first-child .entries { columns: 3 260px; column-gap: 24px; }
+
+.kit-view > .grid:first-child .entry { break-inside: avoid; }
+
+.kit-group-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 4px; padding-bottom: 6px; border-bottom: 2px solid var(--ink); font-family: var(--font-head); font-weight: 900; font-size: 22px; text-transform: uppercase; }
+
+.kit-group > .note { margin: 0 0 10px; }
+
+/* Viewer: sin marks and kit items */
+.mark-spread-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 24px; align-items: start; margin-bottom: 20px; }
+
+.mark-spread-roll { font-family: var(--font-goth2); font-weight: 800; font-size: 150px; line-height: 0.8; color: #e8141c; }
+
+.mark-spread-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+
+.mark-spread-list li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 14px 16px; background: rgba(255, 255, 255, 0.06); border: 1px solid #333; border-radius: 18px; }
+
+.mark-spread-list h3 { margin: 0 0 4px; font-size: 16px; text-transform: uppercase; }
+
+.mark-spread-num { font-family: var(--font-goth2); font-weight: 800; font-size: 40px; line-height: 1; color: #e8141c; text-align: center; }
+
+.spread.kit-spread { width: min(900px, 94vw); display: grid; grid-template-columns: minmax(160px, 260px) minmax(0, 1fr); gap: 28px; align-items: start; }
+
+.kit-spread.no-pic { grid-template-columns: minmax(0, 1fr); }
+
+.kit-spread .kit-spread-pic { float: none; margin: 0; width: 100%; height: auto; aspect-ratio: 1; background: #e9e6df; border-radius: 12px; padding: 14px; }
+
+.kit-spread .kit-spread-pic img { filter: none; }
+
+.kit-spread .kit-pic-color.kit-spread-pic { background: #111; }
+
+.kit-spread-name { font-family: var(--font-head); font-weight: 900; font-size: 48px; line-height: 1; text-transform: uppercase; margin: 0 0 4px; }
+
+.kit-spread .tags { margin: 10px 0; }
+
+.kit-spread .tag { color: #eee; border-color: #555; }
+
+.kit-spread-text { font-size: 15px; line-height: 1.6; }
+
+@media (max-width: 700px) {
+	.kit-spread, .mark-spread-head { grid-template-columns: minmax(0, 1fr); }
+	.mark-spread-roll { font-size: 90px; }
+}
+
 /* Focus viewer: hover lights a card up; clicking opens it over a darkened
    screen, laid out like the book's pages. */
 [data-view] { cursor: zoom-in; transition: transform 0.12s ease, outline-color 0.12s ease; outline: 3px solid transparent; outline-offset: 3px; }

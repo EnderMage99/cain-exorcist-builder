@@ -191,80 +191,111 @@ window.CAIN = window.CAIN || {};
 			h("ul", { class: "skill-picks" }, rows));
 	}
 
+	// Brings the chosen entry's options into view after picking a tile.
+	function revealPick() {
+		setTimeout(function () {
+			var el = document.querySelector(".pick-detail");
+			if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
+		}, 0);
+	}
+
+	function chooseButton(selected, disabled, onPick) {
+		return h("button", { class: "btn small" + (selected ? "" : " ghost"), type: "button", disabled: disabled, "aria-pressed": String(selected), onclick: onPick }, selected ? "Chosen" : "Choose");
+	}
+
 	function agendaStep() {
 		var c = ch();
 		var cat = R.derived(c).cat;
 		var chosen = c.agendaAbilities[0];
+		var a = c.agenda ? R.agenda(c.agenda) : null;
+		var tiles = CAIN.tileGrid("agenda", CAIN.agendas, function (x) {
+			var allowed = R.agendaAllowed(c, x);
+			var selected = c.agenda === x.id;
+			return { selected: selected, locked: allowed.ok ? null : allowed.reason,
+				actions: chooseButton(selected, !allowed.ok, function () {
+					if (c.agenda !== x.id) { c.agenda = x.id; c.agendaAbilities = []; }
+					changed(true);
+					revealPick();
+				}) };
+		});
+		var detail = a ? (function () {
+			var look = CAIN.agendaLook(a);
+			return h("article", { class: "card pick-card pick-detail selected " + look.class, style: look.style, "data-view": "agenda:" + a.id },
+				CAIN.agendaHead(a, h("span", { class: "tag stamp ag-picked" }, "Selected")),
+				a.items.length === 0 ? null : h("div", { class: "ag-items" }, h("span", { class: "ag-label" }, "Items:"),
+					h("ul", { class: "items" }, a.items.map(function (it) { return h("li", { class: it.bold ? "bold" : null }, it.text); }))),
+				h("div", { class: "ag-label" }, "Choose 1 ability:"),
+				h("ul", { class: "options" }, a.abilities.map(function (ab) {
+					var on = !!chosen && chosen.agenda === a.id && chosen.ability === ab.id;
+					return h("li", null, h("button", {
+						class: "option", type: "button", "aria-pressed": String(on),
+						onclick: function () {
+							c.agendaAbilities = [{ agenda: a.id, ability: ab.id }];
+							changed(true);
+						}
+					}, h("span", { class: "option-mark", "aria-hidden": "true" }),
+						h("span", { class: "option-body" }, h("span", { class: "entry-name" }, ab.name), CAIN.richText(ab.text, cat))));
+				})),
+				a.note ? h("p", { class: "agenda-note" }, a.note) : null,
+				CAIN.agendaFoot());
+		})() : null;
 		return h("div", null,
-			h("p", { class: "lede" }, "Your agenda is how your exorcist approaches problems. Following its items earns XP. Pick one ability to start."),
-			h("div", { class: "grid" }, CAIN.agendas.map(function (a) {
-				var allowed = R.agendaAllowed(c, a);
-				var selected = c.agenda === a.id;
-				var look = CAIN.agendaLook(a);
-				return h("article", { class: "card pick-card " + look.class + (selected ? " selected" : "") + (allowed.ok ? "" : " locked"), style: look.style, "data-view": "agenda:" + a.id },
-					CAIN.agendaHead(a, selected ? h("span", { class: "tag stamp ag-picked" }, "Selected") : null),
-					allowed.ok ? null : h("p", { class: "tag stamp" }, allowed.reason),
-					a.items.length === 0 ? null : h("div", { class: "ag-items" }, h("span", { class: "ag-label" }, "Items:"),
-						h("ul", { class: "items" }, a.items.map(function (it) { return h("li", { class: it.bold ? "bold" : null }, it.text); }))),
-					h("div", { class: "ag-label" }, "Choose 1 ability:"),
-					h("ul", { class: "options" }, a.abilities.map(function (ab) {
-						var on = !!chosen && chosen.agenda === a.id && chosen.ability === ab.id;
-						return h("li", null, h("button", {
-							class: "option", type: "button", "aria-pressed": String(on), disabled: !allowed.ok,
-							onclick: function () {
-								c.agenda = a.id;
-								c.agendaAbilities = [{ agenda: a.id, ability: ab.id }];
-								changed(true);
-							}
-						}, h("span", { class: "option-mark", "aria-hidden": "true" }),
-							h("span", { class: "option-body" }, h("span", { class: "entry-name" }, ab.name), CAIN.richText(ab.text, cat))));
-					})),
-					a.note ? h("p", { class: "agenda-note" }, a.note) : null,
-					CAIN.agendaFoot());
-			})));
+			h("p", { class: "lede" }, "Your agenda is how your exorcist approaches problems. Following its items earns XP. Choose one, then pick its first ability below. Click a tile to read it in full."),
+			tiles,
+			detail ? h("div", { class: "pick-detail-wrap" }, detail) : null);
 	}
 
 	function blasphemyStep() {
 		var c = ch();
 		var cat = R.derived(c).cat;
 		var owned = c.blasphemies[0];
+		var b = owned ? R.blasphemy(owned.id) : null;
+		var tiles = CAIN.tileGrid("blasphemy", CAIN.blasphemies, function (x) {
+			var selected = !!owned && owned.id === x.id;
+			return { selected: selected, selectedLabel: selected ? owned.powers.length + " / 2 powers" : null,
+				actions: chooseButton(selected, false, function () {
+					if (!selected) c.blasphemies = [{ id: x.id, powers: [] }];
+					changed(true);
+					revealPick();
+				}) };
+		});
+		var detail = b ? (function () {
+			var count = owned.powers.length;
+			var th = CAIN.blasTheme(b);
+			return h("article", { class: "card pick-card pick-detail blas-card selected " + th.class, style: th.style, "data-view": "blasphemy:" + b.id },
+				h("div", { class: "blas-intro" },
+					CAIN.blasPortrait(b),
+					h("div", { class: "blas-intro-text" },
+						h("div", { class: "card-head" }, h("h2", { class: "blas-title" }, b.name), h("span", { class: "label" }, count + " / 2 powers")),
+						CAIN.sourceBadge(b),
+						CAIN.approvalTag(b),
+						h("p", { class: "note" }, b.summary))),
+				h("div", { class: "passive" },
+					h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
+					CAIN.richText(b.passive.text, cat)),
+				h("div", { class: "label" }, "Choose 2 powers"),
+				h("ul", { class: "options" }, b.powers.map(function (p) {
+					var on = owned.powers.indexOf(p.id) >= 0;
+					var full = count >= 2 && !on;
+					return h("li", null, h("button", {
+						class: "option multi", type: "button", "aria-pressed": String(on), disabled: full,
+						title: full ? "Two powers chosen. Untick one first." : null,
+						onclick: function () {
+							if (on) owned.powers = owned.powers.filter(function (x) { return x !== p.id; });
+							else owned.powers.push(p.id);
+							changed(true);
+						}
+					}, h("span", { class: "option-mark", "aria-hidden": "true" }),
+						h("span", { class: "option-body" },
+							CAIN.powerHead(p),
+							CAIN.powerTags(p, cat),
+							CAIN.richText(p.text, cat))));
+				})));
+		})() : null;
 		return h("div", null,
-			h("p", { class: "lede" }, "Your blasphemy is your psychic power. You get its passive and pick two powers. Values in purple are worked out for your CAT (" + cat + ")."),
-			h("div", { class: "grid" }, CAIN.blasphemies.map(function (b) {
-				var selected = !!owned && owned.id === b.id;
-				var count = selected ? owned.powers.length : 0;
-				var th = CAIN.blasTheme(b);
-				return h("article", { class: "card pick-card blas-card " + th.class + (selected ? " selected" : ""), style: th.style, "data-view": "blasphemy:" + b.id },
-					h("div", { class: "blas-intro" },
-						CAIN.blasPortrait(b),
-						h("div", { class: "blas-intro-text" },
-							h("div", { class: "card-head" }, h("h2", { class: "blas-title" }, b.name), h("span", { class: "label" }, selected ? count + " / 2 powers" : (b.numeral ? "Blasphemy " + b.numeral : b.group || "Blasphemy"))),
-							CAIN.sourceBadge(b),
-							CAIN.approvalTag(b),
-							h("p", { class: "note" }, b.summary))),
-					h("div", { class: "passive" },
-						h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
-						CAIN.richText(b.passive.text, cat)),
-					h("div", { class: "label" }, "Choose 2 powers"),
-					h("ul", { class: "options" }, b.powers.map(function (p) {
-						var on = selected && owned.powers.indexOf(p.id) >= 0;
-						var full = selected && count >= 2 && !on;
-						return h("li", null, h("button", {
-							class: "option multi", type: "button", "aria-pressed": String(on), disabled: full,
-							title: full ? "Two powers chosen. Untick one first." : null,
-							onclick: function () {
-								if (!selected) c.blasphemies = [{ id: b.id, powers: [p.id] }];
-								else if (on) owned.powers = owned.powers.filter(function (x) { return x !== p.id; });
-								else owned.powers.push(p.id);
-								changed(true);
-							}
-						}, h("span", { class: "option-mark", "aria-hidden": "true" }),
-							h("span", { class: "option-body" },
-								CAIN.powerHead(p),
-								CAIN.powerTags(p, cat),
-								CAIN.richText(p.text, cat))));
-					})));
-			})),
+			h("p", { class: "lede" }, "Your blasphemy is your psychic power. Choose one, then pick two powers below. Click a tile to read it in full. Values in purple are worked out for your CAT (" + cat + ")."),
+			tiles,
+			detail ? h("div", { class: "pick-detail-wrap" }, detail) : null,
 			h("section", { class: "card", style: "margin-top:16px" },
 				h("div", { class: "card-head" }, h("h2", null, "Blast"), h("span", { class: "label" }, "Every exorcist has this")),
 				CAIN.richText(CAIN.blast.text, cat)));
@@ -274,45 +305,32 @@ window.CAIN = window.CAIN || {};
 	// the one to bond with on the first mission. Several can be tracked.
 	function virtueStep() {
 		var c = ch();
-		var cat = R.derived(c).cat;
 		if (!Array.isArray(c.virtues)) c.virtues = [];
 		return h("div", null,
-			h("p", { class: "lede" }, "Optional. Virtues are CAIN's living legends. Bond with one at the start of a mission to gain its rank 0 ability, and raise the bond each mission you survive. You can hold bonds with several. Skip this step if your group isn't using them."),
-			h("div", { class: "grid" }, CAIN.virtues.map(function (v) {
+			h("p", { class: "lede" }, "Optional. Virtues are CAIN's living legends. Bond with one at the start of a mission to gain its rank 0 ability, and raise the bond each mission you survive. You can hold bonds with several. Click a tile to read it in full, or skip this step if your group isn't using them."),
+			CAIN.tileGrid("virtue", CAIN.virtues, function (v) {
 				var owned = c.virtues.filter(function (o) { return o.id === v.id; })[0];
 				var bonding = c.virtueBonding === v.id;
-				var th = CAIN.blasTheme(v);
-				return h("article", { class: "card pick-card blas-card virtue-card " + th.class + (owned ? " selected" : ""), style: th.style, "data-view": "virtue:" + v.id },
-					h("div", { class: "blas-intro" },
-						CAIN.virtuePortrait(v),
-						h("div", { class: "blas-intro-text" },
-							h("div", { class: "card-head" }, h("h2", { class: "blas-title" }, v.name), h("span", { class: "label" }, v.epithet)),
-							CAIN.sourceBadge(v),
-							h("div", { class: "passive virtue-stricture" },
-								h("div", { class: "entry-name" }, "Stricture", h("span", { class: "tag stamp" }, "While bonding")),
-								h("p", null, v.stricture)),
-							h("div", { class: "subrow virtue-controls" },
-								h("button", { class: "chip", type: "button", "aria-pressed": String(!!owned), onclick: function () {
-									if (owned) {
-										c.virtues = c.virtues.filter(function (o) { return o.id !== v.id; });
-										if (bonding) c.virtueBonding = null;
-									} else c.virtues.push({ id: v.id, rank: 0 });
-									changed(true);
-								} }, owned ? "Bonded" : "Add bond"),
-								owned ? CAIN.stepper("Rank", owned.rank, 0, CAIN.virtueRules.maxRank, function (val) { owned.rank = val; changed(true); },
-									{ small: true, format: function (n) { return CAIN.virtueRanks[n]; } }) : null,
-								h("button", { class: "chip", type: "button", "aria-pressed": String(bonding), onclick: function () {
-									if (bonding) c.virtueBonding = null;
-									else {
-										c.virtueBonding = v.id;
-										if (!owned) c.virtues.push({ id: v.id, rank: 0 });
-									}
-									changed(true);
-								} }, "Bond on first mission")))),
-					h("div", { class: "virtue-cols" },
-						h("div", null, h("div", { class: "subhead" }, "Bond abilities"), CAIN.virtueBondList(v, cat, owned ? owned.rank : undefined)),
-						h("div", null, h("div", { class: "subhead" }, "High blasphemy"), CAIN.virtuePowers(v, cat, owned ? owned.rank : undefined))));
-			})));
+				return { selected: !!owned, selectedLabel: owned ? "Bond " + CAIN.virtueRanks[owned.rank] : null,
+					actions: [
+						h("button", { class: "chip", type: "button", "aria-pressed": String(!!owned), onclick: function () {
+							if (owned) {
+								c.virtues = c.virtues.filter(function (o) { return o.id !== v.id; });
+								if (bonding) c.virtueBonding = null;
+							} else c.virtues.push({ id: v.id, rank: 0 });
+							changed(true);
+						} }, owned ? "Bonded" : "Add bond"),
+						owned ? CAIN.stepper("Rank", owned.rank, 0, CAIN.virtueRules.maxRank, function (val) { owned.rank = val; changed(true); },
+							{ small: true, format: function (n) { return CAIN.virtueRanks[n]; } }) : null,
+						h("button", { class: "chip", type: "button", "aria-pressed": String(bonding), onclick: function () {
+							if (bonding) c.virtueBonding = null;
+							else {
+								c.virtueBonding = v.id;
+								if (!owned) c.virtues.push({ id: v.id, rank: 0 });
+							}
+							changed(true);
+						} }, "Bond on first mission")] };
+			}));
 	}
 
 	function kitStep() {
