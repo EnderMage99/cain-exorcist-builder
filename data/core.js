@@ -47,6 +47,69 @@ CAIN.core = {
 	},
 	catDimensions: ["people", "size", "area", "range", "speed", "magnitude"],
 
+	// Power tags used in the book (CAIN 1.4.5, "Tags"). Range values that scale
+	// with CAT carry a token so they resolve to the character's CAT.
+	powerTags: {
+		duration: ["Instant", "Until rest", "1 scene", "Entire hunt"],
+		effect: ["Curse", "Charm", "Transmute", "Summon"],
+		range: [
+			{ label: "Self", value: "Self" },
+			{ label: "Adjacent", value: "Adjacent" },
+			{ label: "Short", value: "Short" },
+			{ label: "Long", value: "Long" },
+			{ label: "Extreme", value: "Extreme" },
+			{ label: "CAT range", value: "CAT range ({cat:range})" },
+			{ label: "CAT+1 range", value: "CAT+1 range ({cat+1:range})" },
+			{ label: "CAT+2 range", value: "CAT+2 range ({cat+2:range})" },
+			{ label: "CAT area", value: "CAT area ({cat:area})" },
+			{ label: "Special", value: "Special" },
+			{ label: "Investigation area", value: "Investigation area" },
+			{ label: "Infinite", value: "Infinite range" }
+		]
+	},
+
+	// Burst symbols, as in the book: a black four-point star needs a psyche burst
+	// (with + for one or more); an outline star needs none, or only on success.
+	burstKinds: [
+		{ id: "required", label: "Needs a psyche burst" },
+		{ id: "multiple", label: "One or more psyche bursts" },
+		{ id: "onSuccess", label: "Burst only on success" },
+		{ id: "none", label: "No psyche burst" }
+	],
+
+	// CAT values a player can drop into custom text. Each fills in for the
+	// character's CAT, like the book's "a CAT sized group" or "up to 1/2 CAT".
+	catInserts: [
+		{ group: "Numbers", options: [
+			{ label: "CAT", token: "{cat}" },
+			{ label: "CAT+1", token: "{cat+1}" },
+			{ label: "CAT+2", token: "{cat+2}" },
+			{ label: "half CAT (rounded up)", token: "{halfcat}" },
+			{ label: "2+CAT (talisman length)", token: "{2+cat}" }
+		] },
+		{ group: "At CAT", options: [
+			{ label: "CAT people (a group of...)", token: "{cat:people}" },
+			{ label: "CAT size", token: "{cat:size}" },
+			{ label: "CAT area", token: "{cat:area}" },
+			{ label: "CAT range", token: "{cat:range}" },
+			{ label: "CAT speed", token: "{cat:speed}" },
+			{ label: "CAT magnitude", token: "{cat:magnitude}" }
+		] },
+		{ group: "At CAT+1 / CAT+2", options: [
+			{ label: "CAT+1 size", token: "{cat+1:size}" },
+			{ label: "CAT+1 range", token: "{cat+1:range}" },
+			{ label: "CAT+2 size", token: "{cat+2:size}" },
+			{ label: "CAT+2 range", token: "{cat+2:range}" },
+			{ label: "CAT+2 area", token: "{cat+2:area}" }
+		] },
+		{ group: "At half CAT", options: [
+			{ label: "half CAT people", token: "{halfcat:people}" },
+			{ label: "half CAT size", token: "{halfcat:size}" },
+			{ label: "half CAT area", token: "{halfcat:area}" },
+			{ label: "half CAT range", token: "{halfcat:range}" }
+		] }
+	],
+
 	// Base values before modifiers. Sin cap 10 is the box count on the official sheet.
 	base: {
 		maxStress: 6,

@@ -571,6 +571,66 @@
 		check("a broken entry is skipped, the rest import", !mixed.error && mixed.characters.length === 1 && mixed.warnings[0].indexOf("Skipped entry 1") === 0);
 		eq("file names", [T.fileName([hero]), /^cain-exorcists-\d{4}-\d{2}-\d{2}\.cain\.json$/.test(T.fileName([hero, hero]))], ["Ines-Varga.cain.json", true]);
 
+		group("Custom agendas and blasphemies");
+		// Stand in for the store: custom content comes from these characters.
+		var pool = [];
+		R.setCustomProvider(function () {
+			var out = { agendas: [], blasphemies: [] };
+			pool.forEach(function (c) { out.agendas = out.agendas.concat(c.custom.agendas); out.blasphemies = out.blasphemies.concat(c.custom.blasphemies); });
+			return out;
+		});
+		var maker = guardianTension();
+		H.normalize(maker);
+		pool.push(maker);
+		check("a custom agenda needs a name", H.saveCustomAgenda(maker, { name: " " }).ok === false);
+		var ag = H.saveCustomAgenda(maker, {
+			name: "Martyr",
+			items: [{ text: "Suffer for others", bold: false }, { text: "Refuse help", bold: true }, { text: "  ", bold: false }],
+			abilities: [{ key: "k1", name: "Bleed for them", text: "Take an ally's stress, up to {cat}." }, { key: "k2", name: "Last rites", text: "Once a hunt..." }, { key: "k3", name: "", text: "unnamed is dropped" }]
+		}, { owned: ["k1"], makeCurrent: true });
+		var martyr = R.agenda(ag.id);
+		check("custom agenda saved and found by the rules", ag.ok && /^ca-/.test(ag.id) && martyr && martyr.custom && martyr.name === "Martyr");
+		eq("blank items and nameless abilities are dropped", [martyr.items.length, martyr.abilities.length], [2, 2]);
+		check("made current, the ticked ability owned", maker.agenda === ag.id && maker.agendaAbilities.some(function (r) { return r.agenda === ag.id && r.ability === martyr.abilities[0].id; }));
+		eq("CAT tokens in custom text resolve", R.resolveText(martyr.abilities[0].text, 3), "Take an ally's stress, up to 3.");
+		var adv = R.legalAdvances(maker).filter(function (o) { return o.kind === "agendaAbility"; })[0];
+		eq("advances offer the custom agenda's open ability", adv.choices, [martyr.abilities[1].id]);
+		maker.advances = 1;
+		H.spendAdvance(maker, { kind: "agendaAbility", ability: martyr.abilities[1].id });
+		eq("spending an advance on it works", maker.agendaAbilities.filter(function (r) { return r.agenda === ag.id; }).length, 2);
+		var firstId = martyr.abilities[0].id;
+		H.saveCustomAgenda(maker, { id: ag.id, name: "Martyr", items: martyr.items, abilities: [martyr.abilities[0]] }, { owned: [firstId], makeCurrent: true });
+		eq("editing keeps ids; a removed ability's ref goes too", [R.agenda(ag.id).abilities[0].id, maker.agendaAbilities.filter(function (r) { return r.agenda === ag.id; }).length], [firstId, 1]);
+
+		check("a custom blasphemy needs a name", H.saveCustomBlasphemy(maker, { name: "" }).ok === false);
+		var bl = H.saveCustomBlasphemy(maker, {
+			name: "Rust",
+			summary: "Decay anything you touch.",
+			passive: { name: "", text: "Metal near you corrodes." },
+			powers: [
+				{ key: "p1", name: "Corrode", text: "Rot an object up to {cat:size}.", burst: "onSuccess", tags: { duration: "Instant", effect: "Transmute", range: "Adjacent" } },
+				{ key: "p2", name: "Blight", text: "", burst: "nonsense", tags: { duration: "1 scene", effect: "", range: "CAT range ({cat:range})" } }
+			]
+		}, { owned: ["p1"], have: true });
+		var rust = R.blasphemy(bl.id);
+		check("custom blasphemy saved and found", bl.ok && /^cb-/.test(bl.id) && rust && rust.custom && rust.passive.name === "Passive");
+		eq("burst kept, unknown burst defaults to needs a burst", [rust.powers[0].burst, rust.powers[1].burst], ["onSuccess", "required"]);
+		eq("power text and range tag resolve at CAT 2", [R.resolveText(rust.powers[0].text, 2), R.resolveText(rust.powers[1].tags.range, 2)], ["Rot an object up to a large animal.", "CAT range (across the street)"]);
+		var entry = maker.blasphemies.filter(function (b) { return b.id === bl.id; })[0];
+		eq("held with the ticked power", entry.powers, [rust.powers[0].id]);
+		eq("a second blasphemy changes caps as usual", [R.derived(maker).sinCap, R.derived(maker).xpToAdvance], [9, 5]);
+		H.saveCustomBlasphemy(maker, { id: bl.id, name: "Rust", passive: rust.passive, powers: rust.powers }, { owned: [], have: false });
+		check("unticking 'has this blasphemy' drops it from the sheet but keeps the design", !maker.blasphemies.some(function (b) { return b.id === bl.id; }) && !!R.blasphemy(bl.id));
+		H.saveCustomBlasphemy(maker, { id: bl.id, name: "Rust", passive: rust.passive, powers: rust.powers }, { owned: [rust.powers[1].id], have: true });
+
+		var moved = T.unpack(T.pack([maker]));
+		check("custom content exports and imports without warnings", !moved.error && moved.warnings.length === 0 && moved.characters[0].custom.blasphemies[0].name === "Rust");
+		H.deleteCustom(maker, "agenda", ag.id);
+		H.deleteCustom(maker, "blasphemy", bl.id);
+		check("deleting removes the design and everything pointing at it", maker.agenda === null && !maker.agendaAbilities.some(function (r) { return r.agenda === ag.id; }) && !maker.blasphemies.some(function (b) { return b.id === bl.id; }) && !R.blasphemy(bl.id));
+		eq("still a valid character after all that", R.validateCharacter(maker), []);
+		R.setCustomProvider(null);
+
 		group("End of mission");
 		var em = guardianTension();
 		H.startMission(em, {});

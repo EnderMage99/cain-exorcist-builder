@@ -28,6 +28,24 @@ window.CAIN = window.CAIN || {};
 		safe.set(KEY_CHARACTERS, list().filter(function (c) { return c.id !== id; }));
 	}
 
+	// Custom agendas and blasphemies from every saved character, for the rules'
+	// lookups. Rebuilt only when the saved data changes.
+	var customCache = { raw: null, content: { agendas: [], blasphemies: [] } };
+	function customContent() {
+		var raw = null;
+		try { raw = localStorage.getItem(KEY_CHARACTERS); } catch (e) { raw = null; }
+		if (raw === customCache.raw) return customCache.content;
+		var content = { agendas: [], blasphemies: [] };
+		list().forEach(function (c) {
+			if (!c.custom) return;
+			(c.custom.agendas || []).forEach(function (a) { content.agendas.push(a); });
+			(c.custom.blasphemies || []).forEach(function (b) { content.blasphemies.push(b); });
+		});
+		customCache = { raw: raw, content: content };
+		return content;
+	}
+	CAIN.rules.setCustomProvider(customContent);
+
 	// The draft is { character, step }.
 	function getDraft() {
 		var d = safe.get(KEY_DRAFT, null);

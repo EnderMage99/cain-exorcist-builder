@@ -446,9 +446,14 @@ window.CAIN = window.CAIN || {};
 				h("div", { class: "card-head" },
 					h("h2", null, "Agenda"),
 					this.editable
-						? CAIN.select(null, ch.agenda || "", CAIN.agendas.map(function (ag) { return { value: ag.id, label: ag.name }; }),
-							function (v) { var before = ch.agenda; ch.agenda = v || null; self.change("Agenda", before, ch.agenda); }, { placeholder: "None", aria: "Agenda" })
+						? CAIN.select(null, ch.agenda || "", (function () {
+							var groups = [{ group: "From the book", options: CAIN.agendas.map(function (ag) { return { value: ag.id, label: ag.name }; }) }];
+							if (ch.custom.agendas.length) groups.push({ group: "Your agendas", options: ch.custom.agendas.map(function (ag) { return { value: ag.id, label: ag.name }; }) });
+							return groups;
+						})(), function (v) { var before = ch.agenda; ch.agenda = v || null; self.change("Agenda", before, ch.agenda); }, { placeholder: "None", aria: "Agenda" })
 						: h("span", { class: "sticker" }, a ? a.name : "None")),
+				a && a.custom ? h("div", { class: "subrow" }, h("span", { class: "label" }, "Custom agenda"),
+					this.editable && this.openPanel ? h("button", { class: "mini-btn", type: "button", onclick: function () { self.openPanel("customAgenda", a.id); } }, "Edit") : null) : null,
 				h("p", { class: "tiny" }, "Swap agendas between missions. Keep any bolded items. Spend an advance to gain a new ability. 5 abilities max."),
 				h("div", { class: "label" }, "Agenda items"),
 				a ? h("ul", { class: "items" }, a.items.map(function (it) { return h("li", { class: it.bold ? "bold" : null }, it.text); }),
@@ -459,7 +464,7 @@ window.CAIN = window.CAIN || {};
 			h("section", { class: "card sheet-abilities" },
 				h("div", { class: "card-head" }, h("h2", null, "Agenda abilities"), h("span", { class: "label" }, ch.agendaAbilities.length + " / 5")),
 				abilities.length ? h("ul", { class: "entries" }, abilities) : h("p", { class: "note" }, "None."),
-				h("div", { class: "btn-row" }, this.openButton("Add an ability...", "ability"))));
+				h("div", { class: "btn-row" }, this.openButton("Add an ability...", "ability"), this.openButton("Create an agenda...", "customAgenda"))));
 	};
 
 	Sheet.prototype.blasphemies = function () {
@@ -473,33 +478,37 @@ window.CAIN = window.CAIN || {};
 			return h("div", { class: "blas-block" },
 				h("div", { class: "blas-head" },
 					h("span", { class: "sticker" }, b.name),
-					h("span", { class: "label" }, "Blasphemy " + b.numeral),
+					h("span", { class: "label" }, b.custom ? "Custom blasphemy" : "Blasphemy " + b.numeral),
+					b.custom && self.editable && self.openPanel ? h("button", { class: "mini-btn", type: "button", onclick: function () { self.openPanel("customBlasphemy", b.id); } }, "Edit") : null,
 					self.editable ? removeBtn(b.name, function () { ch.blasphemies.splice(bi, 1); self.onChange(true); }) : null),
+				b.summary && b.custom ? h("p", { class: "tiny" }, b.summary) : null,
 				h("div", { class: "passive" },
 					h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
 					CAIN.richText(b.passive.text, d.cat)),
 				h("div", { class: "power-grid" }, owned.powers.map(function (pid, pi) {
 					var p = R.power(b.id, pid);
 					if (!p) return null;
-					var tags = [p.tags.duration, p.tags.effect, p.tags.range].filter(Boolean);
 					return h("div", { class: "power-box" },
 						h("span", { class: "power-side" }, "Observed power"),
 						h("div", { class: "power-body" },
-							h("div", { class: "entry-name" }, p.name,
-								self.editable ? removeBtn(p.name, function () { owned.powers.splice(pi, 1); self.onChange(true); }) : null),
-							h("div", { class: "tags" },
-								tags.map(function (t) { return h("span", { class: "tag" }, CAIN.inlineText(t, d.cat)); }),
-								h("span", { class: "tag burst" }, CAIN.burstLabels[p.burst])),
+							CAIN.powerHead(p, self.editable ? removeBtn(p.name, function () { owned.powers.splice(pi, 1); self.onChange(true); }) : null),
+							CAIN.powerTags(p, d.cat),
 							CAIN.richText(p.text, d.cat)));
 				})));
 		});
 		var blast = CAIN.blast;
+		var legend = h("p", { class: "tiny burst-legend" },
+			CAIN.burstIcon("required"), " needs a psyche burst   ",
+			CAIN.burstIcon("multiple"), " one or more   ",
+			CAIN.burstIcon("none"), " no burst, or only on success");
 		return section("blasphemy", "Blasphemy", "Observed powers " + total + " / 5",
 			h("p", { class: "tiny" }, "Keep sticker attached at all times. Spend an advance to gain a new power, or a new blasphemy: gain its passive, cross out a sin box, and increase XP to advance by +1."),
+			legend,
 			blocks.length ? blocks : h("p", { class: "note" }, "No blasphemy."),
-			h("div", { class: "btn-row" }, this.openButton("Add a power...", "power")),
+			h("div", { class: "btn-row" }, this.openButton("Add a power...", "power"), this.openButton("Create a blasphemy...", "customBlasphemy")),
 			h("div", { class: "passive blast" },
-				h("div", { class: "entry-name" }, blast.name + ":", h("span", { class: "tag burst" }, CAIN.burstLabels[blast.burst])),
+				CAIN.powerHead({ name: blast.name, burst: blast.burst }),
+				CAIN.powerTags(blast, d.cat),
 				CAIN.richText(blast.text, d.cat)));
 	};
 
@@ -583,8 +592,10 @@ window.CAIN = window.CAIN || {};
 
 	// Events from the last action, shown once at the top of the next render.
 	var flash = null;
-	// Which action panel is open, per character.
+	// Which action panel is open, per character, and what it was opened for
+	// (e.g. which custom blasphemy to edit).
 	var openPanels = {};
+	var panelArgs = {};
 
 	// Character screen: #/c/<id>. Old /play and /between links land here too.
 	CAIN.screens.sheet = {
@@ -607,6 +618,7 @@ window.CAIN = window.CAIN || {};
 			var timer = null;
 			var ctx = {
 				panel: openPanels[ch.id] || null,
+				panelArg: panelArgs[ch.id],
 				save: function (rerender) {
 					var ok = CAIN.store.save(ch);
 					if (rerender) { CAIN.app.render(); return; }
@@ -620,12 +632,21 @@ window.CAIN = window.CAIN || {};
 					CAIN.app.render();
 				},
 				flash: function (events) { flash = { id: ch.id, events: events }; CAIN.app.render(); },
-				open: function (panel) {
-					openPanels[ch.id] = openPanels[ch.id] === panel ? null : panel;
+				// With an argument it always opens (for that thing); without, it toggles.
+				open: function (panel, arg) {
+					var same = openPanels[ch.id] === panel && panelArgs[ch.id] === arg;
+					openPanels[ch.id] = same && arg === undefined ? null : panel;
+					panelArgs[ch.id] = arg;
 					CAIN.app.render();
 					if (openPanels[ch.id]) window.scrollTo({ top: 0, behavior: "smooth" });
 				},
-				close: function () { openPanels[ch.id] = null; CAIN.app.render(); }
+				close: function () { openPanels[ch.id] = null; panelArgs[ch.id] = undefined; CAIN.app.render(); },
+				// Closes the panel and shows what the action did.
+				done: function (result) {
+					openPanels[ch.id] = null;
+					panelArgs[ch.id] = undefined;
+					ctx.act(result);
+				}
 			};
 			var del = h("button", { class: "btn ghost small danger", type: "button", onclick: function () {
 				if (!del.classList.contains("confirming")) {
@@ -666,7 +687,7 @@ window.CAIN = window.CAIN || {};
 				editable: true,
 				onChange: function (rerender) { ctx.save(rerender); },
 				change: function (label, before, after) { ctx.act(CAIN.hunt.note(ch, label + ": " + before + " -> " + after + ".")); },
-				openPanel: function (panel) { ctx.open(panel); }
+				openPanel: function (panel, arg) { ctx.open(panel, arg); }
 			});
 			return [head, dead, CAIN.renderActions(ch, ctx), flashBox, sheet];
 		}

@@ -45,7 +45,13 @@ system before the rest of the book's content goes in. See
   - **Spend advance**: only the options the rules allow, replacing one at
     the cap of 5.
   - **Add ability / Add power**: pick from the cards, optionally using up
-    an advance.
+    an advance. Both have **Create your own**: build a whole agenda (items,
+    bold items, abilities) or blasphemy (summary, passive, powers) from
+    scratch, tick which parts your exorcist has, give each power the book's
+    tags (duration, effect, range) and burst symbol, and drop CAT values
+    into the text ("Insert CAT value") that fill in for your CAT. Custom
+    ones are saved with the exorcist, export with them, and can be edited
+    or deleted from the sheet.
   - **Take stress**: roll-over into injuries, Painkiller, Iron Soul with
     your d6, nonlethal, brink of death, instant death and defying fate.
   - **Dice pool**: how many dice to roll; records your successes, spends
@@ -82,6 +88,7 @@ js/transfer.js    export and import: the .cain.json format and its checks
 js/registration.js character creation steps
 js/sheet.js       the one-page exorcist sheet and the character screen
 js/actions.js     the action bar, its panels, and alerts
+js/custom.js      editors for custom agendas and blasphemies
 js/app.js         theme, routing, Registry and Doctrine screens
 data/*.js         rules content: core, agendas, blasphemies, sin marks, kit
 tests/            rules checks page

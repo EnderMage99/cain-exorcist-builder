@@ -238,7 +238,6 @@ window.CAIN = window.CAIN || {};
 					h("ul", { class: "options" }, b.powers.map(function (p) {
 						var on = selected && owned.powers.indexOf(p.id) >= 0;
 						var full = selected && count >= 2 && !on;
-						var tags = [p.tags.duration, p.tags.effect, p.tags.range].filter(Boolean);
 						return h("li", null, h("button", {
 							class: "option multi", type: "button", "aria-pressed": String(on), disabled: full,
 							title: full ? "Two powers chosen. Untick one first." : null,
@@ -250,10 +249,8 @@ window.CAIN = window.CAIN || {};
 							}
 						}, h("span", { class: "option-mark", "aria-hidden": "true" }),
 							h("span", { class: "option-body" },
-								h("span", { class: "entry-name" }, p.name),
-								h("span", { class: "tags" },
-									tags.map(function (t) { return h("span", { class: "tag" }, CAIN.inlineText(t, cat)); }),
-									h("span", { class: "tag burst" }, CAIN.burstLabels[p.burst])),
+								CAIN.powerHead(p),
+								CAIN.powerTags(p, cat),
 								CAIN.richText(p.text, cat))));
 					})));
 			})),

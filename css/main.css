@@ -1637,6 +1637,67 @@ label.btn { user-select: none; }
 	padding: 10px 12px;
 }
 
+/* Book-style power heading: four-point star, name, italic tag line */
+.burst-mark { display: inline-flex; align-items: flex-start; flex: none; line-height: 1; }
+
+.burst-star { width: 18px; height: 18px; display: block; }
+
+.burst-star path { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+
+.burst-star.filled path { fill: var(--ink); }
+
+.burst-plus { font-weight: 900; font-size: 12px; margin-left: -1px; margin-top: -3px; }
+
+.power-name { display: flex; align-items: center; gap: 8px; }
+
+.power-name > span:not(.burst-mark) { flex: 0 1 auto; }
+
+.power-name .mini-btn { margin-left: auto; }
+
+.power-tags { font-style: italic; font-size: 13px; color: var(--ink-soft); margin: 2px 0 6px; }
+
+.burst-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; white-space: pre; }
+
+.burst-legend .burst-star { width: 14px; height: 14px; }
+
+/* Custom agenda and blasphemy editors */
+.custom-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+
+.custom-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.custom-row > .input { flex: 1 1 220px; min-width: 0; }
+
+.custom-block {
+	display: grid;
+	gap: 8px;
+	border: 1.5px solid var(--line);
+	border-radius: var(--radius-sm);
+	padding: 10px 12px;
+}
+
+.cat-text { display: grid; gap: 6px; }
+
+.cat-text-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+
+.custom-preview {
+	border-left: 3px solid var(--accent);
+	padding: 4px 0 4px 12px;
+}
+
+.custom-preview:empty { display: none; }
+
+.burst-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.burst-choice { display: inline-flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; font-family: var(--font-type); font-weight: 400; }
+
+.burst-choice[aria-pressed="true"] .burst-star path { stroke: var(--paper); }
+
+.burst-choice[aria-pressed="true"] .burst-star.filled path { fill: var(--paper); }
+
+.tag-pick { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+
+.power-star .burst-star { width: 22px; height: 22px; }
+
 .sin-web { padding: 6px 0 10px; }
 
 .sin-web .pip.blot { width: 28px; height: 28px; border-width: 2.5px; }

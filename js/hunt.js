@@ -20,6 +20,9 @@ window.CAIN = window.CAIN || {};
 		if (ch.weaponLook === undefined) ch.weaponLook = "";
 		if (ch.notes === undefined) ch.notes = "";
 		if (ch.kitNotes === undefined) ch.kitNotes = "";
+		if (!ch.custom) ch.custom = { agendas: [], blasphemies: [] };
+		if (!ch.custom.agendas) ch.custom.agendas = [];
+		if (!ch.custom.blasphemies) ch.custom.blasphemies = [];
 		// Bursts start full: a fresh hunt holds null until first shown.
 		if (ch.hunt.bursts === null) ch.hunt.bursts = R.derived(ch).psycheBursts;
 		return ch;
@@ -611,8 +614,123 @@ window.CAIN = window.CAIN || {};
 		return { events: events, ok: true, id: id };
 	}
 
+	// Custom agendas and blasphemies
+
+	function uid(prefix) {
+		return prefix + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
+	}
+
+	// Creates or updates a player-made agenda on this character.
+	// def: { id?, name, items: [{ text, bold }], abilities: [{ id?, name, text }] }.
+	// opts: { owned: [ability ids the character has], makeCurrent }.
+	function saveCustomAgenda(ch, def, opts) {
+		opts = opts || {};
+		var events = [];
+		var name = (def.name || "").trim();
+		if (!name) return { events: events, ok: false, reason: "Give the agenda a name." };
+		var isNew = !def.id;
+		var agendaDef = {
+			id: def.id || uid("ca-"),
+			name: name,
+			custom: true,
+			requires: null,
+			items: (def.items || []).filter(function (it) { return (it.text || "").trim(); })
+				.map(function (it) { return { text: it.text.trim(), bold: !!it.bold }; }),
+			abilities: (def.abilities || []).filter(function (ab) { return (ab.name || "").trim(); })
+				.map(function (ab) { return { id: ab.id || uid("a-"), name: ab.name.trim(), text: (ab.text || "").trim(), key: ab.key }; })
+		};
+		// key ties an unsaved ability to its "I have this" tick before it has an id.
+		var owned = (opts.owned || []).map(function (k) {
+			var hit = agendaDef.abilities.filter(function (ab) { return ab.id === k || ab.key === k; })[0];
+			return hit ? hit.id : null;
+		}).filter(Boolean);
+		agendaDef.abilities.forEach(function (ab) { delete ab.key; });
+		var list = ch.custom.agendas;
+		var i = list.findIndex(function (a) { return a.id === agendaDef.id; });
+		if (i >= 0) list[i] = agendaDef; else list.push(agendaDef);
+		ch.agendaAbilities = ch.agendaAbilities.filter(function (r) { return r.agenda !== agendaDef.id || owned.indexOf(r.ability) >= 0; });
+		owned.forEach(function (aid) {
+			if (!ch.agendaAbilities.some(function (r) { return r.agenda === agendaDef.id && r.ability === aid; })) ch.agendaAbilities.push({ agenda: agendaDef.id, ability: aid });
+		});
+		if (opts.makeCurrent) ch.agenda = agendaDef.id;
+		log(ch, events, (isNew ? "Created custom agenda " : "Updated custom agenda ") + name + ".");
+		return { events: events, ok: true, id: agendaDef.id };
+	}
+
+	// Creates or updates a player-made blasphemy on this character.
+	// def: { id?, name, summary, passive: { name, text }, powers: [{ id?, key?, name, text,
+	// burst, tags: { duration, effect, range } }] }.
+	// opts: { owned: [power ids or keys the character has], have: true to hold the blasphemy }.
+	function saveCustomBlasphemy(ch, def, opts) {
+		opts = opts || {};
+		var events = [];
+		var name = (def.name || "").trim();
+		if (!name) return { events: events, ok: false, reason: "Give the blasphemy a name." };
+		var bursts = core.burstKinds.map(function (k) { return k.id; });
+		var isNew = !def.id;
+		var passive = def.passive || {};
+		var blasDef = {
+			id: def.id || uid("cb-"),
+			numeral: "",
+			name: name,
+			custom: true,
+			summary: (def.summary || "").trim(),
+			flavor: "",
+			passive: { id: "passive", name: (passive.name || "").trim() || "Passive", text: (passive.text || "").trim() },
+			powers: (def.powers || []).filter(function (p) { return (p.name || "").trim(); }).map(function (p) {
+				var tags = p.tags || {};
+				return {
+					id: p.id || uid("p-"),
+					key: p.key,
+					name: p.name.trim(),
+					text: (p.text || "").trim(),
+					burst: bursts.indexOf(p.burst) >= 0 ? p.burst : "required",
+					tags: { duration: tags.duration || "", effect: tags.effect || "", range: tags.range || "" }
+				};
+			})
+		};
+		var owned = (opts.owned || []).map(function (k) {
+			var hit = blasDef.powers.filter(function (p) { return p.id === k || p.key === k; })[0];
+			return hit ? hit.id : null;
+		}).filter(Boolean);
+		blasDef.powers.forEach(function (p) { delete p.key; });
+		var list = ch.custom.blasphemies;
+		var i = list.findIndex(function (b) { return b.id === blasDef.id; });
+		if (i >= 0) list[i] = blasDef; else list.push(blasDef);
+		var entry = ch.blasphemies.filter(function (b) { return b.id === blasDef.id; })[0];
+		if (opts.have || owned.length) {
+			if (!entry) { entry = { id: blasDef.id, powers: [] }; ch.blasphemies.push(entry); }
+			entry.powers = owned;
+		} else if (entry) {
+			ch.blasphemies.splice(ch.blasphemies.indexOf(entry), 1);
+		}
+		log(ch, events, (isNew ? "Created custom blasphemy " : "Updated custom blasphemy ") + name + ".");
+		return { events: events, ok: true, id: blasDef.id };
+	}
+
+	// Deletes a custom agenda or blasphemy and everything that referred to it.
+	function deleteCustom(ch, kind, id) {
+		var events = [];
+		if (kind === "agenda") {
+			var a = ch.custom.agendas.filter(function (x) { return x.id === id; })[0];
+			ch.custom.agendas = ch.custom.agendas.filter(function (x) { return x.id !== id; });
+			ch.agendaAbilities = ch.agendaAbilities.filter(function (r) { return r.agenda !== id; });
+			if (ch.agenda === id) ch.agenda = null;
+			if (a) log(ch, events, "Deleted custom agenda " + a.name + ".");
+		} else {
+			var b = ch.custom.blasphemies.filter(function (x) { return x.id === id; })[0];
+			ch.custom.blasphemies = ch.custom.blasphemies.filter(function (x) { return x.id !== id; });
+			ch.blasphemies = ch.blasphemies.filter(function (x) { return x.id !== id; });
+			if (b) log(ch, events, "Deleted custom blasphemy " + b.name + ".");
+		}
+		return { events: events, ok: true };
+	}
+
 	CAIN.hunt = {
 		normalize: normalize,
+		saveCustomAgenda: saveCustomAgenda,
+		saveCustomBlasphemy: saveCustomBlasphemy,
+		deleteCustom: deleteCustom,
 		note: note,
 		kpLeft: kpLeft,
 		burstsMax: burstsMax,

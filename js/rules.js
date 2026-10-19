@@ -13,8 +13,17 @@ window.CAIN = window.CAIN || {};
 		return null;
 	}
 
-	function agenda(id) { return byId(CAIN.agendas, id); }
-	function blasphemy(id) { return byId(CAIN.blasphemies, id); }
+	// Player-made agendas and blasphemies live on characters. The store supplies
+	// them (from every character in this browser); ids are unique, so the book's
+	// lookups can fall back to them.
+	var customProvider = null;
+	function setCustomProvider(fn) { customProvider = fn; }
+	function customContent() {
+		return (customProvider && customProvider()) || { agendas: [], blasphemies: [] };
+	}
+
+	function agenda(id) { return byId(CAIN.agendas, id) || byId(customContent().agendas, id); }
+	function blasphemy(id) { return byId(CAIN.blasphemies, id) || byId(customContent().blasphemies, id); }
 	function sinMark(id) { return byId(CAIN.sinMarks, id); }
 	function kitItem(id) { return byId(CAIN.kit, id); }
 
@@ -72,6 +81,7 @@ window.CAIN = window.CAIN || {};
 			agendaAbilities: [],
 			boldItems: [],
 			blasphemies: [],
+			custom: { agendas: [], blasphemies: [] },
 			sinMarks: [],
 			purchases: [],
 			weaponCat: 0,
@@ -516,6 +526,7 @@ window.CAIN = window.CAIN || {};
 
 	CAIN.rules = {
 		agenda: agenda,
+		setCustomProvider: setCustomProvider,
 		blasphemy: blasphemy,
 		sinMark: sinMark,
 		kitItem: kitItem,

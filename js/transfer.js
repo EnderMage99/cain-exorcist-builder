@@ -38,14 +38,20 @@ window.CAIN = window.CAIN || {};
 	function contentWarnings(c) {
 		var name = c.name || "An exorcist";
 		var out = [];
-		if (c.agenda && !R.agenda(c.agenda)) out.push(name + ": agenda \"" + c.agenda + "\" isn't in this build.");
+		// The character's own custom agendas and blasphemies count as known.
+		function findIn(list, id) { return (list || []).filter(function (x) { return x.id === id; })[0] || null; }
+		function agendaOf(id) { return R.agenda(id) || findIn(c.custom.agendas, id); }
+		function blasOf(id) { return R.blasphemy(id) || findIn(c.custom.blasphemies, id); }
+		if (c.agenda && !agendaOf(c.agenda)) out.push(name + ": agenda \"" + c.agenda + "\" isn't in this build.");
 		c.agendaAbilities.forEach(function (r) {
-			if (!R.agendaAbility(r)) out.push(name + ": agenda ability \"" + r.ability + "\" isn't in this build.");
+			var a = agendaOf(r.agenda);
+			if (!a || !findIn(a.abilities, r.ability)) out.push(name + ": agenda ability \"" + r.ability + "\" isn't in this build.");
 		});
 		c.blasphemies.forEach(function (b) {
-			if (!R.blasphemy(b.id)) out.push(name + ": blasphemy \"" + b.id + "\" isn't in this build.");
+			var def = blasOf(b.id);
+			if (!def) out.push(name + ": blasphemy \"" + b.id + "\" isn't in this build.");
 			else b.powers.forEach(function (p) {
-				if (!R.power(b.id, p)) out.push(name + ": power \"" + p + "\" isn't in this build.");
+				if (!findIn(def.powers, p)) out.push(name + ": power \"" + p + "\" isn't in this build.");
 			});
 		});
 		c.sinMarks.forEach(function (m) {

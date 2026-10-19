@@ -263,12 +263,9 @@ window.CAIN = window.CAIN || {};
 	}
 
 	function powerEntry(p, cat) {
-		var tags = [p.tags.duration, p.tags.effect, p.tags.range].filter(Boolean);
 		return h("li", { class: "entry" },
-			h("div", { class: "entry-name" }, p.name),
-			h("div", { class: "tags" },
-				tags.map(function (t) { return h("span", { class: "tag" }, inline(t, cat)); }),
-				h("span", { class: "tag burst" }, CAIN.burstLabels[p.burst])),
+			CAIN.powerHead(p),
+			CAIN.powerTags(p, cat),
 			richText(p.text, cat));
 	}
 

@@ -178,6 +178,44 @@ window.CAIN = window.CAIN || {};
 		return label ? h("label", { class: "select-field" }, h("span", { class: "field-label" }, label), el) : el;
 	}
 
+	// The book's power symbol: a curved four-point star. Black when the power needs a
+	// psyche burst (with a + for one or more), outlined when it needs none or only
+	// on success.
+	var SVG_NS = "http://www.w3.org/2000/svg";
+	function burstIcon(burst) {
+		var kind = (CAIN.core.burstKinds.filter(function (k) { return k.id === burst; })[0]) || CAIN.core.burstKinds[0];
+		var filled = burst === "required" || burst === "multiple";
+		var svg = document.createElementNS(SVG_NS, "svg");
+		svg.setAttribute("viewBox", "0 0 24 24");
+		svg.setAttribute("class", "burst-star" + (filled ? " filled" : ""));
+		svg.setAttribute("aria-hidden", "true");
+		var path = document.createElementNS(SVG_NS, "path");
+		path.setAttribute("d", "M12 1.5C12.9 8.6 15.4 11.1 22.5 12C15.4 12.9 12.9 15.4 12 22.5C11.1 15.4 8.6 12.9 1.5 12C8.6 11.1 11.1 8.6 12 1.5Z");
+		svg.appendChild(path);
+		return h("span", { class: "burst-mark", title: kind.label, role: "img", "aria-label": kind.label },
+			svg, burst === "multiple" ? h("span", { class: "burst-plus", "aria-hidden": "true" }, "+") : null);
+	}
+
+	// A power's heading (burst star + name, plus any extra controls) and its tag
+	// line ("Until rest, Charm, Adjacent"), as the book prints them.
+	function powerHead(p, extra) {
+		return h("div", { class: "entry-name power-name" }, burstIcon(p.burst), h("span", null, p.name), extra || null);
+	}
+
+	function powerTags(p, cat) {
+		var tags = p.tags ? [p.tags.duration, p.tags.effect, p.tags.range].filter(Boolean) : [];
+		if (!tags.length) return null;
+		var parts = [];
+		tags.forEach(function (t, i) {
+			if (i) parts.push(", ");
+			parts.push(inlineText(t, cat));
+		});
+		return h("div", { class: "power-tags" }, parts);
+	}
+
+	CAIN.powerHead = powerHead;
+	CAIN.powerTags = powerTags;
+	CAIN.burstIcon = burstIcon;
 	CAIN.stepper = stepper;
 	CAIN.select = select;
 	CAIN.term = term;
@@ -188,11 +226,5 @@ window.CAIN = window.CAIN || {};
 	CAIN.append = append;
 	CAIN.inlineText = inlineText;
 	CAIN.richText = richText;
-	CAIN.burstLabels = {
-		required: "Psyche burst",
-		onSuccess: "Burst on success",
-		multiple: "Burst +",
-		none: "No burst"
-	};
 	CAIN.screens = CAIN.screens || {};
 })();

@@ -264,14 +264,15 @@ window.CAIN = window.CAIN || {};
 	function abilityPanel(ch, ctx) {
 		var st = uiFor(ch);
 		var cat = R.derived(ch).cat;
-		var agendas = CAIN.agendas.slice().sort(function (a, b) { return (b.id === ch.agenda) - (a.id === ch.agenda); });
-		var from = st.addFrom && R.agenda(st.addFrom) ? st.addFrom : (ch.agenda || agendas[0].id);
+		var agendas = CAIN.agendas.concat(ch.custom.agendas).sort(function (a, b) { return (b.id === ch.agenda) - (a.id === ch.agenda); });
+		var from = st.addFrom && R.agenda(st.addFrom) ? st.addFrom : (ch.agenda && R.agenda(ch.agenda) ? ch.agenda : agendas[0].id);
 		var ag = R.agenda(from);
 		var open = ag.abilities.filter(function (ab) { return !ch.agendaAbilities.some(function (r) { return r.agenda === ag.id && r.ability === ab.id; }); });
 		return panel(ctx, "Add an agenda ability", ch.agendaAbilities.length >= 5 ? "You already have 5. The rules cap it at 5, so remove one on the sheet, or add anyway." : null,
-			row(CAIN.select("From agenda", from, agendas.map(function (x) { return { value: x.id, label: x.name + (x.id === ch.agenda ? " (current)" : "") }; }),
+			row(CAIN.select("From agenda", from, agendas.map(function (x) { return { value: x.id, label: x.name + (x.custom ? " (yours)" : "") + (x.id === ch.agenda ? " (current)" : "") }; }),
 				function (v) { st.addFrom = v; ctx.save(true); }),
-				ch.advances > 0 ? chip("Use up 1 advance (" + ch.advances + ")", st.useAdvance, function () { st.useAdvance = !st.useAdvance; ctx.save(true); }) : null),
+				ch.advances > 0 ? chip("Use up 1 advance (" + ch.advances + ")", st.useAdvance, function () { st.useAdvance = !st.useAdvance; ctx.save(true); }) : null,
+				btn("Create your own agenda", function () { ctx.open("customAgenda"); }, { small: true, ghost: true })),
 			open.length ? h("ul", { class: "options" }, open.map(function (ab) {
 				return h("li", null, h("button", { class: "option", type: "button", onclick: function () {
 					ch.agendaAbilities.push({ agenda: ag.id, ability: ab.id });
@@ -287,22 +288,22 @@ window.CAIN = window.CAIN || {};
 		var st = uiFor(ch);
 		var cat = R.derived(ch).cat;
 		var owned = ch.blasphemies.map(function (b) { return b.id; });
-		var list = CAIN.blasphemies.slice().sort(function (a, b) { return (owned.indexOf(b.id) >= 0) - (owned.indexOf(a.id) >= 0); });
-		var from = st.addFrom && R.blasphemy(st.addFrom) ? st.addFrom : (owned[0] || list[0].id);
+		var list = CAIN.blasphemies.concat(ch.custom.blasphemies).sort(function (a, b) { return (owned.indexOf(b.id) >= 0) - (owned.indexOf(a.id) >= 0); });
+		var from = st.addFrom && R.blasphemy(st.addFrom) ? st.addFrom : (owned.filter(function (o) { return R.blasphemy(o); })[0] || list[0].id);
 		var b = R.blasphemy(from);
 		var mine = ch.blasphemies.filter(function (x) { return x.id === b.id; })[0];
 		var open = b.powers.filter(function (p) { return !mine || mine.powers.indexOf(p.id) < 0; });
 		var total = ch.blasphemies.reduce(function (n, x) { return n + x.powers.length; }, 0);
 		return panel(ctx, "Add a power", total >= 5 ? "You already have 5 powers. The rules cap it at 5, so remove one on the sheet, or add anyway." : null,
-			row(CAIN.select("From blasphemy", from, list.map(function (x) { return { value: x.id, label: x.name + (owned.indexOf(x.id) >= 0 ? "" : " (new blasphemy)") }; }),
+			row(CAIN.select("From blasphemy", from, list.map(function (x) { return { value: x.id, label: x.name + (x.custom ? " (yours)" : "") + (owned.indexOf(x.id) >= 0 ? "" : " (new blasphemy)") }; }),
 				function (v) { st.addFrom = v; ctx.save(true); }),
-				ch.advances > 0 ? chip("Use up 1 advance (" + ch.advances + ")", st.useAdvance, function () { st.useAdvance = !st.useAdvance; ctx.save(true); }) : null),
+				ch.advances > 0 ? chip("Use up 1 advance (" + ch.advances + ")", st.useAdvance, function () { st.useAdvance = !st.useAdvance; ctx.save(true); }) : null,
+				btn("Create your own blasphemy", function () { ctx.open("customBlasphemy"); }, { small: true, ghost: true })),
 			!mine ? h("div", { class: "passive" },
 				h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
 				h("p", { class: "note" }, "A new blasphemy brings its passive, crosses out a sin box and adds 1 to XP to advance."),
 				CAIN.richText(b.passive.text, cat)) : null,
 			open.length ? h("ul", { class: "options" }, open.map(function (p) {
-				var tags = [p.tags.duration, p.tags.effect, p.tags.range].filter(Boolean);
 				return h("li", null, h("button", { class: "option", type: "button", onclick: function () {
 					if (!mine) { mine = { id: b.id, powers: [] }; ch.blasphemies.push(mine); }
 					mine.powers.push(p.id);
@@ -311,8 +312,8 @@ window.CAIN = window.CAIN || {};
 					st.useAdvance = false;
 					ctx.act(H.note(ch, "Added power " + p.name + " (" + b.name + ")" + (used ? " (used an advance)" : "") + "."));
 				} }, h("span", { class: "option-mark" }), h("span", { class: "option-body" },
-					h("span", { class: "entry-name" }, p.name),
-					h("span", { class: "tags" }, tags.map(function (t) { return h("span", { class: "tag" }, CAIN.inlineText(t, cat)); }), h("span", { class: "tag burst" }, CAIN.burstLabels[p.burst])),
+					CAIN.powerHead(p),
+					CAIN.powerTags(p, cat),
 					CAIN.richText(p.text, cat))));
 			})) : h("p", { class: "note" }, "You have every " + b.name + " power."));
 	}
@@ -567,12 +568,15 @@ window.CAIN = window.CAIN || {};
 		{ id: "rest", label: "Rest", title: "Rest and assign the resting dice", render: restPanel, badge: function (ch) { return ch.hunt.restDice ? "!" : null; } },
 		{ id: "mission", label: "Mission", title: "Close a mission or start a new one", render: missionPanel },
 		{ id: "shop", label: "Kit", title: "Pull out and use kit, add or create items, set scrip", render: kitPanel },
-		{ id: "log", label: "Log", title: "Everything recorded", render: logPanel }
+		{ id: "log", label: "Log", title: "Everything recorded", render: logPanel },
+		// Opened from Add ability / Add power and the sheet, not shown on the bar.
+		{ id: "customAgenda", hidden: true, render: function (ch, ctx) { return CAIN.customPanels.agenda(ch, ctx); } },
+		{ id: "customBlasphemy", hidden: true, render: function (ch, ctx) { return CAIN.customPanels.blasphemy(ch, ctx); } }
 	];
 
 	CAIN.renderActions = function (ch, ctx) {
 		var current = ch.dead ? null : actions.filter(function (a) { return a.id === ctx.panel; })[0];
-		var bar = ch.dead ? null : h("nav", { class: "action-bar", "aria-label": "Sheet actions" }, actions.map(function (a) {
+		var bar = ch.dead ? null : h("nav", { class: "action-bar", "aria-label": "Sheet actions" }, actions.filter(function (a) { return !a.hidden; }).map(function (a) {
 			var badge = a.badge ? a.badge(ch) : null;
 			return h("button", { class: "action-btn", type: "button", title: a.title, "aria-pressed": String(ctx.panel === a.id), onclick: function () { ctx.open(a.id); } },
 				a.label, badge ? h("span", { class: "badge" }, String(badge)) : null);
