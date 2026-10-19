@@ -159,7 +159,7 @@ window.CAIN = window.CAIN || {};
 		var st = uiFor(ch).session;
 		var d = R.derived(ch);
 		return panel(ctx, "End of session", "Every yes is 1 XP; a full track becomes an advance. Recording also clears pathos and Divine Agony.",
-			h("ul", { class: "options" }, core.xpQuestions.map(function (q) {
+			h("ul", { class: "options" }, R.xpQuestions(ch).map(function (q) {
 				return h("li", null, h("button", { class: "option multi", type: "button", "aria-pressed": String(!!st[q.id]),
 					onclick: function () { st[q.id] = !st[q.id]; ctx.save(true); } },
 					h("span", { class: "option-mark", "aria-hidden": "true" }), h("span", { class: "option-body" }, q.text)));
@@ -565,8 +565,11 @@ window.CAIN = window.CAIN || {};
 			}),
 			H.hasAgendaAbility(ch, "jack") && zeroSkills.length ? row(CAIN.select("Jack!: a 0 skill counts as 1 this mission", dep.jack,
 				zeroSkills.map(function (s) { return { value: s.id, label: s.name }; }), function (v) { dep.jack = v; ctx.save(true); }, { placeholder: "None" })) : null,
+			row(CAIN.select("Bond with a virtue this mission", dep.virtue === undefined ? (ch.virtueBonding || "") : dep.virtue,
+				CAIN.virtues.map(function (v) { var o = (ch.virtues || []).filter(function (x) { return x.id === v.id; })[0]; return { value: v.id, label: v.name + (o ? " (rank " + CAIN.virtueRanks[o.rank] + ")" : " (new bond)") }; }),
+				function (v) { dep.virtue = v; ctx.save(true); }, { placeholder: "None" })),
 			h("div", { class: "btn-row" }, btn("Start a new mission", function () {
-				var r = H.startMission(ch, { jackSkill: dep.jack || null, missionRolls: dep.rolls });
+				var r = H.startMission(ch, { jackSkill: dep.jack || null, missionRolls: dep.rolls, virtue: dep.virtue === undefined ? (ch.virtueBonding || null) : (dep.virtue || null) });
 				if (!r.ok) { ctx.flash(["Enter the dice first."]); return; }
 				st.deploy = { jack: "", rolls: {} };
 				ctx.act(r);

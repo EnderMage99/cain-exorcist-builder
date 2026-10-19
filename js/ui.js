@@ -152,7 +152,7 @@ window.CAIN = window.CAIN || {};
 			label ? h("span", { class: "field-label" }, label) : null,
 			h("span", { class: "stepper-controls" },
 				h("button", { class: "step-btn", type: "button", "aria-label": "Lower " + name, disabled: value <= min, onclick: function () { set(value - 1); } }, "-"),
-				h("span", { class: "stepper-value", "aria-live": "polite" }, String(value) + (opts.suffix || "")),
+				h("span", { class: "stepper-value", "aria-live": "polite" }, (opts.format ? opts.format(value) : String(value)) + (opts.suffix || "")),
 				h("button", { class: "step-btn", type: "button", "aria-label": "Raise " + name, disabled: value >= max, onclick: function () { set(value + 1); } }, "+")));
 	}
 
@@ -198,7 +198,7 @@ window.CAIN = window.CAIN || {};
 			svg.appendChild(cross);
 		}
 		return h("span", { class: "burst-mark", title: kind.label, role: "img", "aria-label": kind.label },
-			svg, burst === "multiple" ? h("span", { class: "burst-plus", "aria-hidden": "true" }, "+") : null);
+			svg, burst === "multiple" ? h("span", { class: "burst-plus", "aria-hidden": "true" }, "+") : burst === "all" ? h("span", { class: "burst-plus burst-all", "aria-hidden": "true" }, "ALL") : null);
 	}
 
 	// A power's heading (burst star + name, plus any extra controls) and its tag
@@ -308,6 +308,38 @@ window.CAIN = window.CAIN || {};
 		return h("span", { class: "art kit-pic" + (cls ? " " + cls : ""), "aria-hidden": "true" }, h("img", { src: item.image, alt: "", draggable: "false" }));
 	}
 
+	// Virtues: portrait, the bond track (ranks 0-III, ones not reached dimmed when
+	// a rank is given) and the high blasphemy powers.
+	var RANKS = ["0", "I", "II", "III"];
+
+	function virtuePortrait(v, cls) {
+		return h("img", { class: "blas-portrait" + (cls ? " " + cls : ""), src: "img/virtue/" + v.id + ".jpg", alt: "", draggable: "false" });
+	}
+
+	function virtueBondList(v, cat, rank) {
+		return h("ol", { class: "virtue-bonds" }, v.bonds.map(function (b) {
+			var locked = rank !== undefined && b.rank > rank;
+			return h("li", { class: "virtue-bond" + (locked ? " locked" : "") },
+				h("span", { class: "virtue-rank", "aria-label": "Rank " + RANKS[b.rank] }, RANKS[b.rank]),
+				h("div", { class: "virtue-bond-text" }, richText(b.text, cat)));
+		}));
+	}
+
+	function virtuePowers(v, cat, rank, extra) {
+		return h("ul", { class: "entries virtue-powers" }, v.powers.map(function (p) {
+			var locked = rank !== undefined && p.rank > rank;
+			return h("li", { class: "entry" + (locked ? " locked" : "") },
+				powerHead(p, h("span", { class: "tag" }, "Bond " + RANKS[p.rank] + (p.choice ? ", by choice" : ""))),
+				powerTags(p, cat),
+				richText(p.text, cat),
+				extra ? extra(p) : null);
+		}));
+	}
+
+	CAIN.virtueRanks = RANKS;
+	CAIN.virtuePortrait = virtuePortrait;
+	CAIN.virtueBondList = virtueBondList;
+	CAIN.virtuePowers = virtuePowers;
 	CAIN.kitPicture = kitPicture;
 	CAIN.powerHead = powerHead;
 	CAIN.agendaIcon = agendaIcon;

@@ -296,6 +296,16 @@ expansion items in four categories. Stat items (Private Room, Visitation
 rights, Relaxed Grooming, Leave of Absence) change the sheet's numbers;
 healing consumables (Green and Red Herb, Adrenal Pill) take the rolled total.
 
+### M10 - Virtues (done)
+
+The optional Virtues from Games for Freaks issue 1 (`data/virtues.js`): a
+Doctrine tab, an optional Registration step, and a Virtues section on the
+sheet tracking any number of bonds. Pick the virtue to bond with when starting
+a mission (or on the sheet); surviving raises it by 1, to III. Bond abilities
+and high blasphemies apply by rank; Justice adds an XP question, Faith II
+crosses out one sin box on overflow, and a chosen Immaculate Defiance gives +1
+max injury.
+
 ## Next
 
 1. Optional Admin tools: tension and pressure talismans, a hunt tracker.

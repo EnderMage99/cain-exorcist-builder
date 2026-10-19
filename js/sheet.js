@@ -304,7 +304,7 @@ window.CAIN = window.CAIN || {};
 				bubbles(ch.advances, advSlots, { label: "Advances" },
 					this.tracked("Advances", function () { return ch.advances; }, function (v) { ch.advances = v; }))),
 			h("p", { class: "note" }, "At the end of each session, answer each question, then mark XP. Cash an advance each time this fills."),
-			h("ul", { class: "plain-list" }, core.xpQuestions.map(function (q) { return h("li", null, q.text); })),
+			h("ul", { class: "plain-list" }, R.xpQuestions(this.ch).map(function (q) { return h("li", null, q.text); })),
 			h("div", { class: "btn-row" }, this.openButton("End of session...", "xp"), ch.advances > 0 ? this.openButton("Spend an advance...", "advance") : null));
 	};
 
@@ -563,6 +563,62 @@ window.CAIN = window.CAIN || {};
 				CAIN.richText(blast.text, d.cat)));
 	};
 
+	// Virtue bonds: any number tracked, each with its rank (0-III), the one being
+	// raised this mission, its stricture, and what it has granted.
+	Sheet.prototype.virtues = function () {
+		var self = this;
+		var ch = this.ch;
+		var d = this.d;
+		if (!Array.isArray(ch.virtues)) ch.virtues = [];
+		if (!ch.virtues.length && !this.editable) return null;
+		var blocks = ch.virtues.map(function (owned, i) {
+			var v = R.virtue(owned.id);
+			if (!v) return null;
+			var th = CAIN.blasTheme(v);
+			var bonding = ch.virtueBonding === v.id;
+			return h("div", { class: "blas-block virtue-block " + th.class, style: th.style },
+				h("div", { class: "blas-head" },
+					CAIN.virtuePortrait(v, "blas-portrait-sm"),
+					h("span", { class: "sticker blas-plate" }, v.name),
+					h("span", { class: "label" }, v.epithet),
+					h("span", { class: "virtue-rank-pips" }, h("span", { class: "label" }, "Bond"),
+						bubbles(owned.rank, CAIN.virtueRules.maxRank, { label: v.name + " bond rank" },
+							self.tracked(v.name + " bond", function () { return owned.rank; }, function (val) { owned.rank = val; }))),
+					self.editable ? h("button", { class: "chip", type: "button", "aria-pressed": String(bonding), title: "The virtue you're raising this mission. Its bond rises by 1 when you close a mission you survived.",
+						onclick: function () { CAIN.hunt.bondWith(ch, bonding ? null : v.id); self.onChange(true); } }, bonding ? "Bonding this mission" : "Bond this mission")
+						: (bonding ? h("span", { class: "tag stamp" }, "Bonding this mission") : null),
+					self.editable ? removeBtn(v.name + " bond", function () {
+						ch.virtues.splice(i, 1);
+						if (bonding) ch.virtueBonding = null;
+						self.onChange(true);
+					}) : null),
+				bonding ? h("div", { class: "passive virtue-stricture" },
+					h("div", { class: "entry-name" }, "Stricture", h("span", { class: "tag stamp" }, "While bonding")),
+					h("p", null, v.stricture),
+					h("p", { class: "tiny" }, "Ignore it for one roll by taking 2 nonlethal stress.")) : null,
+				CAIN.virtueBondList(v, d.cat, owned.rank),
+				CAIN.virtuePowers(v, d.cat, owned.rank, function (p) {
+					if (!p.choice || owned.rank < p.rank || !self.editable) return null;
+					return owned.chosen ? h("p", { class: "tag stamp" }, "Chosen")
+						: h("button", { class: "mini-btn", type: "button", onclick: function () {
+							owned.chosen = true;
+							self.change(p.name, "not chosen", "chosen (irreversible)");
+						} }, "Choose " + p.name + " (irreversible)");
+				}));
+		});
+		var untracked = CAIN.virtues.filter(function (v) { return !ch.virtues.some(function (o) { return o.id === v.id; }); });
+		var add = this.editable && untracked.length ? h("div", { class: "subrow" },
+			CAIN.select(null, "", untracked.map(function (v) { return { value: v.id, label: v.name + ", " + v.epithet }; }), function (val) {
+				if (!val) return;
+				ch.virtues.push({ id: val, rank: 0 });
+				self.change("Virtue bond", "none", R.virtue(val).name + " (rank 0)");
+			}, { placeholder: "Add a virtue bond...", aria: "Add a virtue bond" })) : null;
+		return section("virtues", { text: "Virtues", goth: true }, ch.virtues.length + " bond" + (ch.virtues.length === 1 ? "" : "s"),
+			h("p", { class: "tiny" }, "Bond with a virtue at the start of a mission to gain its rank 0 ability; survive and the bond rises by 1, to III. Bonds stay with you, and you can hold several. High blasphemies don't change your XP cap or sin cap, and spend all remaining bursts (min 1)."),
+			blocks.length ? blocks : h("p", { class: "note" }, "No virtue bonds."),
+			add);
+	};
+
 	// Last page
 
 	Sheet.prototype.background = function () {
@@ -629,7 +685,8 @@ window.CAIN = window.CAIN || {};
 			page("3", "Registered abilities",
 				h("div", { class: "sheet-cols" },
 					h("div", { class: "sheet-col" }, s.agenda()),
-					h("div", { class: "sheet-col" }, s.blasphemies()))),
+					h("div", { class: "sheet-col" }, s.blasphemies())),
+				s.virtues()),
 			page("4", "Background",
 				h("div", { class: "sheet-cols" },
 					h("div", { class: "sheet-col" }, s.background()),

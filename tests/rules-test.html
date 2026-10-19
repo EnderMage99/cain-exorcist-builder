@@ -38,6 +38,7 @@
 <script src="../data/blasphemies.js"></script>
 <script src="../data/sinmarks.js"></script>
 <script src="../data/kit.js"></script>
+<script src="../data/virtues.js"></script>
 <script src="../data/prompts.js"></script>
 <script src="../js/rules.js"></script>
 <script src="../js/hunt.js"></script>
@@ -666,6 +667,40 @@
 		veteran.purchases.push({ item: "improved-meal-plan", count: 1 });
 		// Gate +1 KP, meal plan +1 KP; extra blasphemy: sin cap 9, XP 5; CAT 5: PSYCHE 3.
 		eq("CAT 5 veteran with two blasphemies", sheetNumbers(veteran), [7, 6, 9, 5, 3, 3]);
+
+		group("Virtues");
+		CAIN.virtues.forEach(function (v) {
+			check("virtue " + v.id + " has bonds 0-III", v.bonds.map(function (b) { return b.rank; }).join() === "0,1,2,3");
+			check("virtue " + v.id + " has a stricture and a high blasphemy", !!v.stricture && v.powers.length >= 1);
+		});
+		var vb = guardianTension();
+		H.normalize(vb);
+		eq("no bonds to start", [vb.virtues.length, vb.virtueBonding], [0, null]);
+		H.startMission(vb, { virtue: "faith" });
+		eq("bonding on deploy starts at rank 0", [vb.virtueBonding, vb.virtues[0].rank], ["faith", 0]);
+		H.endMission(vb, { outcome: "execute" });
+		eq("surviving raises the bond and clears bonding", [vb.virtues[0].rank, vb.virtueBonding], [1, null]);
+		check("rank I grants Null", R.virtueBonds(vb)[0].powers.some(function (p) { return p.id === "null"; }));
+		H.startMission(vb, { virtue: "justice" });
+		H.endMission(vb, { outcome: "execute" });
+		eq("a second virtue is tracked alongside", vb.virtues.map(function (o) { return o.id + o.rank; }), ["faith1", "justice1"]);
+		eq("Justice adds an XP question", R.xpQuestions(vb).length, CAIN.core.xpQuestions.length + 1);
+		vb.virtues[0].rank = 2;
+		check("Faith II: overflow crosses one box", R.hasFlag(vb, "overflowCrossesOne"));
+		var injBefore = R.derived(vb).maxInjuries;
+		vb.virtues[0].rank = 3;
+		eq("Immaculate Defiance only counts once chosen", R.derived(vb).maxInjuries, injBefore);
+		vb.virtues[0].chosen = true;
+		eq("chosen Immaculate Defiance: +1 max injury", R.derived(vb).maxInjuries, injBefore + 1);
+		vb.virtues[0].rank = 3;
+		H.startMission(vb, { virtue: "faith" });
+		H.endMission(vb, { outcome: "execute" });
+		eq("bonds stop at III", vb.virtues[0].rank, 3);
+		var died = guardianTension();
+		H.normalize(died);
+		H.startMission(died, { virtue: "hope" });
+		H.endMission(died, { died: true });
+		eq("no rank gained if the exorcist dies", died.virtues[0].rank, 0);
 	} catch (err) {
 		group("Crash");
 		check("tests ran without throwing", false, err && err.stack ? err.stack : String(err));

@@ -13,6 +13,7 @@ window.CAIN = window.CAIN || {};
 		{ id: "skills", name: "Skills" },
 		{ id: "agenda", name: "Agenda" },
 		{ id: "blasphemy", name: "Blasphemy" },
+		{ id: "virtue", name: "Virtue" },
 		{ id: "kit", name: "Kit" },
 		{ id: "review", name: "Review" }
 	];
@@ -267,6 +268,51 @@ window.CAIN = window.CAIN || {};
 				CAIN.richText(CAIN.blast.text, cat)));
 	}
 
+	// Optional: track virtue bonds (for an exorcist who already has some) and pick
+	// the one to bond with on the first mission. Several can be tracked.
+	function virtueStep() {
+		var c = ch();
+		var cat = R.derived(c).cat;
+		if (!Array.isArray(c.virtues)) c.virtues = [];
+		return h("div", null,
+			h("p", { class: "lede" }, "Optional. Virtues are CAIN's living legends. Bond with one at the start of a mission to gain its rank 0 ability, and raise the bond each mission you survive. You can hold bonds with several. Skip this step if your group isn't using them."),
+			h("div", { class: "grid" }, CAIN.virtues.map(function (v) {
+				var owned = c.virtues.filter(function (o) { return o.id === v.id; })[0];
+				var bonding = c.virtueBonding === v.id;
+				var th = CAIN.blasTheme(v);
+				return h("article", { class: "card pick-card blas-card virtue-card " + th.class + (owned ? " selected" : ""), style: th.style },
+					h("div", { class: "blas-intro" },
+						CAIN.virtuePortrait(v),
+						h("div", { class: "blas-intro-text" },
+							h("div", { class: "card-head" }, h("h2", { class: "blas-title" }, v.name), h("span", { class: "label" }, v.epithet)),
+							h("div", { class: "passive virtue-stricture" },
+								h("div", { class: "entry-name" }, "Stricture", h("span", { class: "tag stamp" }, "While bonding")),
+								h("p", null, v.stricture)),
+							h("div", { class: "subrow virtue-controls" },
+								h("button", { class: "chip", type: "button", "aria-pressed": String(!!owned), onclick: function () {
+									if (owned) {
+										c.virtues = c.virtues.filter(function (o) { return o.id !== v.id; });
+										if (bonding) c.virtueBonding = null;
+									} else c.virtues.push({ id: v.id, rank: 0 });
+									changed(true);
+								} }, owned ? "Bonded" : "Add bond"),
+								owned ? CAIN.stepper("Rank", owned.rank, 0, CAIN.virtueRules.maxRank, function (val) { owned.rank = val; changed(true); },
+									{ small: true, format: function (n) { return CAIN.virtueRanks[n]; } }) : null,
+								h("button", { class: "chip", type: "button", "aria-pressed": String(bonding), onclick: function () {
+									if (bonding) c.virtueBonding = null;
+									else {
+										c.virtueBonding = v.id;
+										if (!owned) c.virtues.push({ id: v.id, rank: 0 });
+									}
+									changed(true);
+								} }, "Bond on first mission")))),
+					h("div", { class: "subhead" }, "Bond abilities"),
+					CAIN.virtueBondList(v, cat, owned ? owned.rank : undefined),
+					h("div", { class: "subhead" }, "High blasphemy"),
+					CAIN.virtuePowers(v, cat, owned ? owned.rank : undefined));
+			})));
+	}
+
 	function kitStep() {
 		var c = ch();
 		var d = R.derived(c);
@@ -304,6 +350,7 @@ window.CAIN = window.CAIN || {};
 		skills: skillsStep,
 		agenda: agendaStep,
 		blasphemy: blasphemyStep,
+		virtue: virtueStep,
 		kit: kitStep,
 		review: reviewStep
 	};

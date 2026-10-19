@@ -42,7 +42,8 @@ window.CAIN = window.CAIN || {};
 		{ id: "M6", text: "Export and import", done: true },
 		{ id: "M7", text: "Print view and polish", done: true },
 		{ id: "M8", text: "All agendas and blasphemies, book colours", done: true },
-		{ id: "M9", text: "All sin marks and kit", done: true }
+		{ id: "M9", text: "All sin marks and kit", done: true },
+		{ id: "M10", text: "Virtues (Games for Freaks)", done: true }
 	];
 
 	// Import state for the registry: result messages, characters waiting on a
@@ -235,6 +236,7 @@ window.CAIN = window.CAIN || {};
 	var doctrineTabs = [
 		{ id: "agendas", name: "Agendas" },
 		{ id: "blasphemies", name: "Blasphemies" },
+		{ id: "virtues", name: "Virtues" },
 		{ id: "sinmarks", name: "Sin marks" },
 		{ id: "kit", name: "Kit" },
 		{ id: "cat", name: "CAT scale" },
@@ -297,6 +299,39 @@ window.CAIN = window.CAIN || {};
 			h("ul", { class: "entries" }, m.abilities.map(function (ab) {
 				return h("li", { class: "entry" }, h("div", { class: "entry-name" }, "d6: " + ab.roll), richText(ab.text, cat));
 			})));
+	}
+
+	function virtueCard(v, cat) {
+		var th = CAIN.blasTheme(v);
+		return h("article", { class: "card blas-card virtue-card " + th.class, style: th.style },
+			h("div", { class: "blas-intro" },
+				CAIN.virtuePortrait(v),
+				h("div", { class: "blas-intro-text" },
+					h("div", { class: "card-head" },
+						h("h2", { class: "blas-title" }, v.name),
+						h("span", { class: "label" }, v.epithet)),
+					h("p", { class: "note" }, v.flavor),
+					h("dl", { class: "virtue-facts" },
+						h("dt", null, "Likes"), h("dd", null, v.likes.join(", ")),
+						h("dt", null, "Dislikes"), h("dd", null, v.dislikes.join(", ")),
+						h("dt", null, "Favorite food"), h("dd", null, v.food)))),
+			h("div", { class: "passive virtue-stricture" },
+				h("div", { class: "entry-name" }, "Stricture", h("span", { class: "tag stamp" }, "While bonding")),
+				h("p", null, v.stricture)),
+			h("div", { class: "subhead" }, "Bond abilities"),
+			CAIN.virtueBondList(v, cat),
+			h("div", { class: "subhead" }, "High blasphemy"),
+			CAIN.virtuePowers(v, cat));
+	}
+
+	function virtuesView(cat) {
+		return h("div", { class: "grid" },
+			h("article", { class: "card virtue-rules" },
+				h("div", { class: "card-head" }, h("h2", null, "Virtue bonds"), h("span", { class: "label" }, "Games for Freaks, issue 1")),
+				h("p", null, "Virtues are CAIN's six living weapons of last resort, background mentors your exorcist can study under or emulate between missions. At the start of any mission, pick a virtue to bond with: you gain its rank 0 ability at once. Survive the mission and the bond rises by 1, to III, granting each ability in turn. Bonds are permanent, and you can bond with a different virtue each mission, so you can hold several."),
+				h("p", null, CAIN.virtueRules.stricture),
+				h("p", null, CAIN.virtueRules.highBlasphemy)),
+			CAIN.virtues.map(function (v) { return virtueCard(v, cat); }));
 	}
 
 	function kitEntry(k) {
@@ -366,7 +401,7 @@ window.CAIN = window.CAIN || {};
 	// re-render so the search box keeps focus. A card whose name or summary
 	// matches shows whole; otherwise only its matching powers or abilities.
 	var docQuery = "";
-	var SEARCH_TABS = ["agendas", "blasphemies", "sinmarks", "kit"];
+	var SEARCH_TABS = ["agendas", "blasphemies", "virtues", "sinmarks", "kit"];
 	var DOC_SIZES = [{ id: "normal", label: "100%" }, { id: "small", label: "85%" }, { id: "smaller", label: "70%" }];
 
 	function applySearch(body, status) {
@@ -377,7 +412,7 @@ window.CAIN = window.CAIN || {};
 		}
 		var shown = 0;
 		[].forEach.call(body.querySelectorAll(".grid > .card"), function (card) {
-			var parts = [].slice.call(card.querySelectorAll(".entries > .entry, .passive"));
+			var parts = [].slice.call(card.querySelectorAll(".entries > .entry, .passive, .virtue-bonds > li"));
 			var head = [].slice.call(card.querySelectorAll(".card-head, .ag-head, :scope > .note, .ag-items"));
 			var whole = !words.length || head.some(hit);
 			var any = false;
@@ -416,6 +451,7 @@ window.CAIN = window.CAIN || {};
 		var body;
 		if (doctrine.tab === "agendas") body = h("div", { class: "grid" }, CAIN.agendas.map(function (a) { return agendaCard(a, cat); }));
 		else if (doctrine.tab === "blasphemies") body = h("div", { class: "grid" }, blasphemyCard(CAIN.blast, cat), CAIN.blasphemies.map(function (b) { return blasphemyCard(b, cat); }));
+		else if (doctrine.tab === "virtues") body = virtuesView(cat);
 		else if (doctrine.tab === "sinmarks") body = h("div", { class: "grid" }, CAIN.sinMarks.map(function (m) { return sinMarkCard(m, cat); }));
 		else if (doctrine.tab === "kit") body = kitView();
 		else if (doctrine.tab === "cat") body = catView(cat);

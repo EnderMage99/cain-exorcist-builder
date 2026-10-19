@@ -683,7 +683,7 @@ label.btn { user-select: none; }
 /* Registration (character creation) */
 .stepbar {
 	display: grid;
-	grid-template-columns: repeat(6, minmax(0, 1fr));
+	grid-template-columns: repeat(7, minmax(0, 1fr));
 	gap: 6px;
 	margin-bottom: 18px;
 }
@@ -730,7 +730,7 @@ label.btn { user-select: none; }
 	.step-name { display: none; }
 	.step-btn-bar { justify-content: center; padding: 6px; }
 	.step-btn-bar[aria-current="step"] .step-name { display: inline; }
-	.stepbar { grid-template-columns: repeat(6, auto); justify-content: start; }
+	.stepbar { grid-template-columns: repeat(7, auto); justify-content: start; }
 }
 
 .reg-body > .card + .card { margin-top: 16px; }
@@ -2389,6 +2389,42 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 
 .icon-choice[aria-pressed="true"] { border-color: var(--stamp); outline: 3px solid var(--stamp); outline-offset: 1px; }
 
+/* Virtues: bond track 0-III, likes and dislikes, locked ranks dimmed. */
+.virtue-bonds { list-style: none; margin: 6px 0 12px; padding: 0; display: grid; gap: 6px; }
+
+.virtue-bond { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; }
+
+.virtue-rank {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+	background: var(--blas, var(--ink));
+	color: #0d0d0d;
+	font-weight: 900;
+	font-size: 12px;
+}
+
+.virtue-bond-text { padding-top: 4px; }
+
+.virtue-bond.locked, .virtue-powers .entry.locked { opacity: 0.45; }
+
+.virtue-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; font-size: 12.5px; margin: 6px 0 0; }
+
+.virtue-facts dt { font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; color: var(--muted); }
+
+.virtue-facts dd { margin: 0; }
+
+.virtue-rank-pips { display: inline-flex; align-items: center; gap: 6px; }
+
+.virtue-controls { flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+.virtue-rules p { max-width: 90ch; }
+
+.burst-all { font-size: 8px; letter-spacing: 0.04em; margin-top: -1px; }
+
 /* Kit drawings from the book (Occult / Medical). */
 .entry.has-pic { display: flow-root; }
 
@@ -2641,7 +2677,7 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 
 	.grid > * { break-inside: avoid; margin: 0 0 16px; }
 
-	.grid > .blas-card { column-span: all; }
+	.grid > .blas-card, .grid > .virtue-rules { column-span: all; }
 
 	/* Powers flow the same way, at most --n columns (the number of powers, 3 at most). */
 	.blas-card .entries,

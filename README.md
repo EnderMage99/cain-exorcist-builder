@@ -109,5 +109,5 @@ derived numbers like kit points or max stress update without special cases.
 Text can hold CAT tokens: `{cat}`, `{cat+2}`, `{2+cat}`, `{halfcat}`, and
 table lookups like `{cat:area}` or `{halfcat:size}`.
 
-CAIN is by Tom Bloom / CHASM. This is an unofficial fan tool; the sheet
+CAIN and Games for Freaks are by Tom Bloom / CHASM. This is an unofficial fan tool; the sheet
 artwork in `img/sheet/` is from the official CAIN character sheet.

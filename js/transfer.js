@@ -60,6 +60,9 @@ window.CAIN = window.CAIN || {};
 		c.purchases.forEach(function (p) {
 			if (!R.purchaseItem(p)) out.push(name + ": kit item \"" + p.item + "\" isn't in this build.");
 		});
+		(c.virtues || []).forEach(function (v) {
+			if (!R.virtue(v.id)) out.push(name + ": virtue \"" + v.id + "\" isn't in this build.");
+		});
 		return out;
 	}
 

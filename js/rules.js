@@ -83,6 +83,8 @@ window.CAIN = window.CAIN || {};
 			blasphemies: [],
 			custom: { agendas: [], blasphemies: [] },
 			sinMarks: [],
+			virtues: [],
+			virtueBonding: null,
 			purchases: [],
 			weaponCat: 0,
 			missionsSurvived: 0,
@@ -141,6 +143,39 @@ window.CAIN = window.CAIN || {};
 		return cat < core.catThresholds.length ? core.catThresholds[cat] : null;
 	}
 
+	// Virtues
+
+	function virtue(id) { return byId(CAIN.virtues || [], id); }
+
+	// The character's virtue bonds as { virtue, rank, bonds, powers }: the bond
+	// abilities and high blasphemy powers they've reached. Immaculate Defiance only
+	// counts once chosen.
+	function virtueBonds(ch) {
+		return (ch.virtues || []).map(function (owned) {
+			var v = virtue(owned.id);
+			if (!v) return null;
+			var rank = Math.max(0, Math.min(CAIN.virtueRules.maxRank, owned.rank || 0));
+			return {
+				virtue: v,
+				owned: owned,
+				rank: rank,
+				bonds: v.bonds.filter(function (b) { return b.rank <= rank; }),
+				powers: v.powers.filter(function (p) { return p.rank <= rank && (!p.choice || owned.chosen); })
+			};
+		}).filter(Boolean);
+	}
+
+	// The end-of-session questions, with any a virtue bond adds.
+	function xpQuestions(ch) {
+		var extra = [];
+		virtueBonds(ch).forEach(function (vb) {
+			vb.bonds.forEach(function (b) {
+				if (b.xpQuestion) extra.push({ id: "virtue-" + vb.virtue.id, text: b.xpQuestion + " (" + vb.virtue.name + ")" });
+			});
+		});
+		return core.xpQuestions.concat(extra);
+	}
+
 	// Modifiers
 
 	// Everything the character owns that can carry modifiers or flags.
@@ -163,6 +198,9 @@ window.CAIN = window.CAIN || {};
 			var item = purchaseItem(pur);
 			// Consumables never carry modifiers; permanent items are listed once.
 			if (item) sources.push({ name: item.name, entry: item, count: 1 });
+		});
+		virtueBonds(ch).forEach(function (vb) {
+			vb.bonds.concat(vb.powers).forEach(function (entry) { sources.push({ name: vb.virtue.name, entry: entry, count: 1 }); });
 		});
 		ch.sinMarks.forEach(function (owned) {
 			owned.abilities.forEach(function (a) {
@@ -559,6 +597,9 @@ window.CAIN = window.CAIN || {};
 		resolveSegments: resolveSegments,
 		resolveText: resolveText,
 		agendaAllowed: agendaAllowed,
+		virtue: virtue,
+		virtueBonds: virtueBonds,
+		xpQuestions: xpQuestions,
 		iconSrc: iconSrc,
 		validateCreation: validateCreation,
 		validateCharacter: validateCharacter,

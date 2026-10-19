@@ -23,6 +23,8 @@ window.CAIN = window.CAIN || {};
 		if (!ch.custom) ch.custom = { agendas: [], blasphemies: [] };
 		if (!ch.custom.agendas) ch.custom.agendas = [];
 		if (!ch.custom.blasphemies) ch.custom.blasphemies = [];
+		if (!Array.isArray(ch.virtues)) ch.virtues = [];
+		if (ch.virtueBonding === undefined) ch.virtueBonding = null;
 		// Bursts start full: a fresh hunt holds null until first shown.
 		if (ch.hunt.bursts === null) ch.hunt.bursts = R.derived(ch).psycheBursts;
 		return ch;
@@ -96,8 +98,32 @@ window.CAIN = window.CAIN || {};
 			ch.hunt.jackSkill = opts.jackSkill;
 			log(ch, events, "Jack!: " + opts.jackSkill + " counts as 1 this mission.");
 		}
+		if (opts.virtue !== undefined) bondWith(ch, opts.virtue || null, events);
 		log(ch, events, "Deployed on a new hunt with " + ch.hunt.bursts + " psyche bursts and " + kpLeft(ch) + " KP.");
 		return { events: events, ok: true };
+	}
+
+	// Picks the virtue to bond with this mission (null for none). A new bond starts
+	// at rank 0, which applies at once.
+	function bondWith(ch, id, events) {
+		events = events || [];
+		var v = id ? R.virtue(id) : null;
+		ch.virtueBonding = v ? v.id : null;
+		if (v && !ch.virtues.some(function (o) { return o.id === v.id; })) ch.virtues.push({ id: v.id, rank: 0 });
+		log(ch, events, v ? "Bonding with " + v.name + " this mission. Follow the stricture: " + v.stricture : "Not bonding with a virtue this mission.");
+		return { events: events, ok: true };
+	}
+
+	// After a survived mission, the bond with the virtue being raised goes up by 1.
+	function raiseBond(ch, events) {
+		var owned = ch.virtueBonding ? ch.virtues.filter(function (o) { return o.id === ch.virtueBonding; })[0] : null;
+		ch.virtueBonding = null;
+		if (!owned) return;
+		var v = R.virtue(owned.id);
+		if (owned.rank >= CAIN.virtueRules.maxRank) { log(ch, events, v.name + " bond is already at its highest rank."); return; }
+		owned.rank += 1;
+		var gained = v.bonds.filter(function (b) { return b.rank === owned.rank; })[0];
+		log(ch, events, v.name + " bond raised to rank " + ["0", "I", "II", "III"][owned.rank] + (gained ? ": " + gained.text : "."));
 	}
 
 	// Closes the mission. opts: { outcome: "execute" | "spare" | "fail", bodies, died }.
@@ -118,6 +144,7 @@ window.CAIN = window.CAIN || {};
 		ch.sin = ch.settings.clearSinAfterMission ? 0 : R.halveSin(ch.sin);
 		if (sinBefore) log(ch, events, "Sin " + sinBefore + " -> " + ch.sin + ".");
 		ch.missionsSurvived += 1;
+		raiseBond(ch, events);
 		var catAfter = R.derived(ch).cat;
 		log(ch, events, "Missions survived: " + ch.missionsSurvived + ".");
 		if (catAfter > catBefore) log(ch, events, "Category rating raised to CAT " + catAfter + ".");
@@ -465,9 +492,10 @@ window.CAIN = window.CAIN || {};
 			return { events: events, ok: true, pass: false };
 		}
 		ch.sin = 0;
-		ch.sinBoxesCrossed += 2;
+		var crossed = R.hasFlag(ch, "overflowCrossesOne") ? 1 : 2;
+		ch.sinBoxesCrossed += crossed;
 		ch.hunt.pending = { type: "sinMark" };
-		log(ch, events, "Kept control. Sin cleared, two sin boxes crossed out. A sin mark manifests.");
+		log(ch, events, "Kept control. Sin cleared, " + (crossed === 1 ? "one sin box" : "two sin boxes") + " crossed out. A sin mark manifests.");
 		return { events: events, ok: true, pass: true };
 	}
 
@@ -526,7 +554,7 @@ window.CAIN = window.CAIN || {};
 	// answers: { survived, firstItem, boldItem, harmed } booleans.
 	function endSession(ch, answers) {
 		var events = [];
-		var yes = core.xpQuestions.filter(function (q) { return answers[q.id]; }).length;
+		var yes = R.xpQuestions(ch).filter(function (q) { return answers[q.id]; }).length;
 		log(ch, events, "Session over: +" + yes + " XP.");
 		addXp(ch, yes, events);
 		ch.hunt.pathos = 0;
@@ -847,6 +875,7 @@ window.CAIN = window.CAIN || {};
 		addItem: addItem,
 		addCustomItem: addCustomItem,
 		diceRange: diceRange,
+		bondWith: bondWith,
 		swapAgenda: swapAgenda,
 		swapBlasphemy: swapBlasphemy
 	};

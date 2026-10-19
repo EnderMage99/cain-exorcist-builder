@@ -74,7 +74,8 @@ CAIN.core = {
 		{ id: "required", label: "Needs a psyche burst" },
 		{ id: "multiple", label: "One or more psyche bursts" },
 		{ id: "onSuccess", label: "Burst only on success" },
-		{ id: "none", label: "No psyche burst" }
+		{ id: "none", label: "No psyche burst" },
+		{ id: "all", label: "Spend all remaining psyche bursts (min 1)" }
 	],
 
 	// CAT values a player can drop into custom text. Each fills in for the
