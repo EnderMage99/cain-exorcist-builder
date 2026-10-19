@@ -32,22 +32,6 @@ window.CAIN = window.CAIN || {};
 
 	// Registry (home)
 
-	var milestones = [
-		{ id: "M0", text: "Site skeleton and GitHub Pages", done: true },
-		{ id: "M1", text: "Rules engine and test content", done: true },
-		{ id: "M2", text: "Registration (character creation)", done: true },
-		{ id: "M3", text: "Sheet, edit mode", done: true },
-		{ id: "M4", text: "Play mode", done: true },
-		{ id: "M5", text: "Sessions, missions, advances", done: true },
-		{ id: "M6", text: "Export and import", done: true },
-		{ id: "M7", text: "Print view and polish", done: true },
-		{ id: "M8", text: "All agendas and blasphemies, book colours", done: true },
-		{ id: "M9", text: "All sin marks and kit", done: true },
-		{ id: "M10", text: "Virtues (Games for Freaks)", done: true },
-		{ id: "M11", text: "Fan content: The Ishmael Protocol", done: true },
-		{ id: "M12", text: "Fan content: The Harpocrates Dossier", done: true }
-	];
-
 	// Import state for the registry: result messages, characters waiting on a
 	// replace / keep both / skip choice, and the paste box.
 	var transferUi = { message: "", warnings: [], conflicts: [], pasteOpen: false, pasteText: "" };
@@ -171,13 +155,6 @@ window.CAIN = window.CAIN || {};
 		var fileInput = h("input", { type: "file", accept: ".json,application/json", class: "visually-hidden", id: "import-file",
 			onchange: function () { if (fileInput.files[0]) importFile(fileInput.files[0]); fileInput.value = ""; } });
 
-		var actions = h("div", { class: "head-actions" },
-			h("a", { class: "btn", href: "#/new" }, draft ? "Continue registration" : "Register exorcist"),
-			h("button", { class: "btn ghost", type: "button", title: "Roll a random legal exorcist and review it", onclick: function () {
-				CAIN.registration.quickExorcist();
-				location.hash = "#/new";
-			} }, "Quick exorcist"));
-
 		var transferBar = h("div", { class: "transfer-bar" },
 			h("span", { class: "label" }, "Move exorcists between browsers or players"),
 			h("label", { class: "btn small ghost", for: "import-file", title: "Import a .cain.json file. You can also drop a file anywhere on this page." }, "Import file"),
@@ -201,36 +178,32 @@ window.CAIN = window.CAIN || {};
 				h("h2", null, "No exorcists on file"),
 				h("p", null, "Registered exorcists are kept in this browser. Register one step by step, or roll a Quick exorcist to see how it works."));
 
-		var powers = CAIN.blasphemies.reduce(function (n, b) { return n + b.powers.length; }, 0);
-		var abilities = CAIN.agendas.reduce(function (n, a) { return n + a.abilities.length; }, 0);
+		// The big picture tiles in the middle of the home page.
+		function toDoctrine(tab) { return function () { doctrine.tab = tab; safeStore.set("cain.doctrine", doctrine); location.hash = "#/doctrine"; }; }
+		function tile(area, title, sub, img, attrs) {
+			var a = Object.assign({ class: "home-tile tile-" + area, style: "background-image:url('" + img + "')" }, attrs);
+			var tag = a.href ? "a" : a["for"] ? "label" : "button";
+			if (tag === "button") a.type = "button";
+			return h(tag, a, h("span", { class: "home-tile-title" }, title), sub ? h("span", { class: "home-tile-sub" }, sub) : null);
+		}
+		var tiles = h("nav", { class: "home-tiles", "aria-label": "Start" },
+			tile("reg", draft ? "Continue registration" : "Register exorcist", draft ? (draft.character.name || "Unnamed") + ", " + draft.step + " step" : "Step by step", "img/virtue/justice.jpg", { href: "#/new" }),
+			tile("quick", "Quick exorcist", "A random legal exorcist", "img/blasphemy/gate.jpg", { onclick: function () { CAIN.registration.quickExorcist(); location.hash = "#/new"; } }),
+			tile("imp", "Import", "A .cain.json file", "img/blasphemy/palace.jpg", { "for": "import-file", tabindex: "0", onkeydown: function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); } } }),
+			tile("ag", "Agendas", null, "img/virtue/charity.jpg", { onclick: toDoctrine("agendas") }),
+			tile("blas", "Blasphemies", null, "img/blasphemy/ardence.jpg", { onclick: toDoctrine("blasphemies") }),
+			tile("virt", "Virtues", null, "img/virtue/hope.jpg", { onclick: toDoctrine("virtues") }),
+			tile("kit", "Kit", null, "img/blasphemy/sympathy.jpg", { onclick: toDoctrine("kit") }),
+			tile("doc", "Doctrine", "Sin marks, CAT scale, glossary", "img/blasphemy/edit.jpg", { href: "#/doctrine" }));
 
 		return dropZone(h("div", { class: "registry-page" },
-			h("div", { class: "page-head" },
-				h("div", null,
-					h("div", { class: "kicker" }, "CASTLE personnel files"),
-					h("h1", null, "Registered exorcists")),
-				actions),
+			h("h1", { class: "visually-hidden" }, "CAIN Exorcist Registry"),
+			tiles,
+			h("h2", { class: "home-banner" }, "Exorcists"),
 			transferBar,
 			transferArea(),
 			draftNote,
-			list,
-			h("div", { class: "grid", style: "margin-top:24px" },
-				h("section", { class: "card" },
-					h("div", { class: "card-head" }, h("h2", null, "Build status"), h("span", { class: "label" }, "In progress")),
-					h("ul", { class: "status-list" }, milestones.map(function (m) {
-						return h("li", null, h("span", { class: m.done ? "done" : "todo" }, m.id + "  " + m.text), h("span", { class: "label" }, m.done ? "Done" : "Planned"));
-					}))),
-				h("section", { class: "card" },
-					h("div", { class: "card-head" }, h("h2", null, "Loaded doctrine"), h("span", { class: "label" }, "CAIN 1.4.5")),
-					h("ul", { class: "status-list" },
-						h("li", null, "Agendas", h("span", null, CAIN.agendas.map(function (a) { return a.name; }).join(", "))),
-						h("li", null, "Agenda abilities", h("span", null, String(abilities))),
-						h("li", null, "Blasphemies", h("span", null, CAIN.blasphemies.map(function (b) { return b.name; }).join(", "))),
-						h("li", null, "Blasphemy powers", h("span", null, String(powers) + " + Blast")),
-						h("li", null, "Sin marks", h("span", null, CAIN.sinMarks.map(function (m) { return m.name; }).join(", "))),
-						h("li", null, "Kit items", h("span", null, String(CAIN.kit.length)))),
-					h("p", { class: "note", style: "margin-top:10px" }, "Browse it all under Doctrine. ",
-						h("a", { href: "tests/rules-test.html" }, "Run the rules checks"), ".")))));
+			list));
 	}
 
 	// Doctrine (content browser)
