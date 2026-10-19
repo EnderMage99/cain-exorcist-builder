@@ -125,7 +125,7 @@ window.CAIN = window.CAIN || {};
 					k.kp !== null ? h("span", { class: "tag" }, k.kp + " KP") : h("span", { class: "tag" }, "Not pulled out"),
 					(k.tags || []).map(function (t) { return h("span", { class: "tag" }, t); })),
 				h("div", { class: "kit-spread-text" }, CAIN.richText(k.text, 1)),
-				k.quote ? h("p", { class: "kit-quote" }, "201c" + k.quote + "201d") : null,
+				k.quote ? h("p", { class: "kit-quote" }, "“" + k.quote + "”") : null,
 				k.credit ? h("p", { class: "tiny" }, k.credit) : null,
 				k.stock ? h("p", { class: "tiny" }, k.stock >= 99 ? "Stock: plenty" : "Stock: " + k.stock) : null));
 	}
