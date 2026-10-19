@@ -2334,6 +2334,102 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 	.doc-body.size-smaller .blas-card:not(.blas-solo) .entries { column-count: 5; }
 }
 
+/* Blasphemy portraits from the book, framed in white like its pages. */
+.blas-intro { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; margin-bottom: 10px; }
+
+.blas-intro-text { min-width: 0; }
+
+.blas-intro:not(:has(.blas-portrait)) { grid-template-columns: minmax(0, 1fr); }
+
+.blas-portrait {
+	display: block;
+	width: 120px;
+	aspect-ratio: 320 / 520;
+	object-fit: cover;
+	border: 3px solid #f2f0ea;
+	outline: 2px solid #0d0d0d;
+	box-shadow: 4px 4px 0 var(--blas, #555);
+	background: #0d0d0d;
+}
+
+.blas-portrait-sm { width: 52px; box-shadow: 2px 2px 0 var(--blas, #555); }
+
+.blas-portrait-pick { width: 46px; grid-row: 1 / 3; box-shadow: none; }
+
+.swap-pick.swap-blas { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 4px 10px; align-items: start; }
+
+.swap-pick.swap-blas .blas-plate { justify-self: start; max-width: 100%; }
+
+.ag-emblem-photo { object-fit: cover; object-position: center 20%; }
+
+@media (max-width: 560px) {
+	.blas-portrait { width: 76px; }
+}
+
+/* Picture picker for custom agendas and blasphemies */
+.icon-picker { display: flex; flex-wrap: wrap; gap: 6px; max-height: 190px; overflow-y: auto; padding: 4px; }
+
+.icon-choice {
+	width: 52px;
+	height: 52px;
+	padding: 0;
+	border: 2px solid var(--line);
+	border-radius: 50%;
+	background: #0d0d0d;
+	cursor: pointer;
+	overflow: hidden;
+	flex: none;
+}
+
+.icon-choice.icon-tall { border-radius: 4px; width: 40px; height: 60px; }
+
+.icon-choice img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.icon-none { background: var(--paper-2); color: var(--ink); font-size: 11px; font-weight: 700; }
+
+.icon-choice[aria-pressed="true"] { border-color: var(--stamp); outline: 3px solid var(--stamp); outline-offset: 1px; }
+
+/* Swap panel: agendas and blasphemies as small cards to pick from. */
+.swap-what { margin-bottom: 12px; }
+
+.swap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin: 6px 0 14px; }
+
+.swap-pick {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+	padding: 8px 12px;
+	border: 2px solid transparent;
+	border-radius: 18px;
+	text-align: left;
+	cursor: pointer;
+	font: inherit;
+	color: var(--ink);
+}
+
+.swap-pick.agenda-look { border-radius: 26px 26px 14px 14px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); flex-wrap: wrap; }
+
+.swap-pick .ag-emblem { width: 42px; height: 42px; flex: none; }
+
+.swap-pick-name { font-family: "Permanent Marker", var(--font-head), cursive; font-size: 20px; text-transform: uppercase; line-height: 1.1; }
+
+.swap-pick-warn { flex-basis: 100%; font-size: 11px; color: var(--muted); }
+
+.swap-pick.swap-blas { flex-direction: column; align-items: flex-start; background: var(--paper-2); border-color: var(--blas-line); }
+
+.swap-pick .blas-plate { font-size: 20px; padding: 2px 44px 0 12px; }
+
+.swap-pick-sub { font-size: 12px; color: var(--ink-soft); }
+
+.swap-pick[aria-pressed="true"] { border-color: var(--stamp); outline: 3px solid var(--stamp); outline-offset: 2px; }
+
+.swap-pick:focus-visible { outline: 3px solid var(--focus, var(--stamp)); outline-offset: 2px; }
+
+.swap-detail { border-top: 1px dashed var(--line); padding-top: 12px; }
+
+.swap-detail.blas-pick .options { margin-bottom: 10px; }
+
 /* Agendas as their cards in the rulebook: rounded tag cards of grey card
    stock, stained paper, black card, brushed gold, a luggage tag or a stamped
    form, each with its round emblem, the name in marker pen, a tape note and

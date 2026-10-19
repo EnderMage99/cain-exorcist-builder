@@ -634,6 +634,7 @@ window.CAIN = window.CAIN || {};
 			name: name,
 			custom: true,
 			requires: null,
+			icon: R.iconSrc(def.icon) ? def.icon : "",
 			items: (def.items || []).filter(function (it) { return (it.text || "").trim(); })
 				.map(function (it) { return { text: it.text.trim(), bold: !!it.bold }; }),
 			abilities: (def.abilities || []).filter(function (ab) { return (ab.name || "").trim(); })
@@ -688,6 +689,7 @@ window.CAIN = window.CAIN || {};
 			summary: (def.summary || "").trim(),
 			flavor: "",
 			theme: cleanTheme(def.theme),
+			icon: R.iconSrc(def.icon) ? def.icon : "",
 			passive: { id: "passive", name: (passive.name || "").trim() || "Passive", text: (passive.text || "").trim() },
 			powers: (def.powers || []).filter(function (p) { return (p.name || "").trim(); }).map(function (p) {
 				var tags = p.tags || {};
@@ -738,6 +740,60 @@ window.CAIN = window.CAIN || {};
 		return { events: events, ok: true };
 	}
 
+	// Swaps the current agenda, following the book: bolded items from the old
+	// agenda carry over and its abilities stay. opts: { keepBold (default true),
+	// ability: id from the new agenda to take now, useAdvance }.
+	function swapAgenda(ch, agendaId, opts) {
+		opts = opts || {};
+		var events = [];
+		var next = agendaId ? R.agenda(agendaId) : null;
+		if (agendaId && !next) return { events: events, ok: false, reason: "Unknown agenda." };
+		var old = ch.agenda ? R.agenda(ch.agenda) : null;
+		if (old && next && old.id === next.id) return { events: events, ok: false, reason: "That is already your agenda." };
+		var kept = [];
+		if (old && opts.keepBold !== false) {
+			old.items.forEach(function (it) {
+				if (it.bold && ch.boldItems.indexOf(it.text) < 0 && !(next && next.items.some(function (n) { return n.text === it.text; }))) {
+					ch.boldItems.push(it.text);
+					kept.push(it.text);
+				}
+			});
+		}
+		ch.agenda = next ? next.id : null;
+		var took = null;
+		if (next && opts.ability) {
+			var ab = next.abilities.filter(function (a) { return a.id === opts.ability; })[0];
+			var have = ch.agendaAbilities.some(function (r) { return r.agenda === next.id && r.ability === opts.ability; });
+			if (ab && !have) {
+				ch.agendaAbilities.push({ agenda: next.id, ability: ab.id });
+				took = ab.name;
+				if (opts.useAdvance && ch.advances > 0) ch.advances -= 1; else opts.useAdvance = false;
+			}
+		}
+		log(ch, events, "Swapped agenda" + (old ? " from " + old.name : "") + " to " + (next ? next.name : "none") + "."
+			+ (kept.length ? " Kept bolded: " + kept.join("; ") + "." : "")
+			+ (took ? " Took " + took + (opts.useAdvance ? " (used an advance)" : "") + "." : ""));
+		return { events: events, ok: true, kept: kept };
+	}
+
+	// Replaces one of the character's blasphemies with another, with the powers
+	// picked from it. The rules don't cover this; it's for Admin rulings and fixes.
+	function swapBlasphemy(ch, index, blasphemyId, powerIds) {
+		var events = [];
+		var old = ch.blasphemies[index];
+		var next = R.blasphemy(blasphemyId);
+		if (!old || !next) return { events: events, ok: false, reason: "Pick a blasphemy to swap to." };
+		if (ch.blasphemies.some(function (b, i) { return i !== index && b.id === next.id; })) return { events: events, ok: false, reason: "You already have " + next.name + "." };
+		var powers = (powerIds || []).filter(function (pid, i, all) {
+			return all.indexOf(pid) === i && next.powers.some(function (p) { return p.id === pid; });
+		});
+		var oldDef = R.blasphemy(old.id);
+		ch.blasphemies[index] = { id: next.id, powers: powers };
+		log(ch, events, "Swapped blasphemy " + (oldDef ? oldDef.name : old.id) + " for " + next.name
+			+ (powers.length ? " (" + powers.map(function (pid) { return R.power(next.id, pid).name; }).join(", ") + ")" : "") + ".");
+		return { events: events, ok: true };
+	}
+
 	CAIN.hunt = {
 		normalize: normalize,
 		saveCustomAgenda: saveCustomAgenda,
@@ -782,6 +838,8 @@ window.CAIN = window.CAIN || {};
 		addXpOnly: addXpOnly,
 		spendAdvance: spendAdvance,
 		addItem: addItem,
-		addCustomItem: addCustomItem
+		addCustomItem: addCustomItem,
+		swapAgenda: swapAgenda,
+		swapBlasphemy: swapBlasphemy
 	};
 })();

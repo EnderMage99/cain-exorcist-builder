@@ -105,10 +105,10 @@ window.CAIN = window.CAIN || {};
 		return CAIN.stepper(label, value, min, max, this.tracked(label, function () { return self.ch[key]; }, function (v) { self.ch[key] = v; }), opts);
 	};
 
-	Sheet.prototype.openButton = function (label, panel) {
+	Sheet.prototype.openButton = function (label, panel, arg) {
 		var self = this;
 		if (!this.editable || !this.openPanel) return null;
-		return h("button", { class: "mini-btn", type: "button", onclick: function () { self.openPanel(panel); } }, label);
+		return h("button", { class: "mini-btn", type: "button", onclick: function () { self.openPanel(panel, arg); } }, label);
 	};
 
 	// Page 1
@@ -495,7 +495,7 @@ window.CAIN = window.CAIN || {};
 							var groups = [{ group: "From the book", options: CAIN.agendas.map(function (ag) { return { value: ag.id, label: ag.name }; }) }];
 							if (ch.custom.agendas.length) groups.push({ group: "Your agendas", options: ch.custom.agendas.map(function (ag) { return { value: ag.id, label: ag.name }; }) });
 							return groups;
-						})(), function (v) { var before = ch.agenda; ch.agenda = v || null; self.change("Agenda", before, ch.agenda); }, { placeholder: "None", aria: "Agenda" })
+						})(), function (v) { CAIN.hunt.swapAgenda(ch, v || null); self.onChange(true); }, { placeholder: "None", aria: "Agenda" })
 						: h("span", { class: "sticker" }, a ? a.name : "None")),
 				a ? CAIN.agendaHead(a) : null,
 				a && a.custom ? h("div", { class: "subrow" }, h("span", { class: "label" }, "Custom agenda"),
@@ -511,7 +511,7 @@ window.CAIN = window.CAIN || {};
 			h("section", { class: "card sheet-abilities" },
 				h("div", { class: "card-head" }, h("h2", null, "Agenda abilities"), h("span", { class: "label" }, ch.agendaAbilities.length + " / 5")),
 				abilities.length ? h("ul", { class: "entries" }, abilities) : h("p", { class: "note" }, "None."),
-				h("div", { class: "btn-row" }, this.openButton("Add an ability...", "ability"), this.openButton("Create an agenda...", "customAgenda"))));
+				h("div", { class: "btn-row" }, this.openButton("Add an ability...", "ability"), this.openButton("Swap agenda...", "swap", "agenda"), this.openButton("Create an agenda...", "customAgenda"))));
 	};
 
 	Sheet.prototype.blasphemies = function () {
@@ -525,9 +525,11 @@ window.CAIN = window.CAIN || {};
 			var th = CAIN.blasTheme(b);
 			return h("div", { class: "blas-block " + th.class, style: th.style },
 				h("div", { class: "blas-head" },
+					CAIN.blasPortrait(b, "blas-portrait-sm"),
 					h("span", { class: "sticker blas-plate" }, b.name),
 					h("span", { class: "label" }, b.custom ? "Custom blasphemy" : "Blasphemy " + b.numeral),
 					b.custom && self.editable && self.openPanel ? h("button", { class: "mini-btn", type: "button", onclick: function () { self.openPanel("customBlasphemy", b.id); } }, "Edit") : null,
+					self.editable && self.openPanel ? h("button", { class: "mini-btn", type: "button", "aria-label": "Swap " + b.name, onclick: function () { self.openPanel("swap", bi); } }, "Swap") : null,
 					self.editable ? removeBtn(b.name, function () { ch.blasphemies.splice(bi, 1); self.onChange(true); }) : null),
 				b.summary && b.custom ? h("p", { class: "tiny" }, b.summary) : null,
 				h("div", { class: "passive" },

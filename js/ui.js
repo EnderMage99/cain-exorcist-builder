@@ -252,9 +252,10 @@ window.CAIN = window.CAIN || {};
 	}
 
 	function agendaHead(a, extra) {
-		var emblem = a.custom
-			? h("span", { class: "ag-emblem ag-emblem-blank", "aria-hidden": "true" })
-			: h("img", { class: "ag-emblem", src: "img/agenda/" + a.id + ".png", alt: "", draggable: "false" });
+		var src = agendaIcon(a);
+		var emblem = src
+			? h("img", { class: "ag-emblem" + (src.indexOf("img/blasphemy/") === 0 ? " ag-emblem-photo" : ""), src: src, alt: "", draggable: "false" })
+			: h("span", { class: "ag-emblem ag-emblem-blank", "aria-hidden": "true" });
 		return h("div", { class: "ag-head" }, emblem,
 			h("div", { class: "ag-titles" },
 				h("h2", { class: "ag-name" }, a.name),
@@ -268,7 +269,44 @@ window.CAIN = window.CAIN || {};
 			h("span", { class: "ag-hole" }));
 	}
 
+	// Pictures: every book agenda has a round emblem, every book blasphemy a
+	// portrait. Custom ones borrow either by id ("agenda:beast", "blasphemy:gate").
+	function iconSrc(icon) { return CAIN.rules.iconSrc(icon); }
+
+	function agendaIcon(a) { return a.custom ? iconSrc(a.icon) : "img/agenda/" + a.id + ".png"; }
+
+	function blasphemyIcon(b) {
+		if (b.custom) return iconSrc(b.icon);
+		return CAIN.blasphemies.some(function (x) { return x.id === b.id; }) ? "img/blasphemy/" + b.id + ".jpg" : null;
+	}
+
+	function blasPortrait(b, cls) {
+		var src = blasphemyIcon(b);
+		return src ? h("img", { class: "blas-portrait" + (cls ? " " + cls : ""), src: src, alt: "", draggable: "false" }) : null;
+	}
+
+	// Every picture a custom agenda or blasphemy can use, as { value, label, src }.
+	function iconChoices() {
+		return CAIN.agendas.map(function (a) { return { value: "agenda:" + a.id, label: a.name + " emblem", src: "img/agenda/" + a.id + ".png" }; })
+			.concat(CAIN.blasphemies.map(function (b) { return { value: "blasphemy:" + b.id, label: b.name + " portrait", src: "img/blasphemy/" + b.id + ".jpg" }; }));
+	}
+
+	// A row of picture buttons for an editor; onSet gets the value or "".
+	function iconPicker(current, onSet) {
+		var none = h("button", { class: "icon-choice icon-none", type: "button", "aria-pressed": String(!current), "aria-label": "No picture", onclick: function () { onSet(""); } }, "None");
+		return h("div", { class: "icon-picker", role: "group", "aria-label": "Picture" }, none,
+			iconChoices().map(function (c) {
+				return h("button", { class: "icon-choice" + (c.value.indexOf("blasphemy:") === 0 ? " icon-tall" : ""), type: "button", "aria-pressed": String(current === c.value),
+					"aria-label": c.label, title: c.label, onclick: function () { onSet(c.value); } },
+					h("img", { src: c.src, alt: "" }));
+			}));
+	}
+
 	CAIN.powerHead = powerHead;
+	CAIN.agendaIcon = agendaIcon;
+	CAIN.blasphemyIcon = blasphemyIcon;
+	CAIN.blasPortrait = blasPortrait;
+	CAIN.iconPicker = iconPicker;
 	CAIN.agendaLook = agendaLook;
 	CAIN.agendaHead = agendaHead;
 	CAIN.agendaFoot = agendaFoot;

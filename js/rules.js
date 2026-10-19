@@ -298,6 +298,15 @@ window.CAIN = window.CAIN || {};
 		return core.skills.map(function (s) { return ch.skills[s.id]; });
 	}
 
+	// A custom agenda or blasphemy's borrowed picture ("agenda:beast",
+	// "blasphemy:gate") as an image path, or null if it names nothing loaded.
+	function iconSrc(icon) {
+		var m = /^(agenda|blasphemy):([a-z-]+)$/.exec(icon || "");
+		if (!m) return null;
+		if (m[1] === "agenda") return CAIN.agendas.some(function (a) { return a.id === m[2]; }) ? "img/agenda/" + m[2] + ".png" : null;
+		return CAIN.blasphemies.some(function (b) { return b.id === m[2]; }) ? "img/blasphemy/" + m[2] + ".jpg" : null;
+	}
+
 	function agendaAllowed(ch, a) {
 		if (!a.requires) return { ok: true };
 		if (a.requires.sinMarks && ch.sinMarks.length < a.requires.sinMarks) {
@@ -550,6 +559,7 @@ window.CAIN = window.CAIN || {};
 		resolveSegments: resolveSegments,
 		resolveText: resolveText,
 		agendaAllowed: agendaAllowed,
+		iconSrc: iconSrc,
 		validateCreation: validateCreation,
 		validateCharacter: validateCharacter,
 		legalAdvances: legalAdvances,

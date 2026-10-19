@@ -234,8 +234,11 @@ window.CAIN = window.CAIN || {};
 				var count = selected ? owned.powers.length : 0;
 				var th = CAIN.blasTheme(b);
 				return h("article", { class: "card pick-card blas-card " + th.class + (selected ? " selected" : ""), style: th.style },
-					h("div", { class: "card-head" }, h("h2", { class: "blas-title" }, b.name), h("span", { class: "label" }, selected ? count + " / 2 powers" : "Blasphemy " + b.numeral)),
-					h("p", { class: "note" }, b.summary),
+					h("div", { class: "blas-intro" },
+						CAIN.blasPortrait(b),
+						h("div", { class: "blas-intro-text" },
+							h("div", { class: "card-head" }, h("h2", { class: "blas-title" }, b.name), h("span", { class: "label" }, selected ? count + " / 2 powers" : "Blasphemy " + b.numeral)),
+							h("p", { class: "note" }, b.summary))),
 					h("div", { class: "passive" },
 						h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
 						CAIN.richText(b.passive.text, cat)),

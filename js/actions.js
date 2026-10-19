@@ -30,7 +30,8 @@ window.CAIN = window.CAIN || {};
 				mission: { outcome: "execute", bodies: 0, died: false },
 				session: {},
 				addFrom: "",
-				useAdvance: false
+				useAdvance: false,
+				swap: { what: "agenda", lastArg: null, target: "", ability: "", useAdvance: false, keepBold: true, powers: [] }
 			};
 		}
 		return ui[ch.id];
@@ -320,6 +321,114 @@ window.CAIN = window.CAIN || {};
 			})) : h("p", { class: "note" }, "You have every " + b.name + " power.")));
 	}
 
+	// Swap the agenda or one blasphemy. Opened from the bar, or from the sheet
+	// with "agenda" or a blasphemy's index as the argument.
+	function swapPanel(ch, ctx) {
+		var st = uiFor(ch).swap;
+		var arg = ctx.panelArg === undefined ? null : String(ctx.panelArg);
+		if (arg !== null && arg !== st.lastArg) { st.what = arg; st.target = ""; st.powers = []; st.ability = ""; }
+		st.lastArg = arg;
+		if (st.what !== "agenda" && !ch.blasphemies[+st.what]) st.what = "agenda";
+		var cat = R.derived(ch).cat;
+		var cur = ch.agenda ? R.agenda(ch.agenda) : null;
+		function pickWhat(v) { st.what = v; st.target = ""; st.powers = []; st.ability = ""; ctx.save(true); }
+		var whatRow = h("div", { class: "chips swap-what", role: "group", "aria-label": "What to swap" },
+			chip("Agenda" + (cur ? ": " + cur.name : ""), st.what === "agenda", function () { pickWhat("agenda"); }),
+			ch.blasphemies.map(function (b, i) {
+				var def = R.blasphemy(b.id);
+				return chip("Blasphemy: " + (def ? def.name : b.id), st.what === String(i), function () { pickWhat(String(i)); });
+			}));
+		var body = st.what === "agenda" ? swapAgendaBody(ch, ctx, st, cat, cur) : swapBlasphemyBody(ch, ctx, st, cat, +st.what);
+		return panel(ctx, "Swap", "Pick something new to replace it with. Everything is logged so the Admin can follow along.", whatRow, body);
+	}
+
+	function swapAgendaBody(ch, ctx, st, cat, cur) {
+		var list = CAIN.agendas.concat(ch.custom.agendas).filter(function (a) { return !cur || a.id !== cur.id; });
+		var target = st.target ? R.agenda(st.target) : null;
+		var picks = h("div", { class: "swap-grid" }, list.map(function (a) {
+			var look = CAIN.agendaLook(a);
+			var allowed = R.agendaAllowed(ch, a);
+			return h("button", { class: "swap-pick swap-agenda " + look.class, style: look.style, type: "button", "aria-pressed": String(st.target === a.id),
+				onclick: function () { st.target = a.id; st.ability = ""; ctx.save(true); } },
+				CAIN.agendaIcon(a) ? h("img", { class: "ag-emblem", src: CAIN.agendaIcon(a), alt: "" }) : h("span", { class: "ag-emblem ag-emblem-blank" }),
+				h("span", { class: "swap-pick-name" }, a.name),
+				allowed.ok ? null : h("span", { class: "swap-pick-warn" }, allowed.reason));
+		}));
+		if (!target) return [h("div", { class: "label" }, "Swap to"), picks];
+		var bolds = cur ? cur.items.filter(function (it) { return it.bold; }) : [];
+		var open = target.abilities.filter(function (ab) { return !ch.agendaAbilities.some(function (r) { return r.agenda === target.id && r.ability === ab.id; }); });
+		return [
+			h("div", { class: "label" }, "Swap to"), picks,
+			h("div", { class: "swap-detail" },
+				h("ul", { class: "items" }, target.items.map(function (it) { return h("li", { class: it.bold ? "bold" : null }, it.text); })),
+				target.note ? h("p", { class: "agenda-note" }, target.note) : null,
+				bolds.length ? row(chip("Keep bolded item: " + bolds.map(function (b) { return b.text; }).join("; "), st.keepBold, function () { st.keepBold = !st.keepBold; ctx.save(true); },
+					{ title: "The rules carry bolded items over when you swap" })) : null,
+				ch.agendaAbilities.length ? h("p", { class: "note" }, "Your abilities stay, as the rules say. Remove any on the sheet if you're changing them.") : null,
+				open.length ? [h("div", { class: "label" }, "Take an ability from " + target.name + " now (optional)"),
+					h("ul", { class: "options" }, open.map(function (ab) {
+						var on = st.ability === ab.id;
+						return h("li", null, h("button", { class: "option", type: "button", "aria-pressed": String(on),
+							onclick: function () { st.ability = on ? "" : ab.id; ctx.save(true); } },
+							h("span", { class: "option-mark", "aria-hidden": "true" }),
+							h("span", { class: "option-body" }, h("span", { class: "entry-name" }, ab.name), CAIN.richText(ab.text, cat))));
+					}))] : null,
+				st.ability && ch.advances > 0 ? row(chip("Use up 1 advance (" + ch.advances + ")", st.useAdvance, function () { st.useAdvance = !st.useAdvance; ctx.save(true); })) : null,
+				h("div", { class: "btn-row" },
+					btn("Swap to " + target.name, function () {
+						var r = H.swapAgenda(ch, target.id, { keepBold: st.keepBold, ability: st.ability, useAdvance: st.useAdvance });
+						st.target = ""; st.ability = ""; st.useAdvance = false;
+						ctx.done(r);
+					}),
+					btn("Cancel", function () { st.target = ""; ctx.save(true); }, { ghost: true })))
+		];
+	}
+
+	function swapBlasphemyBody(ch, ctx, st, cat, index) {
+		var owned = ch.blasphemies[index];
+		var list = CAIN.blasphemies.concat(ch.custom.blasphemies).filter(function (b) {
+			return !ch.blasphemies.some(function (o) { return o.id === b.id; });
+		});
+		var target = st.target ? R.blasphemy(st.target) : null;
+		var picks = h("div", { class: "swap-grid" }, list.map(function (b) {
+			var th = CAIN.blasTheme(b);
+			return h("button", { class: "swap-pick swap-blas " + th.class, style: th.style, type: "button", "aria-pressed": String(st.target === b.id),
+				onclick: function () { st.target = b.id; st.powers = []; ctx.save(true); } },
+				CAIN.blasPortrait(b, "blas-portrait-pick"),
+				h("span", { class: "sticker blas-plate" }, b.name),
+				h("span", { class: "swap-pick-sub" }, b.summary || ""));
+		}));
+		if (!target) return [h("div", { class: "label" }, "Swap to"), picks];
+		var want = Math.max(1, owned.powers.length);
+		var th = CAIN.blasTheme(target);
+		return [
+			h("div", { class: "label" }, "Swap to"), picks,
+			h("div", { class: "swap-detail blas-pick " + th.class, style: th.style },
+				h("div", { class: "passive" },
+					h("div", { class: "entry-name" }, target.passive.name, h("span", { class: "tag stamp" }, "Passive")),
+					CAIN.richText(target.passive.text, cat)),
+				h("div", { class: "label" }, "Pick powers: " + st.powers.length + " chosen (you had " + owned.powers.length + ")"),
+				h("ul", { class: "options" }, target.powers.map(function (p) {
+					var on = st.powers.indexOf(p.id) >= 0;
+					return h("li", null, h("button", { class: "option multi", type: "button", "aria-pressed": String(on),
+						onclick: function () {
+							if (on) st.powers = st.powers.filter(function (x) { return x !== p.id; }); else st.powers.push(p.id);
+							ctx.save(true);
+						} },
+						h("span", { class: "option-mark", "aria-hidden": "true" }),
+						h("span", { class: "option-body" }, CAIN.powerHead(p), CAIN.powerTags(p, cat), CAIN.richText(p.text, cat))));
+				})),
+				st.powers.length !== want ? h("p", { class: "note" }, "You had " + owned.powers.length + " power" + (owned.powers.length === 1 ? "" : "s") + " from it. Any number is allowed; the sheet warns if you go over 5 in total.") : null,
+				h("div", { class: "btn-row" },
+					btn("Swap " + (R.blasphemy(owned.id) ? R.blasphemy(owned.id).name : "it") + " for " + target.name, function () {
+						var r = H.swapBlasphemy(ch, index, target.id, st.powers);
+						st.target = ""; st.powers = [];
+						ctx.done(r);
+					}),
+					btn("Cancel", function () { st.target = ""; st.powers = []; ctx.save(true); }, { ghost: true })))
+		];
+	}
+
 	function stressPanel(ch, ctx) {
 		var st = uiFor(ch).stress;
 		var iron = H.hasPassive(ch, "iron-soul");
@@ -565,6 +674,7 @@ window.CAIN = window.CAIN || {};
 		{ id: "advance", label: "Spend advance", title: "Spend a banked advance", render: advancePanel, badge: function (ch) { return ch.advances || null; } },
 		{ id: "ability", label: "Add ability", title: "Add an agenda ability", render: abilityPanel },
 		{ id: "power", label: "Add power", title: "Add a blasphemy power", render: powerPanel },
+		{ id: "swap", label: "Swap", title: "Swap your agenda or a blasphemy", render: swapPanel },
 		{ id: "stress", label: "Take stress", title: "Take stress with the rules applied", render: stressPanel },
 		{ id: "pool", label: "Dice pool", title: "How many dice to roll, and record the result", render: poolPanel },
 		{ id: "rest", label: "Rest", title: "Rest and assign the resting dice", render: restPanel, badge: function (ch) { return ch.hunt.restDice ? "!" : null; } },
