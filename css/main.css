@@ -2324,9 +2324,9 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 
 .is-hidden { display: none !important; }
 
-.doc-body.size-small { zoom: 0.85; }
 
-.doc-body.size-smaller { zoom: 0.7; }
+
+
 
 @media (min-width: 1000px) {
 	.doc-body.size-small .blas-card:not(.blas-solo) .entries { column-count: 4; }
@@ -2555,6 +2555,14 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 			"doc doc";
 	}
 }
+
+.size-picker { gap: 8px; }
+
+.size-slider { width: 200px; accent-color: var(--stamp); cursor: pointer; }
+
+.size-end { font-size: 11px; color: var(--muted); }
+
+.size-value { min-width: 3.4em; font-weight: 800; font-size: 13px; }
 
 /* Focus viewer: hover lights a card up; clicking opens it over a darkened
    screen, laid out like the book's pages. */

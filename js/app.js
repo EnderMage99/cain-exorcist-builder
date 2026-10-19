@@ -406,7 +406,6 @@ window.CAIN = window.CAIN || {};
 	// matches shows whole; otherwise only its matching powers or abilities.
 	var docQuery = "";
 	var SEARCH_TABS = ["agendas", "blasphemies", "virtues", "sinmarks", "kit"];
-	var DOC_SIZES = [{ id: "normal", label: "100%" }, { id: "small", label: "85%" }, { id: "smaller", label: "70%" }];
 
 	function applySearch(body, status) {
 		var words = docQuery.toLowerCase().split(/\s+/).filter(Boolean);
@@ -449,13 +448,36 @@ window.CAIN = window.CAIN || {};
 		return h("div", { class: "doc-search-row" }, input, status, sources);
 	}
 
-	function sizePicker() {
-		return h("div", { class: "cat-picker", role: "group", "aria-label": "Text size" },
+	// Text size as a percentage, 40-200. Older saves used names; map those over.
+	function docZoom() {
+		var z = doctrine.zoom;
+		if (typeof z !== "number") z = { small: 85, smaller: 70 }[doctrine.size] || 100;
+		return Math.max(40, Math.min(200, Math.round(z / 10) * 10));
+	}
+
+	// The body gets zoom, plus a class that lets blasphemy powers spread into more
+	// columns when the text is small.
+	function applyDocZoom(el, z) {
+		el.style.zoom = z / 100;
+		el.className = "doc-body" + (z <= 70 ? " size-smaller" : z <= 85 ? " size-small" : "");
+	}
+
+	function sizePicker(bodyWrap) {
+		var z = docZoom();
+		var out = h("output", { class: "size-value" }, z + "%");
+		var slider = h("input", { class: "size-slider", type: "range", min: "40", max: "200", step: "10", value: String(z), "aria-label": "Text size", "aria-valuetext": z + "%" });
+		// Live while dragging; saved without a re-render so the slider keeps focus.
+		slider.addEventListener("input", function () {
+			var v = +slider.value;
+			out.textContent = v + "%";
+			slider.setAttribute("aria-valuetext", v + "%");
+			applyDocZoom(bodyWrap, v);
+		});
+		slider.addEventListener("change", function () { doctrine.zoom = +slider.value; safeStore.set("cain.doctrine", doctrine); });
+		return h("div", { class: "cat-picker size-picker" },
 			h("span", { class: "label" }, "Text size"),
-			DOC_SIZES.map(function (s) {
-				return h("button", { class: "chip", type: "button", "aria-pressed": String((doctrine.size || "normal") === s.id),
-					onclick: function () { setDoctrine({ size: s.id }); } }, s.label);
-			}));
+			h("span", { class: "size-end" }, "40%"), slider, h("span", { class: "size-end" }, "200%"), out,
+			h("button", { class: "chip", type: "button", onclick: function () { slider.value = "100"; slider.dispatchEvent(new Event("input")); slider.dispatchEvent(new Event("change")); } }, "Reset"));
 	}
 
 	function renderDoctrine() {
@@ -469,6 +491,8 @@ window.CAIN = window.CAIN || {};
 		else if (doctrine.tab === "cat") body = catView(cat);
 		else body = glossaryView();
 
+		var bodyWrap = h("div", null, body);
+		applyDocZoom(bodyWrap, docZoom());
 		var catChips = [];
 		for (var c = 0; c <= core.catMax; c++) {
 			(function (value) {
@@ -495,9 +519,9 @@ window.CAIN = window.CAIN || {};
 				h("div", { class: "cat-picker" },
 					h("span", { class: "label" }, "Show at CAT"),
 					catChips),
-				sizePicker()),
+				sizePicker(bodyWrap)),
 			SEARCH_TABS.indexOf(doctrine.tab) >= 0 ? searchBox(body) : null,
-			h("div", { class: "doc-body size-" + (doctrine.size || "normal") }, body)
+			bodyWrap
 		];
 	}
 
