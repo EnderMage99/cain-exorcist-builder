@@ -2315,6 +2315,25 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 	border-radius: 0 8px 8px 0;
 }
 
+/* Doctrine search and text size */
+.doc-search-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: -4px 0 16px; }
+
+.doc-search { flex: 1 1 320px; max-width: 560px; font-size: 15px; padding: 9px 12px; }
+
+.doc-search-status { font-size: 13px; color: var(--muted); }
+
+.is-hidden { display: none !important; }
+
+.doc-body.size-small { zoom: 0.85; }
+
+.doc-body.size-smaller { zoom: 0.7; }
+
+@media (min-width: 1000px) {
+	.doc-body.size-small .blas-card:not(.blas-solo) .entries { column-count: 4; }
+
+	.doc-body.size-smaller .blas-card:not(.blas-solo) .entries { column-count: 5; }
+}
+
 /* Agendas as their cards in the rulebook: rounded tag cards of grey card
    stock, stained paper, black card, brushed gold, a luggage tag or a stamped
    form, each with its round emblem, the name in marker pen, a tape note and

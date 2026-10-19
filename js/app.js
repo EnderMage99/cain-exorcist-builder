@@ -349,6 +349,55 @@ window.CAIN = window.CAIN || {};
 		})));
 	}
 
+	// Doctrine search: hides cards and entries that don't match, without a
+	// re-render so the search box keeps focus. A card whose name or summary
+	// matches shows whole; otherwise only its matching powers or abilities.
+	var docQuery = "";
+	var SEARCH_TABS = ["agendas", "blasphemies", "sinmarks"];
+	var DOC_SIZES = [{ id: "normal", label: "100%" }, { id: "small", label: "85%" }, { id: "smaller", label: "70%" }];
+
+	function applySearch(body, status) {
+		var words = docQuery.toLowerCase().split(/\s+/).filter(Boolean);
+		function hit(el) {
+			var text = el.textContent.toLowerCase();
+			return words.every(function (w) { return text.indexOf(w) >= 0; });
+		}
+		var shown = 0;
+		[].forEach.call(body.querySelectorAll(".grid > .card"), function (card) {
+			var parts = [].slice.call(card.querySelectorAll(".entries > .entry, .passive"));
+			var head = [].slice.call(card.querySelectorAll(".card-head, .ag-head, :scope > .note, .ag-items"));
+			var whole = !words.length || head.some(hit);
+			var any = false;
+			parts.forEach(function (p) {
+				var on = whole || hit(p);
+				p.classList.toggle("is-hidden", !on);
+				if (on && !p.classList.contains("passive")) any = true;
+			});
+			var visible = whole || any || parts.some(function (p) { return !p.classList.contains("is-hidden"); });
+			card.classList.toggle("is-hidden", !visible);
+			if (visible) shown += 1;
+		});
+		status.textContent = words.length ? (shown ? shown + (shown === 1 ? " match" : " matches") : "Nothing matches \"" + docQuery + "\".") : "";
+	}
+
+	function searchBox(body) {
+		var status = h("span", { class: "doc-search-status", role: "status" });
+		var input = h("input", { class: "input doc-search", type: "search", value: docQuery, placeholder: "Search names, powers, rules text...", "aria-label": "Search " + doctrine.tab });
+		input.addEventListener("input", function () { docQuery = input.value; applySearch(body, status); });
+		input.addEventListener("keydown", function (e) { if (e.key === "Escape") { input.value = ""; docQuery = ""; applySearch(body, status); } });
+		applySearch(body, status);
+		return h("div", { class: "doc-search-row" }, input, status);
+	}
+
+	function sizePicker() {
+		return h("div", { class: "cat-picker", role: "group", "aria-label": "Text size" },
+			h("span", { class: "label" }, "Text size"),
+			DOC_SIZES.map(function (s) {
+				return h("button", { class: "chip", type: "button", "aria-pressed": String((doctrine.size || "normal") === s.id),
+					onclick: function () { setDoctrine({ size: s.id }); } }, s.label);
+			}));
+	}
+
 	function renderDoctrine() {
 		var cat = doctrine.cat;
 		var body;
@@ -384,8 +433,10 @@ window.CAIN = window.CAIN || {};
 				})),
 				h("div", { class: "cat-picker" },
 					h("span", { class: "label" }, "Show at CAT"),
-					catChips)),
-			body
+					catChips),
+				sizePicker()),
+			SEARCH_TABS.indexOf(doctrine.tab) >= 0 ? searchBox(body) : null,
+			h("div", { class: "doc-body size-" + (doctrine.size || "normal") }, body)
 		];
 	}
 
