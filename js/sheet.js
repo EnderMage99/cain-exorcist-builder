@@ -174,7 +174,7 @@ window.CAIN = window.CAIN || {};
 		var lost = d.stressCapacity - d.maxStress;
 		return h("section", { class: "card sheet-execution" },
 			h("div", { class: "exec-row" },
-				h("span", { class: "exec-seal" }, CAIN.art("dagger")),
+				CAIN.art("seal", "exec-seal"),
 				h("span", { class: "exec-stress" }, String(hu.stress)),
 				bubbles(hu.stress, d.stressCapacity, { shape: "box", crossed: lost, label: "Stress" },
 					this.tracked("Stress", function () { return hu.stress; }, function (v) { hu.stress = v; })),
@@ -275,7 +275,7 @@ window.CAIN = window.CAIN || {};
 		var self = this;
 		return section("agony", { text: "Divine Agony", goth: true }, null,
 			h("div", { class: "agony-row" },
-				h("span", { class: "agony-blades" }, CAIN.art("dagger"), CAIN.art("dagger", "flip")),
+				CAIN.art("daggers", "agony-blades"),
 				h("ul", { class: "tiny-list" },
 					h("li", null, "When you take no successes on a roll, gain an affliction, fill out a hook, gain an injury, or an exorcist dies or suffers sin overflow, store a pathos."),
 					h("li", null, "Once a session, and once a scene for the whole group, you may burn away all pathos to add one extra die to a roll per pathos burned, stacking with all bonuses.")),
@@ -405,7 +405,7 @@ window.CAIN = window.CAIN || {};
 		var marks = ch.sinMarks.map(function (owned, mi) {
 			var m = R.sinMark(owned.mark);
 			return h("div", { class: "mark-box" },
-				h("div", { class: "entry-name goth-name" }, CAIN.art(mi % 2 ? "fly" : "grub", "mark-bug"), m ? m.name : owned.mark,
+				h("div", { class: "entry-name goth-name" }, CAIN.art(["grub", "fly", "beetle"][mi % 3], "mark-bug"), m ? m.name : owned.mark,
 					self.editable ? removeBtn("the whole mark", function () { ch.sinMarks.splice(mi, 1); self.onChange(true); }) : null),
 				m ? h("p", { class: "tiny" }, m.appearance) : null,
 				owned.abilities.map(function (a, ai) {
@@ -445,8 +445,8 @@ window.CAIN = window.CAIN || {};
 				} }, "Add")) : null;
 		}
 		return section("sin", { text: "Sin", goth: true }, ch.sin + " / " + d.sinCap,
+			CAIN.art("body", "sin-body"),
 			h("div", { class: "sin-web" },
-				CAIN.art("web", "sin-veins"),
 				bubbles(ch.sin, boxes, { shape: "blot", crossed: crossed, label: "Sin" },
 					this.tracked("Sin", function () { return ch.sin; }, function (v) { ch.sin = v; }))),
 			h("div", { class: "stepper-row" },

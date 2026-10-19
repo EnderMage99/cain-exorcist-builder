@@ -40,10 +40,12 @@ system before the rest of the book's content goes in. See
   that way. Agenda, abilities, powers, sin marks and kit can be changed or
   removed in place. Rule problems show as warnings, never locks. Clicks on
   tracked numbers are logged so the Admin can follow along.
-  Styled after the paper sheet: typewriter and blackletter type, worn
-  paper, tape and censor bars, a photo slot on the ID card (**Add photo**
-  stores a small portrait with the exorcist), brain-shaped bursts and ink
-  splats for sin. The drawings are original, not copied from the book.
+  Styled after the paper sheet and using its artwork: the CAIN hand
+  emblem in the ID photo slot (**Add photo** stores a small portrait with
+  the exorcist instead), the halftone brain, brain bursts, the inkblot
+  brain, the execution seal, daggers, skull, the sin splats over the
+  nerve-system body, and grub, fly and beetle for sin marks, on its
+  crumpled plastic texture with typewriter and blackletter type.
 - **Action bar** above the sheet, for things a website does better than a
   PDF. **The site never rolls dice**: roll at the table where the Admin can
   see, and enter what you rolled.
@@ -89,7 +91,8 @@ css/main.css      styles, light and dark themes
 js/rules.js       rules engine: derived stats, validation, dice (no DOM)
 js/hunt.js        play and between-mission actions (no DOM)
 js/ui.js          DOM helpers, glossary popover
-js/art.js         sheet illustrations (inline SVG) and portrait resizing
+js/art.js         sheet illustrations and portrait resizing
+img/sheet/        artwork from the official character sheet
 js/store.js       saved characters and the registration draft
 js/transfer.js    export and import: the .cain.json format and its checks
 js/registration.js character creation steps
@@ -106,4 +109,5 @@ derived numbers like kit points or max stress update without special cases.
 Text can hold CAT tokens: `{cat}`, `{cat+2}`, `{2+cat}`, `{halfcat}`, and
 table lookups like `{cat:area}` or `{halfcat:size}`.
 
-CAIN is by Tom Bloom / CHASM. This is an unofficial fan tool.
+CAIN is by Tom Bloom / CHASM. This is an unofficial fan tool; the sheet
+artwork in `img/sheet/` is from the official CAIN character sheet.
