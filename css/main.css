@@ -2314,6 +2314,52 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 	border-radius: 0 8px 8px 0;
 }
 
+/* Wide screens: use the room. The page grows, each sheet page flows its cards
+   into as many columns as fit, and blasphemies spread their powers across the
+   width instead of one long column. */
+@media (min-width: 1000px) {
+	.grid > .blas-card { grid-column: 1 / -1; }
+
+	.grid > .blas-card.blas-solo { grid-column: auto; }
+
+	.blas-card .entries,
+	.blas-card .options,
+	.blas-pick .options,
+	.sheet-blasphemy .power-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+		gap: 10px 16px;
+		align-items: start;
+	}
+
+	.blas-card .entries > .entry { border-top: 0; }
+}
+
+@media (min-width: 1300px) {
+	.page, .masthead-inner { max-width: 1640px; }
+
+	.sheet-cols { display: block; columns: 440px; column-gap: 16px; }
+
+	.sheet-col { display: contents; }
+
+	.sheet-col > * { break-inside: avoid; margin-bottom: 16px; }
+
+	.sheet-col > .sheet-blasphemy { column-span: all; }
+
+	.sheet-col > .agenda-page { column-span: all; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+
+	/* Page 2: kit beside a wider sin card, its marks side by side. */
+	.sheet-cols.cols-kit-sin { display: grid; columns: auto; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+
+	.cols-kit-sin .sheet-col { display: grid; }
+
+	.cols-kit-sin .sheet-col > * { margin-bottom: 0; }
+
+	.sheet-sin .mark-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; align-items: start; }
+
+	.sheet-sin .mark-list .mark-box { margin: 0; }
+}
+
 @media print {
 	.blas-plate, .blas-themed .power-side { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 

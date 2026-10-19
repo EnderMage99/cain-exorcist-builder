@@ -455,7 +455,7 @@ window.CAIN = window.CAIN || {};
 				h("div", { class: "overflow-title" }, "!! Sin overflow !!"),
 				h("p", null, h("strong", null, "Give up"), " or make a ", h("strong", null, "resistance check"), ": roll 1d6 and add 1 for each sin mark. 6 or less keeps control (a 1 always does; with no marks you pass). On success, clear all sin, gain a ", h("strong", null, "sin mark"), ", then ", h("strong", null, "permanently cross out two boxes"), ".")),
 			h("div", { class: "subhead" }, term("Sin marks", "sin mark")),
-			marks.length ? marks : h("p", { class: "note" }, "None."),
+			marks.length ? h("div", { class: "mark-list" }, marks) : h("p", { class: "note" }, "None."),
 			markAdd);
 	};
 
@@ -618,7 +618,7 @@ window.CAIN = window.CAIN || {};
 			page("2", "Category, kit and sin",
 				s.category(),
 				s.psyche(),
-				h("div", { class: "sheet-cols" },
+				h("div", { class: "sheet-cols cols-kit-sin" },
 					h("div", { class: "sheet-col" }, s.kit()),
 					h("div", { class: "sheet-col" }, s.sin()))),
 			page("3", "Registered abilities",

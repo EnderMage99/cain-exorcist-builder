@@ -274,7 +274,7 @@ window.CAIN = window.CAIN || {};
 
 	function blasphemyCard(b, cat) {
 		var th = CAIN.blasTheme(b);
-		return h("article", { class: "card blas-card " + th.class, style: th.style },
+		return h("article", { class: "card blas-card " + th.class + (b.powers ? "" : " blas-solo"), style: th.style },
 			h("div", { class: "card-head" },
 				h("h2", { class: "blas-title" }, b.name),
 				h("span", { class: "label" }, b.numeral ? "Blasphemy " + b.numeral : "All exorcists")),
