@@ -118,10 +118,6 @@ window.CAIN = window.CAIN || {};
 		window.scrollTo(0, 0);
 	}
 
-	function promptButton(onPick, list) {
-		return h("button", { class: "mini-btn", type: "button", onclick: function () { onPick(R.pick(list)); } }, "Prompt me");
-	}
-
 	// Steps
 
 	function conceptStep() {
@@ -136,12 +132,10 @@ window.CAIN = window.CAIN || {};
 				? h("textarea", { id: id, class: "input", rows: 2, placeholder: opts.placeholder || "", value: obj[key] })
 				: h("input", { id: id, class: "input", type: "text", placeholder: opts.placeholder || "", value: obj[key], autocomplete: "off" });
 			input.addEventListener("input", function () { obj[key] = input.value; changed(false); });
-			var extra = opts.prompts ? promptButton(function (v) { obj[key] = v; input.value = v; changed(false); }, opts.prompts) : null;
 			var reroll = opts.reroll ? h("button", { class: "mini-btn", type: "button", onclick: function () { obj[key] = opts.reroll(); input.value = obj[key]; changed(false); } }, "New") : null;
 			return h("div", { class: "field" + (opts.wide ? " wide" : "") },
-				h("label", { class: "field-label", for: id }, label, extra, reroll), input);
+				h("label", { class: "field-label", for: id }, label, reroll), input);
 		}
-		var prompts = CAIN.prompts;
 		return [
 			h("section", { class: "card" },
 				h("div", { class: "card-head" }, h("h2", null, "Identity"), h("span", { class: "label" }, "Affix photo firmly")),
@@ -157,7 +151,7 @@ window.CAIN = window.CAIN || {};
 				h("div", { class: "card-head" }, h("h2", null, "Questions"), h("span", { class: "label" }, "Give the answers to your Admin")),
 				h("p", { class: "note" }, "Answer now or later. You can share them with the group if you like."),
 				h("div", { class: "form-grid" }, core.questions.map(function (q) {
-					return text(q.text, "questions." + q.id, { multiline: true, wide: true, prompts: prompts.questions[q.id] });
+					return text(q.text, "questions." + q.id, { multiline: true, wide: true });
 				})))
 		];
 	}
@@ -282,8 +276,7 @@ window.CAIN = window.CAIN || {};
 				return h("li", null, h("span", null, k.name), h("span", { class: "label" }, k.kp + " KP"));
 			})),
 			h("div", { class: "field wide" },
-				h("label", { class: "field-label", for: "w-weapons" }, "What do your service weapons look like?",
-					promptButton(function (v) { c.weaponLook = v; input.value = v; changed(false); }, CAIN.prompts.weapons)),
+				h("label", { class: "field-label", for: "w-weapons" }, "What do your service weapons look like?"),
 				input),
 			h("p", { class: "note" }, "Service weapons start at CAT 0. Scrip earned on missions buys upgrades and more kit."));
 	}

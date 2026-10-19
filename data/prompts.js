@@ -1,4 +1,4 @@
-// Prompts for the registration's "Prompt me" buttons and Quick Exorcist.
+// Random names, looks, answers and weapons for Quick exorcist only.
 // Original suggestions written for this tool, not from the book.
 window.CAIN = window.CAIN || {};
 
