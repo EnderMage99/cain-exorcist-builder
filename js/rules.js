@@ -86,7 +86,14 @@ window.CAIN = window.CAIN || {};
 			pathos: 0,
 			divineAgonyUsed: false,
 			jackSkill: null,
-			notes: ""
+			notes: "",
+			started: false,
+			ironSoulUsed: false,
+			restDice: null,
+			rests: 0,
+			rolls: [],
+			pulled: [],
+			pending: null
 		};
 	}
 

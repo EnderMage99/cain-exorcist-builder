@@ -149,7 +149,7 @@ window.CAIN = window.CAIN || {};
 			h("div", { class: "subrow" },
 				h("span", { class: "field-label" }, term("Pathos")),
 				bubbles(hunt.pathos, core.base.pathosMax, { shape: "star", label: "Pathos" })),
-			h("p", { class: "note" }, "Tracked live in play mode (coming in M4)."));
+			h("p", { class: "note" }, "Tracked live on the Play tab."));
 	};
 
 	Sheet.prototype.category = function () {
@@ -193,7 +193,7 @@ window.CAIN = window.CAIN || {};
 			h("div", { class: "stepper-row" },
 				this.stepper("Weapon CAT", "weaponCat", 0, core.weaponUpgrade.maxCat),
 				this.stepper("Scrip", "scrip", 0, 999)),
-			h("p", { class: "note" }, "Paid out per mission (5: success, 3: spare, -1: failure, +3 advance). The kit shop opens in M5."));
+			h("p", { class: "note" }, "Paid out per mission (5: success, 3: spare, -1: failure, +3 advance). Buy kit in Between missions."));
 	};
 
 	Sheet.prototype.sin = function () {
@@ -354,10 +354,19 @@ window.CAIN = window.CAIN || {};
 		return copy;
 	}
 
-	// Character screen: #/c/<id>
+	var modes = [
+		{ id: "sheet", name: "Sheet" },
+		{ id: "play", name: "Play" },
+		{ id: "between", name: "Between missions" }
+	];
+
+	// Events from the last action, shown once at the top of the next render.
+	var flash = null;
+
+	// Character screen: #/c/<id>, #/c/<id>/play, #/c/<id>/between
 	CAIN.screens.sheet = {
 		id: "registry",
-		render: function (id) {
+		render: function (id, mode) {
 			var ch = CAIN.store.get(id);
 			if (!ch) {
 				return h("div", { class: "card empty" },
@@ -365,6 +374,37 @@ window.CAIN = window.CAIN || {};
 					h("p", null, "That exorcist isn't registered in this browser."),
 					h("a", { class: "btn", href: "#/" }, "Back to the registry"));
 			}
+			CAIN.hunt.normalize(ch);
+			if (!modes.some(function (m) { return m.id === mode; })) mode = "sheet";
+			var shown = flash && flash.id === ch.id ? flash.events : null;
+			flash = null;
+			var ctx = {
+				save: function (rerender) { CAIN.store.save(ch); if (rerender) CAIN.app.render(); },
+				act: function (result) {
+					flash = { id: ch.id, events: (result && result.events) || [] };
+					CAIN.store.save(ch);
+					CAIN.app.render();
+				},
+				flash: function (events) { flash = { id: ch.id, events: events }; CAIN.app.render(); }
+			};
+			var tabs = h("nav", { class: "tabs mode-tabs", "aria-label": "Character views" }, modes.map(function (m) {
+				return h("a", { class: "tab", href: "#/c/" + encodeURIComponent(ch.id) + (m.id === "sheet" ? "" : "/" + m.id), "aria-current": m.id === mode ? "page" : null }, m.name);
+			}));
+			var head = h("div", { class: "page-head" },
+				h("div", null,
+					h("div", { class: "kicker" }, "Exorcist file " + (ch.xid || "") + "  /  CAT " + R.derived(ch).cat),
+					h("h1", null, ch.name || "Unnamed")));
+			var dead = ch.dead ? h("section", { class: "card alert" },
+				h("div", { class: "alert-title" }, "Deceased"),
+				h("p", null, ch.dead.cause + ". CAIN pays for the cremation."),
+				h("div", { class: "btn-row" }, h("button", { class: "btn ghost small", type: "button", onclick: function () {
+					ch.dead = null;
+					ch.hunt.pending = null;
+					ctx.act({ events: ["Revived (correction)."] });
+				} }, "Undo: they're alive"))) : null;
+			var flashBox = shown && shown.length ? h("div", { class: "flash", role: "status" }, h("ul", null, shown.map(function (e) { return h("li", null, e); }))) : null;
+			if (mode === "play") return [head, tabs, dead, flashBox, CAIN.renderPlay(ch, ctx)];
+			if (mode === "between") return [head, tabs, dead, flashBox, CAIN.renderBetween(ch, ctx)];
 			var status = h("span", { class: "save-status", role: "status" });
 			var timer = null;
 			function onChange(rerender) {
@@ -383,17 +423,16 @@ window.CAIN = window.CAIN || {};
 				CAIN.store.remove(ch.id);
 				location.hash = "#/";
 			} }, "Delete");
+			head.appendChild(h("div", { class: "head-actions" },
+				status,
+				h("button", { class: "btn ghost", type: "button", onclick: function () { location.hash = "#/c/" + duplicate(ch).id; } }, "Duplicate"),
+				h("button", { class: "btn ghost", type: "button", onclick: function () { CAIN.downloadJson(fileName(ch), ch); } }, "Export"),
+				del));
 			return [
-				h("div", { class: "page-head" },
-					h("div", null,
-						h("div", { class: "kicker" }, "Exorcist file " + (ch.xid || "")),
-						h("h1", null, ch.name || "Unnamed")),
-					h("div", { class: "head-actions" },
-						status,
-						h("button", { class: "btn ghost", type: "button", onclick: function () { location.hash = "#/c/" + duplicate(ch).id; } }, "Duplicate"),
-						h("button", { class: "btn ghost", type: "button", onclick: function () { CAIN.downloadJson(fileName(ch), ch); } }, "Export"),
-						del)),
-				h("p", { class: "note sheet-hint" }, "Edit mode: changes save as you type. The steppers are for corrections; play mode (M4) and the session and mission tools (M5) will move these numbers for you."),
+				head,
+				tabs,
+				dead,
+				h("p", { class: "note sheet-hint" }, "Edit mode: changes save as you type. The steppers are for corrections; Play and Between missions move these numbers for you."),
 				CAIN.renderSheet(ch, { editable: true, onChange: onChange })
 			];
 		}

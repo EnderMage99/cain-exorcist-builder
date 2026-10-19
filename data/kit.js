@@ -10,7 +10,8 @@ CAIN.kit = [
 		scrip: 4,
 		kp: 2,
 		tags: ["Consumable", "Focus"],
-		text: "Consume to heal 1d3+3 stress."
+		text: "Consume to heal 1d3+3 stress.",
+		use: { healStress: { dice: "1d3", plus: 3 } }
 	},
 	{
 		id: "improved-meal-plan",

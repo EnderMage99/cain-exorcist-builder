@@ -37,8 +37,8 @@ window.CAIN = window.CAIN || {};
 		{ id: "M1", text: "Rules engine and test content", done: true },
 		{ id: "M2", text: "Registration (character creation)", done: true },
 		{ id: "M3", text: "Sheet, edit mode", done: true },
-		{ id: "M4", text: "Play mode", done: false },
-		{ id: "M5", text: "Sessions, missions, advances", done: false },
+		{ id: "M4", text: "Play mode", done: true },
+		{ id: "M5", text: "Sessions, missions, advances", done: true },
 		{ id: "M6", text: "Sharing by file and link", done: false },
 		{ id: "M7", text: "Print view and polish", done: false }
 	];
@@ -297,8 +297,8 @@ window.CAIN = window.CAIN || {};
 
 	function currentRoute() {
 		var path = location.hash.replace(/^#\/?/, "").split("?")[0];
-		var m = /^c\/(.+)$/.exec(path);
-		if (m) return { id: "sheet:" + m[1], nav: "registry", render: function () { return CAIN.screens.sheet.render(decodeURIComponent(m[1])); } };
+		var m = /^c\/([^/]+)(?:\/(play|between))?$/.exec(path);
+		if (m) return { id: "sheet:" + m[1] + ":" + (m[2] || ""), nav: "registry", render: function () { return CAIN.screens.sheet.render(decodeURIComponent(m[1]), m[2]); } };
 		if (path === "new") return { id: "new", nav: "registry", render: CAIN.screens.registration.render };
 		if (path === "doctrine") return { id: "doctrine", nav: "doctrine", render: renderDoctrine };
 		return { id: "registry", nav: "registry", render: renderRegistry };
