@@ -1,11 +1,14 @@
 // Agendas, as in CAIN 1.4.5 (pages 46-51). note: a special rule printed with
 // the agenda. requires: { sinMarks: n } or { dead: true } gates picking it.
+// look: the agenda's card in the book: paper (grey, beige, dark, gold, tag or
+// stamp), accent colour, tape colour for its note. Emblems are img/agenda/<id>.png.
 window.CAIN = window.CAIN || {};
 
 CAIN.agendas = [
 	{
 		id: "beast",
 		name: "Beast",
+		look: { paper: "grey", accent: "#d61f1f", splatter: true },
 		requires: null,
 		items: [
 			{ text: "Get into a fight", bold: false },
@@ -27,6 +30,7 @@ CAIN.agendas = [
 	{
 		id: "demon",
 		name: "Demon",
+		look: { paper: "gold", accent: "#3a2e14", tape: "#f4f1ea" },
 		requires: null,
 		note: "You can spend scrip as kit points.",
 		items: [
@@ -49,6 +53,7 @@ CAIN.agendas = [
 	{
 		id: "departed",
 		name: "Departed",
+		look: { paper: "tag", accent: "#7aa3d6", tape: "#e8423a" },
 		requires: { dead: true },
 		note: "A character can only take this agenda if they are well and truly dead. You get its ability for free.",
 		items: [],
@@ -60,6 +65,7 @@ CAIN.agendas = [
 	{
 		id: "doomed",
 		name: "Doomed",
+		look: { paper: "grey", accent: "#141414", tape: "#f2b318" },
 		requires: { sinMarks: 1 },
 		note: "You may only pick this agenda if you have a sin mark. If it's your first agenda, you may start with a sin mark of your choice (only choose location, still roll 1d6 for ability).",
 		items: [
@@ -82,6 +88,7 @@ CAIN.agendas = [
 	{
 		id: "firebug",
 		name: "Firebug",
+		look: { paper: "beige", accent: "#5a3d22" },
 		requires: null,
 		items: [
 			{ text: "Solve problems creatively", bold: false },
@@ -105,6 +112,7 @@ CAIN.agendas = [
 	{
 		id: "guardian",
 		name: "Guardian",
+		look: { paper: "grey", accent: "#141414", tape: "#ef8ff0" },
 		requires: null,
 		items: [
 			{ text: "Protect your people", bold: false },
@@ -127,6 +135,7 @@ CAIN.agendas = [
 	{
 		id: "hardline",
 		name: "Hardline",
+		look: { paper: "grey", accent: "#141414" },
 		requires: null,
 		items: [
 			{ text: "Follow orders", bold: false },
@@ -148,6 +157,7 @@ CAIN.agendas = [
 	{
 		id: "loner",
 		name: "Loner",
+		look: { paper: "grey", accent: "#141414" },
 		requires: null,
 		items: [
 			{ text: "Demonstrate your superior skill", bold: false },
@@ -169,6 +179,7 @@ CAIN.agendas = [
 	{
 		id: "machine",
 		name: "Machine",
+		look: { paper: "beige", accent: "#3a3a3a", tape: "#f2b318" },
 		requires: null,
 		note: "If your group rests, you can choose to exclude yourself from resting.",
 		items: [
@@ -191,6 +202,7 @@ CAIN.agendas = [
 	{
 		id: "moth",
 		name: "Moth",
+		look: { paper: "beige", accent: "#4a3320" },
 		requires: null,
 		items: [
 			{ text: "Uncover hidden or uncomfortable truths about the world", bold: false },
@@ -213,6 +225,7 @@ CAIN.agendas = [
 	{
 		id: "shadow",
 		name: "Shadow",
+		look: { paper: "dark", accent: "#d9d9d9", tape: "#c9c9c9" },
 		requires: null,
 		note: "When you pick this agenda, pick another character to be your rival (the feeling doesn't have to be mutual) at the start of a mission. As long as you have rival abilities from this agenda, you must choose who your rival is.",
 		items: [
@@ -235,6 +248,7 @@ CAIN.agendas = [
 	{
 		id: "songbird",
 		name: "Songbird",
+		look: { paper: "grey", accent: "#a020f0", tape: "#c77dff" },
 		requires: null,
 		items: [
 			{ text: "Get someone to do your bidding", bold: false },
@@ -256,6 +270,7 @@ CAIN.agendas = [
 	{
 		id: "sorcerer",
 		name: "Sorcerer",
+		look: { paper: "dark", accent: "#ff4fd8", tape: "#ff4fd8" },
 		requires: null,
 		items: [
 			{ text: "Demonstrate flashy displays of power", bold: false },
@@ -277,6 +292,7 @@ CAIN.agendas = [
 	{
 		id: "survivor",
 		name: "Survivor",
+		look: { paper: "stamp", accent: "#d8343a", tape: "#f4f1ea" },
 		requires: null,
 		note: "Once taken, a character can only swap out of this agenda by spending two advances. Get its ability for free.",
 		items: [
@@ -291,6 +307,7 @@ CAIN.agendas = [
 	{
 		id: "temperance",
 		name: "Temperance",
+		look: { paper: "grey", accent: "#141414" },
 		requires: null,
 		items: [
 			{ text: "Put people before the mission", bold: false },
@@ -312,6 +329,7 @@ CAIN.agendas = [
 	{
 		id: "torch",
 		name: "Torch",
+		look: { paper: "grey", accent: "#141414" },
 		requires: null,
 		items: [
 			{ text: "Lead from the front", bold: false },

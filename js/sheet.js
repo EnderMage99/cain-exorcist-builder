@@ -485,8 +485,9 @@ window.CAIN = window.CAIN || {};
 				self.onChange(true);
 			} }, "Add"));
 		}
+		var look = a ? CAIN.agendaLook(a) : { class: "", style: null };
 		return h("div", { class: "agenda-page" },
-			h("section", { class: "card sheet-agenda" },
+			h("section", { class: "card sheet-agenda " + look.class, style: look.style },
 				h("div", { class: "card-head" },
 					h("h2", null, "Agenda"),
 					this.editable
@@ -496,6 +497,7 @@ window.CAIN = window.CAIN || {};
 							return groups;
 						})(), function (v) { var before = ch.agenda; ch.agenda = v || null; self.change("Agenda", before, ch.agenda); }, { placeholder: "None", aria: "Agenda" })
 						: h("span", { class: "sticker" }, a ? a.name : "None")),
+				a ? CAIN.agendaHead(a) : null,
 				a && a.custom ? h("div", { class: "subrow" }, h("span", { class: "label" }, "Custom agenda"),
 					this.editable && this.openPanel ? h("button", { class: "mini-btn", type: "button", onclick: function () { self.openPanel("customAgenda", a.id); } }, "Edit") : null) : null,
 				h("p", { class: "tiny" }, "Swap agendas between missions. Keep any bolded items. Spend an advance to gain a new ability. 5 abilities max."),
@@ -531,7 +533,7 @@ window.CAIN = window.CAIN || {};
 				h("div", { class: "passive" },
 					h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
 					CAIN.richText(b.passive.text, d.cat)),
-				h("div", { class: "power-grid" }, owned.powers.map(function (pid, pi) {
+				h("div", { class: "power-grid", style: "--n:" + Math.min(3, Math.max(1, owned.powers.length)) }, owned.powers.map(function (pid, pi) {
 					var p = R.power(b.id, pid);
 					if (!p) return null;
 					return h("div", { class: "power-box" },

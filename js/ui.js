@@ -237,7 +237,41 @@ window.CAIN = window.CAIN || {};
 		return { class: "blas-themed" + (t.dark ? " blas-dark" : ""), style: "--blas:" + c + ";--blas-2:" + c2 + ";--blas-title:" + title };
 	}
 
+	// An agenda drawn like its card in the rulebook: the paper it's printed on,
+	// the round emblem, the name in marker pen and "Registered Agenda".
+	var PAPERS = ["grey", "beige", "dark", "gold", "tag", "stamp"];
+
+	function agendaLook(a) {
+		var l = (a && a.look) || {};
+		var hex = /^#[0-9a-f]{6}$/i;
+		var paper = PAPERS.indexOf(l.paper) >= 0 ? l.paper : "grey";
+		return {
+			class: "agenda-look paper-" + paper + (l.splatter ? " splatter" : ""),
+			style: "--ag-accent:" + (hex.test(l.accent || "") ? l.accent : "#141414") + ";--ag-tape:" + (hex.test(l.tape || "") ? l.tape : "#f2b318")
+		};
+	}
+
+	function agendaHead(a, extra) {
+		var emblem = a.custom
+			? h("span", { class: "ag-emblem ag-emblem-blank", "aria-hidden": "true" })
+			: h("img", { class: "ag-emblem", src: "img/agenda/" + a.id + ".png", alt: "", draggable: "false" });
+		return h("div", { class: "ag-head" }, emblem,
+			h("div", { class: "ag-titles" },
+				h("h2", { class: "ag-name" }, a.name),
+				h("span", { class: "ag-reg" }, a.custom ? "Custom Agenda" : "Registered Agenda")),
+			extra || null);
+	}
+
+	function agendaFoot() {
+		return h("div", { class: "ag-foot", "aria-hidden": "true" },
+			h("span", { class: "ag-tris" }, h("span", null), h("span", null)),
+			h("span", { class: "ag-hole" }));
+	}
+
 	CAIN.powerHead = powerHead;
+	CAIN.agendaLook = agendaLook;
+	CAIN.agendaHead = agendaHead;
+	CAIN.agendaFoot = agendaFoot;
 	CAIN.powerTags = powerTags;
 	CAIN.blasTheme = blasTheme;
 	CAIN.burstIcon = burstIcon;

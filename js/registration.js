@@ -199,12 +199,13 @@ window.CAIN = window.CAIN || {};
 			h("div", { class: "grid" }, CAIN.agendas.map(function (a) {
 				var allowed = R.agendaAllowed(c, a);
 				var selected = c.agenda === a.id;
-				return h("article", { class: "card pick-card" + (selected ? " selected" : "") + (allowed.ok ? "" : " locked") },
-					h("div", { class: "card-head" }, h("h2", null, a.name), h("span", { class: "label" }, selected ? "Selected" : "Agenda")),
+				var look = CAIN.agendaLook(a);
+				return h("article", { class: "card pick-card " + look.class + (selected ? " selected" : "") + (allowed.ok ? "" : " locked"), style: look.style },
+					CAIN.agendaHead(a, selected ? h("span", { class: "tag stamp ag-picked" }, "Selected") : null),
 					allowed.ok ? null : h("p", { class: "tag stamp" }, allowed.reason),
-					a.note ? h("p", { class: "agenda-note" }, a.note) : null,
-					h("ul", { class: "items" }, a.items.map(function (it) { return h("li", { class: it.bold ? "bold" : null }, it.text); })),
-					h("div", { class: "label" }, "Choose 1 ability"),
+					a.items.length === 0 ? null : h("div", { class: "ag-items" }, h("span", { class: "ag-label" }, "Items:"),
+						h("ul", { class: "items" }, a.items.map(function (it) { return h("li", { class: it.bold ? "bold" : null }, it.text); }))),
+					h("div", { class: "ag-label" }, "Choose 1 ability:"),
 					h("ul", { class: "options" }, a.abilities.map(function (ab) {
 						var on = !!chosen && chosen.agenda === a.id && chosen.ability === ab.id;
 						return h("li", null, h("button", {
@@ -216,7 +217,9 @@ window.CAIN = window.CAIN || {};
 							}
 						}, h("span", { class: "option-mark", "aria-hidden": "true" }),
 							h("span", { class: "option-body" }, h("span", { class: "entry-name" }, ab.name), CAIN.richText(ab.text, cat))));
-					})));
+					})),
+					a.note ? h("p", { class: "agenda-note" }, a.note) : null,
+					CAIN.agendaFoot());
 			})));
 	}
 

@@ -252,17 +252,19 @@ window.CAIN = window.CAIN || {};
 	}
 
 	function agendaCard(a, cat) {
-		return h("article", { class: "card" },
-			h("div", { class: "card-head" }, h("h2", null, a.name), h("span", { class: "label" }, "Registered agenda")),
-			a.note ? h("p", { class: "agenda-note" }, a.note) : null,
-			h("div", { class: "label" }, "Items"),
-			h("ul", { class: "items" }, a.items.map(function (it) {
-				return h("li", { class: it.bold ? "bold" : null }, it.text);
-			})),
-			h("div", { class: "label" }, "Abilities"),
-			h("ul", { class: "entries" }, a.abilities.map(function (ab) {
+		var look = CAIN.agendaLook(a);
+		return h("article", { class: "card " + look.class, style: look.style },
+			CAIN.agendaHead(a),
+			a.items.length === 0 ? null : h("div", { class: "ag-items" }, h("span", { class: "ag-label" }, "Items:"),
+				h("ul", { class: "items" }, a.items.map(function (it) {
+					return h("li", { class: it.bold ? "bold" : null }, it.text);
+				}))),
+			h("div", { class: "ag-label" }, "Abilities:"),
+			h("ul", { class: "entries ag-abilities" }, a.abilities.map(function (ab) {
 				return h("li", { class: "entry" }, h("div", { class: "entry-name" }, ab.name), richText(ab.text, cat));
-			})));
+			})),
+			a.note ? h("p", { class: "agenda-note" }, a.note) : null,
+			CAIN.agendaFoot());
 	}
 
 	function powerEntry(p, cat) {

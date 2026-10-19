@@ -1831,13 +1831,13 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 	--ink-filter-rev: none;
 }
 
-.sheet .card {
+.card {
 	position: relative;
 	isolation: isolate;
 	background-image: var(--grain);
 }
 
-.sheet .card::after {
+.card::after {
 	content: "";
 	position: absolute;
 	inset: 0;
@@ -1850,7 +1850,7 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 	z-index: -1;
 }
 
-.sheet .card:nth-of-type(even)::after { background-image: url("../img/sheet/wrinkle-2.jpg"); }
+.card:nth-of-type(even)::after { background-image: url("../img/sheet/wrinkle-2.jpg"); }
 
 .art { display: inline-block; line-height: 0; }
 
@@ -2283,6 +2283,7 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 .blas-card {
 	background:
 		linear-gradient(115deg, var(--blas) 0 55%, #0d0d0d 55% 62%, var(--blas-2) 62%) top / 100% 10px no-repeat,
+		var(--grain),
 		var(--paper);
 	padding-top: 26px;
 }
@@ -2314,25 +2315,223 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 	border-radius: 0 8px 8px 0;
 }
 
+/* Agendas as their cards in the rulebook: rounded tag cards of grey card
+   stock, stained paper, black card, brushed gold, a luggage tag or a stamped
+   form, each with its round emblem, the name in marker pen, a tape note and
+   the punched hole. The paper keeps its own colours in both themes, like a
+   physical card on the black page. */
+.agenda-look {
+	--paper: #e6e3dc;
+	--paper-2: #d9d5cc;
+	--ink: #141414;
+	--ink-soft: #2e2c29;
+	--muted: #4f4b44;
+	--line: #b3ada2;
+	--crease-blend: multiply;
+	--crease-filter: none;
+	--crease-strength: 0.45;
+	--ag-layers: linear-gradient(transparent, transparent);
+	color: var(--ink);
+	--bold-item: var(--ink);
+	container-type: inline-size;
+	background: var(--ag-layers), var(--grain), var(--paper);
+	border: 0;
+	border-radius: 54px 54px 30px 30px;
+	padding: 22px 22px 18px;
+	box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25), 0 10px 22px rgba(0, 0, 0, 0.28);
+}
+
+.agenda-look.paper-beige {
+	--paper: #eadcc2;
+	--paper-2: #ddcca9;
+	--muted: #54442f;
+	--line: #b59f7b;
+	--ag-layers:
+		radial-gradient(circle at 84% 22%, rgba(110, 72, 30, 0.22) 0 26px, transparent 28px),
+		radial-gradient(circle at 12% 78%, rgba(110, 72, 30, 0.16) 0 40px, transparent 43px),
+		radial-gradient(circle at 70% 88%, rgba(90, 60, 25, 0.18) 0 10px, transparent 12px);
+}
+
+.agenda-look.paper-dark {
+	--paper: #1c1c1e;
+	--paper-2: #2a2a2d;
+	--ink: #eeede9;
+	--ink-soft: #d4d2cc;
+	--muted: #aaa69d;
+	--line: #4b4b4f;
+	--crease-blend: screen;
+	--crease-filter: invert(1);
+	--crease-strength: 0.22;
+}
+
+.agenda-look.paper-gold {
+	--paper: #d6c594;
+	--paper-2: #c9b67f;
+	--muted: #3a3020;
+	--line: #7d6a43;
+	--ag-layers: linear-gradient(100deg, rgba(120, 98, 55, 0.55), rgba(255, 248, 225, 0.55) 22%, rgba(150, 125, 75, 0.45) 38%, rgba(255, 246, 215, 0.6) 55%, rgba(125, 102, 60, 0.5) 74%, rgba(240, 228, 190, 0.5));
+	border-radius: 54px;
+}
+
+.agenda-look.paper-tag {
+	--paper: #f0e4c6;
+	--paper-2: #e3d4ae;
+	--muted: #57472f;
+	--line: #b9a37b;
+	border-radius: 8px;
+	clip-path: polygon(34px 0, 100% 0, 100% 100%, 34px 100%, 0 calc(100% - 34px), 0 34px);
+	padding-left: 34px;
+}
+
+.agenda-look.paper-stamp {
+	--paper: #f4f2ec;
+	border-radius: 6px;
+	outline: 3px double #3d3b37;
+	outline-offset: -12px;
+	padding: 26px 28px 22px;
+}
+
+.agenda-look.splatter {
+	--ag-layers:
+		radial-gradient(circle at 78% 34%, var(--ag-accent) 0 4px, transparent 5px),
+		radial-gradient(circle at 81% 37%, var(--ag-accent) 0 2px, transparent 3px),
+		radial-gradient(circle at 92% 71%, var(--ag-accent) 0 6px, transparent 7px),
+		radial-gradient(circle at 88% 75%, var(--ag-accent) 0 2px, transparent 3px),
+		radial-gradient(circle at 18% 93%, var(--ag-accent) 0 5px, transparent 6px),
+		radial-gradient(circle at 64% 90%, var(--ag-accent) 0 3px, transparent 4px),
+		radial-gradient(circle at 96% 46%, var(--ag-accent) 0 3px, transparent 4px);
+}
+
+.ag-head {
+	display: grid;
+	grid-template-columns: 84px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 14px;
+	margin-bottom: 8px;
+}
+
+.ag-emblem { width: 84px; height: 84px; border-radius: 50%; display: block; box-shadow: 0 0 0 3px var(--paper), 0 0 0 4px rgba(0, 0, 0, 0.35); }
+
+.ag-emblem-blank { background: radial-gradient(circle, #0d0d0d 62%, transparent 63%), #0d0d0d; }
+
+.ag-titles { min-width: 0; display: flex; flex-direction: column; }
+
+.ag-name {
+	font-family: "Permanent Marker", var(--font-head), cursive;
+	font-weight: 400;
+	font-size: clamp(22px, 10cqi, 38px);
+	line-height: 1;
+	letter-spacing: 0.01em;
+	text-transform: uppercase;
+	color: var(--ink);
+	margin: 0;
+	transform: rotate(-4deg);
+	transform-origin: left bottom;
+	white-space: nowrap;
+}
+
+.paper-dark .ag-name, .paper-stamp .ag-name { color: var(--ag-accent); }
+
+.paper-stamp .ag-name { text-transform: none; transform: rotate(-2deg); }
+
+.ag-reg {
+	align-self: flex-end;
+	margin-top: 8px;
+	font-family: var(--font-typewriter);
+	font-size: 14px;
+	letter-spacing: 0.08em;
+	color: var(--muted);
+}
+
+.ag-head + * { border-top: 2px solid var(--ink-soft); padding-top: 8px; }
+
+.ag-label { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; margin-top: 6px; }
+
+.ag-items { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 18px; align-items: start; margin-bottom: 4px; }
+
+.ag-items .items { margin: 4px 0 0; font-size: 12.5px; }
+
+.agenda-look .entries.ag-abilities { margin-top: 4px; }
+
+.agenda-look .ag-abilities .entry { border-top: 0; padding: 3px 0; }
+
+.agenda-look .ag-abilities .entry-name,
+.agenda-look .ag-abilities .entry-text,
+.agenda-look .ag-abilities .entry-text > p:first-child { display: inline; }
+
+.agenda-look .ag-abilities .entry-name { text-transform: none; letter-spacing: 0; font-family: inherit; font-size: inherit; }
+
+.agenda-look .ag-abilities .entry-name::before { content: "\25B6\00a0"; font-size: 0.8em; }
+
+.agenda-look .ag-abilities .entry-name::after { content: ": "; }
+
+.agenda-look .agenda-note {
+	position: relative;
+	margin: 16px -4px 6px;
+	padding: 10px 14px;
+	border: 0;
+	border-radius: 2px;
+	background: var(--ag-tape);
+	color: #141414;
+	font-weight: 700;
+	font-size: 12.5px;
+	transform: rotate(-1.6deg);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.ag-foot { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 12px; }
+
+.ag-tris { display: flex; flex-direction: column; line-height: 0.95; color: var(--muted); font-size: 26px; }
+
+.ag-tris span:first-child::before { content: "\25B3"; }
+
+.ag-tris span:last-child::before { content: "\25BD"; }
+
+.ag-hole { width: 34px; height: 34px; border-radius: 50%; background: #0b0b0b; box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.12); }
+
+.paper-tag .ag-hole, .paper-stamp .ag-hole { display: none; }
+
+.ag-picked { margin-left: auto; }
+
+/* On the sheet, the agenda card keeps its dropdown header above the art. */
+.sheet-agenda.agenda-look .ag-head { margin-top: 6px; }
+
+@media (max-width: 560px) {
+	.ag-head { grid-template-columns: 60px minmax(0, 1fr); }
+	.ag-emblem { width: 60px; height: 60px; }
+	.ag-picked { grid-column: 1 / -1; }
+}
+
 /* Wide screens: use the room. The page grows, each sheet page flows its cards
    into as many columns as fit, and blasphemies spread their powers across the
    width instead of one long column. */
 @media (min-width: 1000px) {
-	.grid > .blas-card { grid-column: 1 / -1; }
+	/* Masonry: cards stack in columns, so a short card never leaves a gap
+	   beside a tall one. Blasphemies span the width. */
+	.grid { display: block; columns: 320px; column-gap: 16px; }
 
-	.grid > .blas-card.blas-solo { grid-column: auto; }
+	.grid > * { break-inside: avoid; margin: 0 0 16px; }
 
+	.grid > .blas-card { column-span: all; }
+
+	/* Powers flow the same way, at most --n columns (the number of powers, 3 at most). */
 	.blas-card .entries,
 	.blas-card .options,
 	.blas-pick .options,
 	.sheet-blasphemy .power-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
-		gap: 10px 16px;
-		align-items: start;
+		display: block;
+		columns: 320px var(--n, 3);
+		column-gap: 16px;
 	}
 
+	.blas-card .entries > *,
+	.blas-card .options > *,
+	.blas-pick .options > *,
+	.sheet-blasphemy .power-grid > * { break-inside: avoid; margin-bottom: 12px; }
+
 	.blas-card .entries > .entry { border-top: 0; }
+
+	.blas-solo .entries { columns: auto; }
 }
 
 @media (min-width: 1300px) {
@@ -2446,9 +2645,9 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 
 	.pip.blot.filled::after { background: #000; box-shadow: 0 0 0 2px #fff; }
 
-	.sheet .card::after, .tape, .photo-tools { display: none; }
+	.card::after, .tape, .photo-tools { display: none; }
 
-	.sheet .card { background-image: none; }
+	.card { background-image: none; }
 
 	.id-brain { opacity: 0.1; }
 
