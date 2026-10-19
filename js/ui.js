@@ -368,8 +368,10 @@ window.CAIN = window.CAIN || {};
 	function sourceBadge(entry, short) {
 		var src = sourceOf(entry);
 		if (!src || !src.fan) return null;
-		return h("span", { class: "fan-badge", title: "Fan-made content from " + src.name + " by " + src.author + ". Not official CAIN material." },
-			short ? "Fan-made: " + (src.short || src.name) : "Fan-made: " + src.name + ", by " + src.author);
+		// Inside a card that already has the fan-made border and tab, CSS hides the
+		// short badge and the "Fan-made:" prefix, leaving just the credit.
+		return h("span", { class: "fan-badge" + (short ? " short" : " full"), title: "Fan-made content from " + src.name + " by " + src.author + ". Not official CAIN material." },
+			h("span", { class: "fan-prefix" }, "Fan-made: "), short ? (src.short || src.name) : src.name + ", by " + src.author);
 	}
 
 	CAIN.kitPicture = kitPicture;

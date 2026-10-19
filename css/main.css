@@ -2471,6 +2471,20 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 
 .fan-made { position: relative; }
 
+/* Say it once: inside a bordered fan-made card the tab already says "Fan-made",
+   so nested badges go and the card's own badge becomes a plain credit line. */
+.fan-made .fan-badge.short, .fan-made .fan-made .fan-badge, .fan-made .entry .fan-badge { display: none; }
+
+.fan-made .fan-badge.full { background: none; border: 0; padding: 0; color: var(--muted); text-transform: none; letter-spacing: 0.02em; font-size: 11.5px; }
+
+.fan-made .fan-badge.full .fan-prefix { display: none; }
+
+.fan-made .fan-badge.full::before { content: "From "; }
+
+.fan-made .fan-made { box-shadow: none !important; }
+
+.fan-made .fan-made::before { display: none !important; }
+
 .src-ishmael {
 	box-shadow: 0 0 0 2px #e8141c, 0 0 0 5px #0d0d0d, 0 0 0 6px #e8141c, var(--shadow) !important;
 }

@@ -626,13 +626,16 @@ window.CAIN = window.CAIN || {};
 		var catChips = h("div", { class: "chips", role: "group", "aria-label": "Kit category" }, CAIN.kitCategories.map(function (c) {
 			return chip(c + " (" + CAIN.kit.filter(function (k) { return k.category === c; }).length + ")", c === kitCat, function () { st.kitCat = c; ctx.save(true); });
 		}));
+		var inCat = CAIN.kit.filter(function (item) { return item.category === kitCat; });
+		// A whole fan-made category is labelled once, above its list.
+		var allFan = inCat.length > 0 && inCat.every(function (item) { return CAIN.sourceOf(item) && CAIN.sourceOf(item).fan; });
 		var catalog = CAIN.kit.filter(function (item) { return item.category === kitCat; }).map(function (item) {
 			var owned = ch.purchases.filter(function (p) { return p.item === item.id; })[0];
 			var consumable = item.tags.indexOf("Consumable") >= 0;
 			var listed = owned && !consumable;
 			return h("li", { class: "entry" + (item.image ? " has-pic" : "") },
 				CAIN.kitPicture(item),
-				h("div", { class: "entry-name" }, item.name, CAIN.sourceBadge(item, true), owned ? h("span", { class: "tag" }, owned.count > 1 ? "Have x" + owned.count : "Have it") : null),
+				h("div", { class: "entry-name" }, item.name, allFan ? null : CAIN.sourceBadge(item, true), owned ? h("span", { class: "tag" }, owned.count > 1 ? "Have x" + owned.count : "Have it") : null),
 				h("div", { class: "tags" },
 					item.kp !== null ? h("span", { class: "tag" }, item.kp + " KP") : h("span", { class: "tag" }, "Permanent"),
 					item.tags.map(function (t) { return h("span", { class: "tag" }, t); }),
@@ -672,6 +675,7 @@ window.CAIN = window.CAIN || {};
 					}, { small: true }))),
 			h("div", { class: "subhead" }, "Add from the book"),
 			catChips,
+			allFan ? h("p", null, CAIN.sourceBadge(inCat[0])) : null,
 			h("ul", { class: "entries kit-catalog" }, catalog));
 	}
 
