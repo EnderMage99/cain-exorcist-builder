@@ -37,7 +37,7 @@ window.CAIN = window.CAIN || {};
 		return null;
 	}
 
-	// A blank character, before the creation wizard fills it in.
+	// A blank character, before registration fills it in.
 	function newCharacter() {
 		var skills = {};
 		core.skills.forEach(function (s) { skills[s.id] = core.creation.start; });
@@ -50,6 +50,8 @@ window.CAIN = window.CAIN || {};
 			xid: "",
 			looks: { sex: "", height: "", weight: "", hair: "", eyes: "" },
 			questions: questions,
+			weaponLook: "",
+			notes: "",
 			skills: skills,
 			skillImprovements: 0,
 			agenda: null,
@@ -461,6 +463,60 @@ window.CAIN = window.CAIN || {};
 		return Math.ceil(sin / 2);
 	}
 
+	// Creation
+
+	// How far the creation skill spread has got: skills at 2, at 0, at 3.
+	function creationCounts(ch) {
+		var values = skillValues(ch);
+		return { raised: countBy(values, 2), lowered: countBy(values, 0), maxed: countBy(values, core.skillMax) };
+	}
+
+	function pick(list, rng) {
+		return list[Math.floor((rng || Math.random)() * list.length)];
+	}
+
+	function shuffled(list, rng) {
+		var out = list.slice();
+		for (var i = out.length - 1; i > 0; i--) {
+			var j = Math.floor((rng || Math.random)() * (i + 1));
+			var t = out[i]; out[i] = out[j]; out[j] = t;
+		}
+		return out;
+	}
+
+	// Exorcist internal id, e.g. "KT-4471".
+	function generateXid(rng) {
+		var letters = "ABCDEFGHJKLMNPRSTVWXZ";
+		var num = String(Math.floor((rng || Math.random)() * 10000));
+		while (num.length < 4) num = "0" + num;
+		return pick(letters, rng) + pick(letters, rng) + "-" + num;
+	}
+
+	// A random legal new exorcist (Quick Exorcist). Flavour comes from CAIN.prompts when loaded.
+	function randomCharacter(rng) {
+		var ch = newCharacter();
+		var ids = shuffled(core.skills.map(function (s) { return s.id; }), rng);
+		ids.slice(0, core.creation.raise).forEach(function (id) { ch.skills[id] = 2; });
+		ids.slice(core.creation.raise, core.creation.raise + core.creation.lower).forEach(function (id) { ch.skills[id] = 0; });
+		var agendas = CAIN.agendas.filter(function (a) { return agendaAllowed(ch, a).ok; });
+		var a = pick(agendas, rng);
+		ch.agenda = a.id;
+		ch.agendaAbilities = [{ agenda: a.id, ability: pick(a.abilities, rng).id }];
+		var b = pick(CAIN.blasphemies, rng);
+		ch.blasphemies = [{ id: b.id, powers: shuffled(b.powers, rng).slice(0, 2).map(function (p) { return p.id; }) }];
+		ch.xid = generateXid(rng);
+		var p = CAIN.prompts;
+		if (p) {
+			ch.name = pick(p.names, rng);
+			Object.keys(ch.looks).forEach(function (k) { if (p.looks[k]) ch.looks[k] = pick(p.looks[k], rng); });
+			Object.keys(ch.questions).forEach(function (k) { if (p.questions[k]) ch.questions[k] = pick(p.questions[k], rng); });
+			ch.weaponLook = pick(p.weapons, rng);
+		} else {
+			ch.name = "Exorcist " + ch.xid;
+		}
+		return ch;
+	}
+
 	CAIN.rules = {
 		agenda: agenda,
 		blasphemy: blasphemy,
@@ -493,6 +549,11 @@ window.CAIN = window.CAIN || {};
 		riskOutcome: riskOutcome,
 		resistOverflow: resistOverflow,
 		rollSinMarkLocation: rollSinMarkLocation,
-		halveSin: halveSin
+		halveSin: halveSin,
+		creationCounts: creationCounts,
+		pick: pick,
+		shuffled: shuffled,
+		generateXid: generateXid,
+		randomCharacter: randomCharacter
 	};
 })();

@@ -47,7 +47,7 @@ cain-exorcist-builder/
   js/
     rules.js            derived stats, validation, dice helpers (no DOM)
     store.js            localStorage, export/import, share links
-    wizard.js           character creation steps
+    registration.js     character creation steps (Registration)
     sheet.js            edit mode sheet
     play.js             play mode trackers, roller, rest, end of session/mission
     glossary.js         tooltip terms
@@ -190,7 +190,7 @@ Each milestone ends with its test checklist passing and a push to Pages.
   4 missions -> CAT 4, PSYCHE 2; Gate + Meal Plan -> 7 KP; Fortress at CAT 3
   -> talisman 5.
 
-### M2 - Creation wizard
+### M2 - Registration (character creation)
 - Steps: Concept -> Skills -> Agenda -> Blasphemy -> Kit -> Review. Step bar
   at the top, every step revisitable.
 - Skills: all at 1, "raise 2 / lower 3" counter, Next disabled until valid.

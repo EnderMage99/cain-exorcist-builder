@@ -38,6 +38,7 @@
 <script src="../data/blasphemies.js"></script>
 <script src="../data/sinmarks.js"></script>
 <script src="../data/kit.js"></script>
+<script src="../data/prompts.js"></script>
 <script src="../js/rules.js"></script>
 <script>
 (function () {
@@ -78,6 +79,11 @@
 		ch.agendaAbilities = [{ agenda: agendaId, ability: abilityId }];
 		ch.blasphemies = [{ id: blasphemyId, powers: powers }];
 		return ch;
+	}
+
+	function sheetNumbers(ch) {
+		var d = R.derived(ch);
+		return [d.kitPoints, d.maxStress, d.sinCap, d.xpToAdvance, d.psycheBursts, d.psyche];
 	}
 
 	function guardianTension() { return build("guardian", "painkiller", "tension", ["aegis", "fortress"]); }
@@ -292,6 +298,42 @@
 		var sub = R.rollSinMarkLocation(faces([2, 1]));
 		check("unloaded location rerolls among loaded ones", sub.substituted === true && !!R.sinMark(sub.mark));
 		eq("halve sin rounds up", [R.halveSin(7), R.halveSin(6), R.halveSin(0)], [4, 3, 0]);
+
+		group("Creation helpers");
+		eq("fresh character counts", R.creationCounts(R.newCharacter()), { raised: 0, lowered: 0, maxed: 0 });
+		eq("legal spread counts", R.creationCounts(guardianTension()), { raised: 2, lowered: 3, maxed: 0 });
+		var xrng = R.makeRng(7);
+		var xids = [];
+		for (var xi = 0; xi < 50; xi++) xids.push(R.generateXid(xrng));
+		check("XIDs look like AB-1234", xids.every(function (x) { return /^[A-Z]{2}-\d{4}$/.test(x); }), xids[0]);
+		var rrng = R.makeRng(1234);
+		var bad = [];
+		var seenAgendas = {}, seenBlasphemies = {};
+		for (var ri = 0; ri < 300; ri++) {
+			var rc = R.randomCharacter(rrng);
+			var probs = R.validateCreation(rc).concat(R.validateCharacter(rc));
+			if (probs.length) bad.push(rc.name + ": " + probs[0].message);
+			seenAgendas[rc.agenda] = 1;
+			seenBlasphemies[rc.blasphemies[0].id] = 1;
+		}
+		eq("300 Quick Exorcists are all legal", bad.slice(0, 3), []);
+		eq("Quick Exorcist uses every agenda", Object.keys(seenAgendas).sort(), CAIN.agendas.map(function (a) { return a.id; }).sort());
+		eq("Quick Exorcist uses every blasphemy", Object.keys(seenBlasphemies).sort(), CAIN.blasphemies.map(function (b) { return b.id; }).sort());
+		var named = R.randomCharacter(R.makeRng(5));
+		check("Quick Exorcist fills name, looks, questions and weapons", !!(named.name && named.looks.hair && named.questions.mother && named.weaponLook));
+
+		group("Sheet numbers for the four test pairings");
+		// [kit points, max stress, sin cap, XP to advance, bursts, PSYCHE] at CAT 1, by hand from the rules.
+		eq("Guardian / Tension", sheetNumbers(build("guardian", "castle", "tension", ["aegis", "stasis"])), [5, 6, 10, 4, 3, 1]);
+		eq("Guardian / Gate", sheetNumbers(build("guardian", "iron-wall", "gate", ["tear", "pinch"])), [6, 6, 10, 4, 3, 1]);
+		eq("Firebug / Tension", sheetNumbers(build("firebug", "jack", "tension", ["severance", "fortress"])), [5, 6, 10, 4, 3, 1]);
+		eq("Firebug / Gate", sheetNumbers(build("firebug", "extra-parts", "gate", ["bloom", "maze"])), [6, 6, 10, 4, 3, 1]);
+		var veteran = build("guardian", "painkiller", "gate", ["tear", "pinch"]);
+		veteran.missionsSurvived = 7;
+		veteran.blasphemies.push({ id: "tension", powers: ["aegis"] });
+		veteran.purchases.push({ item: "improved-meal-plan", count: 1 });
+		// Gate +1 KP, meal plan +1 KP; extra blasphemy: sin cap 9, XP 5; CAT 5: PSYCHE 3.
+		eq("CAT 5 veteran with two blasphemies", sheetNumbers(veteran), [7, 6, 9, 5, 3, 3]);
 	} catch (err) {
 		group("Crash");
 		check("tests ran without throwing", false, err && err.stack ? err.stack : String(err));

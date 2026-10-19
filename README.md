@@ -7,8 +7,9 @@ spirit of D&D Beyond and COMP/CON. Made for one group's campaign.
 
 ## Using it
 
-No accounts. Characters are kept in your own browser. Sharing between players
-(export files and share links) arrives in milestone M6.
+No accounts. Characters are kept in your own browser. To move one to another
+device or player, use **Export** on its sheet and **Import** on the Registry.
+Share links arrive in milestone M6.
 
 ## Status
 
@@ -17,7 +18,15 @@ two sin marks (Eyes, Arms or Hands) and two kit items, used to prove every
 system before the rest of the book's content goes in. See
 [BUILD_PLAN.md](BUILD_PLAN.md) for the milestones.
 
-- **Registry** - the home screen; your exorcists will be listed here.
+- **Registry** - the home screen: your exorcists, Register exorcist,
+  Quick exorcist (a random legal character, straight to review) and Import.
+- **Registration** - character creation, step by step: Concept, Skills,
+  Agenda, Blasphemy, Kit, Review. Next stays locked until a step is legal,
+  and the draft saves itself so you can leave and come back.
+- **Exorcist sheet** - laid out like the official sheet. Text saves as you
+  type; steppers correct numbers by hand until play mode (M4) and the
+  session/mission tools (M5) arrive. Tap an underlined term for its rule.
+  Duplicate, Export and Delete live at the top.
 - **Doctrine** - browse all loaded content. Pick a CAT and every CAT-scaled
   value in the text resolves to it (hover a highlighted value to see where
   it came from).
@@ -33,7 +42,11 @@ Plain HTML, CSS and JavaScript. No build step and no install: open
 index.html        app shell
 css/main.css      styles, light and dark themes
 js/rules.js       rules engine (no DOM)
-js/app.js         routing and screens
+js/ui.js          DOM helpers, glossary popover
+js/store.js       saved characters and the registration draft
+js/registration.js character creation steps
+js/sheet.js       the exorcist sheet
+js/app.js         theme, routing, Registry and Doctrine screens
 data/*.js         rules content: core, agendas, blasphemies, sin marks, kit
 tests/            rules checks page
 ```
