@@ -461,48 +461,91 @@ window.CAIN = window.CAIN || {};
 			}, { ghost: true })));
 	}
 
-	function shopPanel(ch, ctx) {
+	// Kit: pull out and use what's on your list, add catalog items for free, or make
+	// your own. Scrip is just a number you set.
+	function kitPanel(ch, ctx) {
 		var st = uiFor(ch);
-		var u = core.weaponUpgrade;
+		if (!st.custom) st.custom = { name: "", kp: 1, text: "", consumable: false };
+		var cu = st.custom;
 		var left = H.kpLeft(ch);
-		var rows = CAIN.kit.map(function (item) {
-			var can = H.canBuy(ch, item.id);
+
+		var pullRows = core.defaultKit.filter(function (k) { return k.kp > 0; }).map(function (k) {
+			return h("li", null, h("span", null, k.name),
+				chip("Pull " + k.kp + " KP", false, function () { ctx.act(H.spendKp(ch, k.kp, k.name)); }, { disabled: left < k.kp }));
+		});
+		ch.purchases.forEach(function (p) {
+			var item = R.purchaseItem(p);
+			if (!item || item.kp === null) return;
+			var consumable = item.tags.indexOf("Consumable") >= 0;
+			if (consumable && st.useItem && st.useItem.id === p.item) {
+				pullRows.push(h("li", { class: "use-row" }, h("span", null, item.name + ": " + item.text),
+					h("span", { class: "row-tools" },
+						dieEntry(item.use.healStress.dice + " rolled", 3, st.useItem.roll, function (v) { st.useItem.roll = v; ctx.save(true); }),
+						btn("Use", function () {
+							var r = H.useConsumable(ch, p.item, st.useItem.roll);
+							if (!r.ok) { ctx.flash([r.reason || "Can't use that."]); return; }
+							st.useItem = null;
+							ctx.act(r);
+						}, { small: true }),
+						btn("Cancel", function () { st.useItem = null; ctx.save(true); }, { small: true, ghost: true }))));
+				return;
+			}
+			pullRows.push(h("li", null,
+				h("span", null, item.name + (p.count > 1 ? " x" + p.count : ""), item.custom ? h("span", { class: "tag" }, "Custom") : null),
+				consumable
+					? chip("Use " + item.kp + " KP", false, function () {
+						if (item.use && item.use.healStress) { st.useItem = { id: p.item, roll: 2 }; ctx.save(true); return; }
+						var r = H.useConsumable(ch, p.item);
+						if (!r.ok) ctx.flash([r.reason || "Can't use that."]); else ctx.act(r);
+					}, { disabled: left < item.kp })
+					: chip("Pull " + item.kp + " KP", false, function () { ctx.act(H.spendKp(ch, item.kp, item.name)); }, { disabled: left < item.kp })));
+		});
+
+		var catalog = CAIN.kit.map(function (item) {
 			var owned = ch.purchases.filter(function (p) { return p.item === item.id; })[0];
 			var consumable = item.tags.indexOf("Consumable") >= 0;
-			var using = st.useItem && st.useItem.id === item.id;
+			var listed = owned && !consumable;
 			return h("li", { class: "entry" },
-				h("div", { class: "entry-name" }, item.name, owned ? h("span", { class: "tag" }, owned.count > 1 ? "Owned x" + owned.count : "Owned") : null),
+				h("div", { class: "entry-name" }, item.name, owned ? h("span", { class: "tag" }, owned.count > 1 ? "Have x" + owned.count : "Have it") : null),
 				h("div", { class: "tags" },
-					h("span", { class: "tag" }, item.scrip + " scrip"),
-					item.kp !== null ? h("span", { class: "tag" }, item.kp + " KP") : null,
-					item.tags.map(function (t) { return h("span", { class: "tag" }, t); })),
+					item.kp !== null ? h("span", { class: "tag" }, item.kp + " KP") : h("span", { class: "tag" }, "Permanent"),
+					item.tags.map(function (t) { return h("span", { class: "tag" }, t); }),
+					h("span", { class: "tag" }, "Book price " + item.scrip + " scrip")),
 				h("div", { class: "entry-text" }, h("p", null, item.text)),
-				using ? row(dieEntry(item.use.healStress.dice + " rolled", 3, st.useItem.roll, function (v) { st.useItem.roll = v; ctx.save(true); }),
-					btn("Use", function () {
-						var r = H.useConsumable(ch, item.id, st.useItem.roll);
-						if (!r.ok) { ctx.flash([r.reason || "Can't use that."]); return; }
-						st.useItem = null;
+				h("div", { class: "btn-row" }, btn(listed ? "On your list" : "Add", function () {
+					var r = H.addItem(ch, item.id);
+					if (!r.ok) ctx.flash([r.reason]); else ctx.act(r);
+				}, { small: true, disabled: listed })));
+		});
+
+		var nameInput = h("input", { class: "input", type: "text", placeholder: "Item name", value: cu.name, "aria-label": "Custom item name" });
+		nameInput.addEventListener("input", function () { cu.name = nameInput.value; });
+		var textInput = h("textarea", { class: "input", rows: 2, placeholder: "What it is and what it does", value: cu.text, "aria-label": "Custom item description" });
+		textInput.addEventListener("input", function () { cu.text = textInput.value; });
+
+		return panel(ctx, "Kit (" + left + " KP left)", "Add items for free and track scrip by hand.",
+			h("div", { class: "subhead" }, "Pull out or use"),
+			h("ul", { class: "kit-list" }, pullRows),
+			h("div", { class: "subhead" }, "Scrip"),
+			row(stepper(null, ch.scrip, 0, 9999, function (v) {
+				var before = ch.scrip;
+				ch.scrip = v;
+				ctx.act(H.note(ch, "Scrip: " + before + " -> " + v + "."));
+			}, { aria: "Scrip", suffix: " scrip" })),
+			h("div", { class: "subhead" }, "Create an item"),
+			h("div", { class: "custom-item" },
+				nameInput,
+				textInput,
+				row(stepper("KP to pull out", cu.kp, 0, 5, function (v) { cu.kp = v; ctx.save(true); }, { small: true }),
+					chip("Consumable", cu.consumable, function () { cu.consumable = !cu.consumable; ctx.save(true); }, { title: "Used up when used; can stack" }),
+					btn("Add to kit", function () {
+						var r = H.addCustomItem(ch, { name: cu.name, kp: cu.kp, text: cu.text, consumable: cu.consumable });
+						if (!r.ok) { ctx.flash([r.reason]); return; }
+						st.custom = { name: "", kp: 1, text: "", consumable: false };
 						ctx.act(r);
-					}, { small: true }),
-					btn("Cancel", function () { st.useItem = null; ctx.save(true); }, { small: true, ghost: true })) :
-				h("div", { class: "btn-row" },
-					btn(can.ok ? "Buy" : can.reason, function () { ctx.act(H.buy(ch, item.id)); }, { small: true, disabled: !can.ok }),
-					owned && consumable ? btn("Use (" + item.kp + " KP)", function () {
-						if (item.use && item.use.healStress) { st.useItem = { id: item.id, roll: 2 }; ctx.save(true); return; }
-						var r = H.useConsumable(ch, item.id);
-						if (!r.ok) ctx.flash([r.reason || "Can't use that."]); else ctx.act(r);
-					}, { small: true, ghost: true, disabled: left < item.kp }) : null));
-		});
-		rows.push(h("li", { class: "entry" },
-			h("div", { class: "entry-name" }, "Service weapon upgrade", h("span", { class: "tag" }, "CAT " + ch.weaponCat)),
-			h("div", { class: "entry-text" }, h("p", null, "Both service weapons +1 CAT, to a max of CAT " + u.maxCat + ".")),
-			h("div", { class: "btn-row" }, btn(ch.weaponCat >= u.maxCat ? "Maxed" : ch.scrip < u.cost ? "Need " + u.cost + " scrip" : "Upgrade for " + u.cost, function () { ctx.act(H.upgradeWeapons(ch)); }, { small: true, disabled: ch.weaponCat >= u.maxCat || ch.scrip < u.cost }))));
-		var pull = core.defaultKit.filter(function (k) { return k.kp > 0; }).map(function (k) {
-			return chip(k.name + " (" + k.kp + ")", false, function () { ctx.act(H.spendKp(ch, k.kp, k.name)); }, { disabled: left < k.kp });
-		});
-		return panel(ctx, "Kit (" + ch.scrip + " scrip, " + left + " KP left)", "Scrip is spent between missions. Pull items out with KP during a mission.",
-			h("div", { class: "subrow" }, h("span", { class: "field-label" }, "Pull out"), h("span", { class: "chips" }, pull)),
-			h("ul", { class: "entries" }, rows));
+					}, { small: true }))),
+			h("div", { class: "subhead" }, "Add from the book"),
+			h("ul", { class: "entries" }, catalog));
 	}
 
 	function logPanel(ch, ctx) {
@@ -523,7 +566,7 @@ window.CAIN = window.CAIN || {};
 		{ id: "pool", label: "Dice pool", title: "How many dice to roll, and record the result", render: poolPanel },
 		{ id: "rest", label: "Rest", title: "Rest and assign the resting dice", render: restPanel, badge: function (ch) { return ch.hunt.restDice ? "!" : null; } },
 		{ id: "mission", label: "Mission", title: "Close a mission or start a new one", render: missionPanel },
-		{ id: "shop", label: "Kit & shop", title: "Pull out kit, use consumables, buy with scrip", render: shopPanel },
+		{ id: "shop", label: "Kit", title: "Pull out and use kit, add or create items, set scrip", render: kitPanel },
 		{ id: "log", label: "Log", title: "Everything recorded", render: logPanel }
 	];
 

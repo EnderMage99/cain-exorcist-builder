@@ -320,15 +320,17 @@ window.CAIN = window.CAIN || {};
 		var d = this.d;
 		var left = d.kitPoints - hu.kpSpent;
 		var items = core.defaultKit.map(function (k) {
-			var name = k.id === "service-weapons" ? "Service weapons (" + k.kp + " KP) (CAT " + ch.weaponCat + ", upgrade +1 for 3 scrip to max CAT 3)" : k.name + " (" + k.kp + " KP)";
+			var name = k.id === "service-weapons" ? "Service weapons (" + k.kp + " KP) (CAT " + ch.weaponCat + ")" : k.name + " (" + k.kp + " KP)";
 			return h("li", null, name.toUpperCase());
 		});
 		ch.purchases.forEach(function (p, i) {
-			var item = R.kitItem(p.item);
+			var item = R.purchaseItem(p);
 			if (!item) return;
 			var consumable = item.tags.indexOf("Consumable") >= 0;
 			items.push(h("li", { class: "kit-bought" },
-				h("span", null, (item.name + (item.kp === null ? " (permanent)" : " (" + item.kp + " KP)") + (!self.editable && p.count > 1 ? " x" + p.count : "")).toUpperCase()),
+				h("span", null,
+					(item.name + (item.kp === null ? " (permanent)" : " (" + item.kp + " KP)") + (consumable ? ", consumable" : "") + (!self.editable && p.count > 1 ? " x" + p.count : "")).toUpperCase(),
+					item.custom && item.text ? h("span", { class: "kit-desc" }, item.text) : null),
 				self.editable ? h("span", { class: "row-tools" },
 					consumable ? CAIN.stepper(null, p.count, 1, 99, function (v) { p.count = v; self.onChange(true); }, { small: true, aria: item.name + " count" }) : null,
 					removeBtn(item.name, function () { ch.purchases.splice(i, 1); self.onChange(true); })) : null));
@@ -342,12 +344,12 @@ window.CAIN = window.CAIN || {};
 			h("div", { class: "kit-box" },
 				h("ul", { class: "kit-typed" }, items),
 				this.field(null, "kitNotes", { multiline: true, rows: 3, placeholder: "Description: anything else on your kit list", empty: "" })),
-			h("div", { class: "btn-row" }, this.openButton("Kit shop...", "shop")),
+			h("div", { class: "btn-row" }, this.openButton("Add or create items...", "shop")),
 			this.field("Service weapons look", "weaponLook", { multiline: true, placeholder: "What your service weapons look like", wide: true }),
 			h("div", { class: "stepper-row" },
 				this.stepper("Weapon CAT", "weaponCat", 0, core.catMax),
-				this.stepper("Scrip", "scrip", 0, 999)),
-			h("p", { class: "tiny" }, "Scrip paid out per mission (5: success, 3: spare, -1: failure, +3 advance)."));
+				this.stepper("Scrip", "scrip", 0, 9999)),
+			h("p", { class: "tiny" }, "Scrip paid out per mission (5: success, 3: spare, -1: failure, +3 advance). Track spending by hand."));
 	};
 
 	Sheet.prototype.sin = function () {

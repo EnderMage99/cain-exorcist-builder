@@ -46,7 +46,9 @@ system before the rest of the book's content goes in. See
   - **Rest**: enter your 2d3, then put each on bursts, stress or a hook.
   - **Mission**: close one (pay, halve sin, missions survived, CAT, reset)
     or start a new one (Oilfinger's d3, Jack!).
-  - **Kit & shop**: pull out kit, use consumables, buy with scrip.
+  - **Kit**: pull out kit and use consumables, add book items for free,
+    create your own items (name, description, KP, consumable), and set
+    scrip by hand. There is no shop: scrip is just a number you track.
   - **Log**: everything recorded.
 
   Sin overflow, instant death and new sin marks appear as alerts at the top

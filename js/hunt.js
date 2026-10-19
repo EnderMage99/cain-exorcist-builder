@@ -336,8 +336,8 @@ window.CAIN = window.CAIN || {};
 	// Uses a consumable: pays its KP, applies its effect with the die rolled, uses one up.
 	function useConsumable(ch, itemId, roll) {
 		var events = [];
-		var item = R.kitItem(itemId);
 		var owned = ch.purchases.filter(function (p) { return p.item === itemId; })[0];
+		var item = owned ? R.purchaseItem(owned) : null;
 		if (!item || !owned || owned.count <= 0) return { events: events, ok: false };
 		if (kpLeft(ch) < item.kp) return { events: events, ok: false, reason: "Not enough KP." };
 		var heal = item.use && item.use.healStress;
@@ -581,39 +581,34 @@ window.CAIN = window.CAIN || {};
 		return result;
 	}
 
-	// Kit shop
+	// Kit list. Items are added for free; scrip is tracked by hand on the sheet.
 
-	function canBuy(ch, itemId) {
-		var item = R.kitItem(itemId);
-		if (!item) return { ok: false, reason: "Unknown item." };
-		if (item.minCat && R.derived(ch).cat < item.minCat) return { ok: false, reason: "CAT " + item.minCat + "+ only." };
-		var consumable = item.tags.indexOf("Consumable") >= 0;
-		if (!consumable && ch.purchases.some(function (p) { return p.item === itemId; })) return { ok: false, reason: "Owned." };
-		if (ch.scrip < item.scrip) return { ok: false, reason: "Need " + item.scrip + " scrip." };
-		return { ok: true };
-	}
-
-	function buy(ch, itemId) {
+	// Adds a catalog item. Consumables stack; anything else is listed once.
+	function addItem(ch, itemId) {
 		var events = [];
-		var check = canBuy(ch, itemId);
-		if (!check.ok) return { events: events, ok: false, reason: check.reason };
 		var item = R.kitItem(itemId);
-		ch.scrip -= item.scrip;
+		if (!item) return { events: events, ok: false, reason: "Unknown item." };
 		var owned = ch.purchases.filter(function (p) { return p.item === itemId; })[0];
+		var consumable = item.tags.indexOf("Consumable") >= 0;
+		if (owned && !consumable) return { events: events, ok: false, reason: item.name + " is already on your kit list." };
 		if (owned) owned.count += 1; else ch.purchases.push({ item: itemId, count: 1 });
-		log(ch, events, "Bought " + item.name + " for " + item.scrip + " scrip. " + ch.scrip + " left.");
+		log(ch, events, "Added " + item.name + " to the kit list.");
 		return { events: events, ok: true };
 	}
 
-	function upgradeWeapons(ch) {
+	// Creates a custom item. def: { name, kp, text, consumable }.
+	function addCustomItem(ch, def) {
 		var events = [];
-		var u = core.weaponUpgrade;
-		if (ch.weaponCat >= u.maxCat) return { events: events, ok: false, reason: "Already CAT " + u.maxCat + "." };
-		if (ch.scrip < u.cost) return { events: events, ok: false, reason: "Need " + u.cost + " scrip." };
-		ch.scrip -= u.cost;
-		ch.weaponCat += 1;
-		log(ch, events, "Service weapons upgraded to CAT " + ch.weaponCat + " for " + u.cost + " scrip.");
-		return { events: events, ok: true };
+		var name = (def.name || "").trim();
+		if (!name) return { events: events, ok: false, reason: "Give the item a name." };
+		var id = "custom-" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
+		ch.purchases.push({
+			item: id,
+			count: 1,
+			custom: { name: name, kp: Math.max(0, def.kp || 0), text: (def.text || "").trim(), consumable: !!def.consumable }
+		});
+		log(ch, events, "Added custom item " + name + " (" + Math.max(0, def.kp || 0) + " KP) to the kit list.");
+		return { events: events, ok: true, id: id };
 	}
 
 	CAIN.hunt = {
@@ -656,8 +651,7 @@ window.CAIN = window.CAIN || {};
 		endSession: endSession,
 		addXpOnly: addXpOnly,
 		spendAdvance: spendAdvance,
-		canBuy: canBuy,
-		buy: buy,
-		upgradeWeapons: upgradeWeapons
+		addItem: addItem,
+		addCustomItem: addCustomItem
 	};
 })();

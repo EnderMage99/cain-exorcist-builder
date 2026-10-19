@@ -18,6 +18,19 @@ window.CAIN = window.CAIN || {};
 	function sinMark(id) { return byId(CAIN.sinMarks, id); }
 	function kitItem(id) { return byId(CAIN.kit, id); }
 
+	// The item behind a kit list entry: a catalog item, or a player-made custom one.
+	function purchaseItem(p) {
+		if (!p.custom) return kitItem(p.item);
+		return {
+			id: p.item,
+			name: p.custom.name,
+			kp: p.custom.kp,
+			text: p.custom.text,
+			tags: p.custom.consumable ? ["Consumable"] : [],
+			custom: true
+		};
+	}
+
 	function agendaAbility(ref) {
 		var a = agenda(ref.agenda);
 		return a ? byId(a.abilities, ref.ability) : null;
@@ -137,8 +150,8 @@ window.CAIN = window.CAIN || {};
 			});
 		});
 		ch.purchases.forEach(function (pur) {
-			var item = kitItem(pur.item);
-			// Consumables never carry modifiers; permanent items are bought once.
+			var item = purchaseItem(pur);
+			// Consumables never carry modifiers; permanent items are listed once.
 			if (item) sources.push({ name: item.name, entry: item, count: 1 });
 		});
 		ch.sinMarks.forEach(function (owned) {
@@ -506,6 +519,7 @@ window.CAIN = window.CAIN || {};
 		blasphemy: blasphemy,
 		sinMark: sinMark,
 		kitItem: kitItem,
+		purchaseItem: purchaseItem,
 		agendaAbility: agendaAbility,
 		power: power,
 		sinMarkAbility: sinMarkAbility,

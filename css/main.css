@@ -1595,6 +1595,16 @@ label.btn { user-select: none; }
 
 .kit-box .input { background: transparent; border-bottom-style: dotted; }
 
+.kit-desc { display: block; font-size: 12px; color: var(--muted); text-transform: none; line-height: 1.4; }
+
+.custom-item {
+	display: grid;
+	gap: 8px;
+	border: 1.5px dashed var(--line);
+	border-radius: var(--radius-sm);
+	padding: 10px 12px;
+}
+
 .sin-web { padding: 6px 0 10px; }
 
 .sin-web .pip.blot { width: 28px; height: 28px; border-width: 2.5px; }
