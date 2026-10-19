@@ -720,6 +720,16 @@ window.CAIN = window.CAIN || {};
 	var panelArgs = {};
 	// The exorcist on screen, so Esc can close their open panel.
 	var shownId = null;
+	// Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) for the exorcist on screen, outside text boxes.
+	var undoKeys = null;
+	document.addEventListener("keydown", function (e) {
+		if (!undoKeys || !(e.ctrlKey || e.metaKey) || !/^#\/c\//.test(location.hash)) return;
+		var t = e.target;
+		if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+		var k = e.key.toLowerCase();
+		if (k === "z" && !e.shiftKey) { e.preventDefault(); undoKeys.undo(); }
+		else if (k === "y" || (k === "z" && e.shiftKey)) { e.preventDefault(); undoKeys.redo(); }
+	});
 
 	document.addEventListener("keydown", function (e) {
 		if (e.key !== "Escape" || !shownId || !openPanels[shownId]) return;
@@ -744,7 +754,7 @@ window.CAIN = window.CAIN || {};
 			// Save when filling in missing fields changed anything (e.g. bursts after a mission).
 			var before = JSON.stringify(ch);
 			CAIN.hunt.normalize(ch);
-			if (JSON.stringify(ch) !== before) CAIN.store.save(ch);
+			if (JSON.stringify(ch) !== before) CAIN.store.save(ch, { silent: true });
 			var shown = flash && flash.id === ch.id ? flash.events : null;
 			flash = null;
 			var status = h("span", { class: "save-status", role: "status" });
@@ -787,6 +797,15 @@ window.CAIN = window.CAIN || {};
 					ctx.act(result);
 				}
 			};
+			// Undo and redo: step back through every change to this exorcist.
+			var hist = CAIN.store.historyFor(ch.id);
+			function stepBack() { var r = CAIN.store.undo(ch.id); if (r) { flash = { id: ch.id, events: ["Undone: " + r.label] }; CAIN.app.render(); } }
+			function stepForward() { var r = CAIN.store.redo(ch.id); if (r) { flash = { id: ch.id, events: ["Redone: " + r.label] }; CAIN.app.render(); } }
+			undoKeys = { id: ch.id, undo: stepBack, redo: stepForward };
+			var undoBar = h("div", { class: "undo-bar", role: "group", "aria-label": "Undo and redo" },
+				h("button", { class: "btn small undo-btn", type: "button", disabled: !hist.undo, title: hist.undo ? "Undo: " + hist.undo + " (Ctrl+Z)" : "Nothing to undo yet", onclick: stepBack },
+					"Undo", hist.undo ? h("span", { class: "undo-label" }, hist.undo) : null),
+				h("button", { class: "btn small ghost", type: "button", disabled: !hist.redo, title: hist.redo ? "Redo: " + hist.redo + " (Ctrl+Y)" : "Nothing to redo", onclick: stepForward }, "Redo"));
 			var del = h("button", { class: "btn ghost small danger", type: "button", onclick: function () {
 				if (!del.classList.contains("confirming")) {
 					del.classList.add("confirming");
@@ -822,14 +841,16 @@ window.CAIN = window.CAIN || {};
 					ch.hunt.pending = null;
 					ctx.act(CAIN.hunt.note(ch, "Revived (correction)."));
 				} }, "Undo: they're alive"))) : null;
-			var flashBox = shown && shown.length ? h("div", { class: "flash", role: "status" }, h("ul", null, shown.map(function (e) { return h("li", null, e); }))) : null;
+			var undoneMsg = shown && shown.length === 1 && /^(Undone|Redone): /.test(shown[0]);
+			var flashBox = shown && shown.length ? h("div", { class: "flash", role: "status" }, h("ul", null, shown.map(function (e) { return h("li", null, e); })),
+				hist.undo && !undoneMsg ? h("button", { class: "btn small flash-undo", type: "button", onclick: stepBack }, "Undo this") : null) : null;
 			var sheet = CAIN.renderSheet(ch, {
 				editable: true,
 				onChange: function (rerender) { ctx.save(rerender); },
 				change: function (label, before, after) { ctx.act(CAIN.hunt.note(ch, label + ": " + before + " -> " + after + ".")); },
 				openPanel: function (panel, arg) { ctx.open(panel, arg); }
 			});
-			return [head, dead, CAIN.renderActions(ch, ctx), flashBox, sheet];
+			return [head, dead, undoBar, CAIN.renderActions(ch, ctx), flashBox, sheet];
 		}
 	};
 

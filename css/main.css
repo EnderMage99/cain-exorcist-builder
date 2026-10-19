@@ -2438,6 +2438,19 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 	.virtue-rules p { break-inside: avoid; max-width: none; }
 }
 
+/* Undo and redo, above the action bar. */
+.undo-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 10px; }
+
+.undo-btn { display: inline-flex; gap: 8px; align-items: center; max-width: 100%; }
+
+.undo-label { font-family: var(--font-type); font-weight: 400; text-transform: none; letter-spacing: 0; opacity: 0.8; max-width: 46ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.flash { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+.flash-undo { flex: none; }
+
+@media print { .undo-bar, .flash-undo { display: none !important; } }
+
 /* Fan-made content: a badge naming the supplement, and a border of its own so it
    never passes for the core book. Ishmael: harpoon-line red on black, with a tab. */
 .fan-badge {
