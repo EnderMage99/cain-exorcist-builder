@@ -180,21 +180,26 @@ window.CAIN = window.CAIN || {};
 
 		// The big picture tiles in the middle of the home page.
 		function toDoctrine(tab) { return function () { doctrine.tab = tab; safeStore.set("cain.doctrine", doctrine); location.hash = "#/doctrine"; }; }
-		function tile(area, title, sub, img, attrs) {
-			var a = Object.assign({ class: "home-tile tile-" + area, style: "background-image:url('" + img + "')" }, attrs);
+		// art: one picture or a strip of several. kind: "photo" (fills the tile),
+		// "emblem" (round agenda emblems, whole) or "ink" (line drawings, lightened).
+		function tile(area, title, sub, art, kind, attrs) {
+			var a = Object.assign({ class: "home-tile tile-" + area }, attrs);
 			var tag = a.href ? "a" : a["for"] ? "label" : "button";
 			if (tag === "button") a.type = "button";
-			return h(tag, a, h("span", { class: "home-tile-title" }, title), sub ? h("span", { class: "home-tile-sub" }, sub) : null);
+			var pics = h("span", { class: "home-tile-art art-" + kind, "aria-hidden": "true" }, [].concat(art).map(function (src) {
+				return h("img", { src: src, alt: "", draggable: "false", loading: "lazy" });
+			}));
+			return h(tag, a, pics, h("span", { class: "home-tile-title" }, title), sub ? h("span", { class: "home-tile-sub" }, sub) : null);
 		}
 		var tiles = h("nav", { class: "home-tiles", "aria-label": "Start" },
-			tile("reg", draft ? "Continue registration" : "Register exorcist", draft ? (draft.character.name || "Unnamed") + ", " + draft.step + " step" : "Step by step", "img/virtue/justice.jpg", { href: "#/new" }),
-			tile("quick", "Quick exorcist", "A random legal exorcist", "img/blasphemy/gate.jpg", { onclick: function () { CAIN.registration.quickExorcist(); location.hash = "#/new"; } }),
-			tile("imp", "Import", "A .cain.json file", "img/blasphemy/palace.jpg", { "for": "import-file", tabindex: "0", onkeydown: function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); } } }),
-			tile("ag", "Agendas", null, "img/virtue/charity.jpg", { onclick: toDoctrine("agendas") }),
-			tile("blas", "Blasphemies", null, "img/blasphemy/ardence.jpg", { onclick: toDoctrine("blasphemies") }),
-			tile("virt", "Virtues", null, "img/virtue/hope.jpg", { onclick: toDoctrine("virtues") }),
-			tile("kit", "Kit", null, "img/blasphemy/sympathy.jpg", { onclick: toDoctrine("kit") }),
-			tile("doc", "Doctrine", "Sin marks, CAT scale, glossary", "img/blasphemy/edit.jpg", { href: "#/doctrine" }));
+			tile("reg", draft ? "Continue registration" : "Register exorcist", draft ? (draft.character.name || "Unnamed") + ", " + draft.step + " step" : "Step by step", "img/virtue/justice.jpg", "photo", { href: "#/new" }),
+			tile("quick", "Quick exorcist", "A random legal exorcist", "img/blasphemy/gate.jpg", "photo", { onclick: function () { CAIN.registration.quickExorcist(); location.hash = "#/new"; } }),
+			tile("imp", "Import", "A .cain.json file", "img/blasphemy/palace.jpg", "photo", { "for": "import-file", tabindex: "0", onkeydown: function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); } } }),
+			tile("ag", "Agendas", null, ["img/agenda/beast.png", "img/agenda/guardian.png", "img/agenda/loner.png", "img/agenda/firebug.png"], "emblem", { onclick: toDoctrine("agendas") }),
+			tile("blas", "Blasphemies", null, ["img/blasphemy/tension.jpg", "img/blasphemy/ardence.jpg", "img/blasphemy/gate.jpg", "img/blasphemy/edit.jpg", "img/blasphemy/jaunt.jpg"], "photo", { onclick: toDoctrine("blasphemies") }),
+			tile("virt", "Virtues", null, ["img/virtue/justice.jpg", "img/virtue/faith.jpg", "img/virtue/charity.jpg", "img/virtue/fortitude.jpg", "img/virtue/hope.jpg", "img/virtue/prudence.jpg"], "photo", { onclick: toDoctrine("virtues") }),
+			tile("kit", "Kit", null, ["img/kit/red-herb.png", "img/kit/qlippoth.png", "img/kit/black-body.png"], "ink", { onclick: toDoctrine("kit") }),
+			tile("doc", "Doctrine", "Sin marks, CAT scale, glossary", "img/sheet/emblem.png", "ink", { href: "#/doctrine" }));
 
 		return dropZone(h("div", { class: "registry-page" },
 			h("h1", { class: "visually-hidden" }, "CAIN Exorcist Registry"),
@@ -230,7 +235,7 @@ window.CAIN = window.CAIN || {};
 
 	function agendaCard(a, cat) {
 		var look = CAIN.agendaLook(a);
-		return h("article", { class: "card " + look.class, style: look.style },
+		return h("article", { class: "card " + look.class, style: look.style, "data-view": "agenda:" + a.id, tabindex: "0", "aria-label": "Open " + a.name },
 			CAIN.agendaHead(a),
 			a.items.length === 0 ? null : h("div", { class: "ag-items" }, h("span", { class: "ag-label" }, "Items:"),
 				h("ul", { class: "items" }, a.items.map(function (it) {
@@ -253,7 +258,7 @@ window.CAIN = window.CAIN || {};
 
 	function blasphemyCard(b, cat) {
 		var th = CAIN.blasTheme(b);
-		return h("article", { class: "card blas-card " + th.class + (b.powers ? "" : " blas-solo"), style: th.style },
+		return h("article", { class: "card blas-card " + th.class + (b.powers ? "" : " blas-solo"), style: th.style, "data-view": b.powers ? "blasphemy:" + b.id : null, tabindex: b.powers ? "0" : null, "aria-label": b.powers ? "Open " + b.name : null },
 			h("div", { class: "blas-intro" },
 				CAIN.blasPortrait(b),
 				h("div", { class: "blas-intro-text" },
@@ -281,7 +286,7 @@ window.CAIN = window.CAIN || {};
 
 	function virtueCard(v, cat) {
 		var th = CAIN.blasTheme(v);
-		return h("article", { class: "card blas-card virtue-card " + th.class, style: th.style },
+		return h("article", { class: "card blas-card virtue-card " + th.class, style: th.style, "data-view": "virtue:" + v.id, tabindex: "0", "aria-label": "Open " + v.name },
 			h("div", { class: "blas-intro" },
 				CAIN.virtuePortrait(v),
 				h("div", { class: "blas-intro-text" },

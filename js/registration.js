@@ -201,7 +201,7 @@ window.CAIN = window.CAIN || {};
 				var allowed = R.agendaAllowed(c, a);
 				var selected = c.agenda === a.id;
 				var look = CAIN.agendaLook(a);
-				return h("article", { class: "card pick-card " + look.class + (selected ? " selected" : "") + (allowed.ok ? "" : " locked"), style: look.style },
+				return h("article", { class: "card pick-card " + look.class + (selected ? " selected" : "") + (allowed.ok ? "" : " locked"), style: look.style, "data-view": "agenda:" + a.id },
 					CAIN.agendaHead(a, selected ? h("span", { class: "tag stamp ag-picked" }, "Selected") : null),
 					allowed.ok ? null : h("p", { class: "tag stamp" }, allowed.reason),
 					a.items.length === 0 ? null : h("div", { class: "ag-items" }, h("span", { class: "ag-label" }, "Items:"),
@@ -234,7 +234,7 @@ window.CAIN = window.CAIN || {};
 				var selected = !!owned && owned.id === b.id;
 				var count = selected ? owned.powers.length : 0;
 				var th = CAIN.blasTheme(b);
-				return h("article", { class: "card pick-card blas-card " + th.class + (selected ? " selected" : ""), style: th.style },
+				return h("article", { class: "card pick-card blas-card " + th.class + (selected ? " selected" : ""), style: th.style, "data-view": "blasphemy:" + b.id },
 					h("div", { class: "blas-intro" },
 						CAIN.blasPortrait(b),
 						h("div", { class: "blas-intro-text" },
@@ -282,7 +282,7 @@ window.CAIN = window.CAIN || {};
 				var owned = c.virtues.filter(function (o) { return o.id === v.id; })[0];
 				var bonding = c.virtueBonding === v.id;
 				var th = CAIN.blasTheme(v);
-				return h("article", { class: "card pick-card blas-card virtue-card " + th.class + (owned ? " selected" : ""), style: th.style },
+				return h("article", { class: "card pick-card blas-card virtue-card " + th.class + (owned ? " selected" : ""), style: th.style, "data-view": "virtue:" + v.id },
 					h("div", { class: "blas-intro" },
 						CAIN.virtuePortrait(v),
 						h("div", { class: "blas-intro-text" },
