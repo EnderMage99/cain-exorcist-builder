@@ -2389,6 +2389,13 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 
 .icon-choice[aria-pressed="true"] { border-color: var(--stamp); outline: 3px solid var(--stamp); outline-offset: 1px; }
 
+/* Kit catalogue in the Kit panel: columns on wide screens. */
+@media (min-width: 1000px) {
+	.kit-catalog { columns: 300px 3; column-gap: 18px; }
+
+	.kit-catalog > .entry { break-inside: avoid; }
+}
+
 /* Swap panel: agendas and blasphemies as small cards to pick from. */
 .swap-what { margin-bottom: 12px; }
 

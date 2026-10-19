@@ -1,26 +1,104 @@
-// Kit shop items bought with scrip. Test build: one consumable, one permanent upgrade.
-// The service weapon CAT upgrade lives in CAIN.core.weaponUpgrade.
+// Kit expansion from CAIN 1.4.5 (pages 78-83), bought with scrip between missions.
+// kp: kit points to pull it out on a mission (null: not pulled out, like clothing
+// or quarters). Kits are pulled one item at a time for 1 KP, as the book says.
+// modifiers change derived stats; use.healStress heals when a consumable is used.
+// Service weapons are cosmetic; their CAT upgrade lives in CAIN.core.weaponUpgrade.
 window.CAIN = window.CAIN || {};
 
+CAIN.kitCategories = ["Aesthetics", "Comfort / Career", "Possessions", "Occult / Medical"];
+
 CAIN.kit = [
-	{
-		id: "red-herb",
-		name: "Red Herb",
-		category: "Occult / Medical",
-		scrip: 4,
-		kp: 2,
-		tags: ["Consumable", "Focus"],
-		text: "Consume to heal 1d3+3 stress.",
-		use: { healStress: { dice: "1d3", plus: 3 } }
-	},
-	{
-		id: "improved-meal-plan",
-		name: "Improved meal plan",
-		category: "Comfort / Career",
-		scrip: 4,
-		kp: null,
-		tags: [],
+	// Aesthetics: no mechanical benefit, 0 KP.
+	{ id: "service-uniform", name: "Service Uniform", category: "Aesthetics", scrip: 0, kp: null, tags: [],
+		text: "Free standard issue service uniform, including sash, shoes, and buckle for optional cape. Not tailored to fit. Shoes are recycled." },
+	{ id: "ceremonial-uniform", name: "Ceremonial Uniform", category: "Aesthetics", scrip: 1, kp: null, tags: [],
+		text: "Issue Cassock or habit. Tailored to fit. Made of very fine material, comfortable. Includes optional head or face coverings for modesty." },
+	{ id: "comfortable-shoes", name: "Comfortable shoes", category: "Aesthetics", scrip: 1, kp: null, tags: [],
+		text: "Shoes sized to fit. Production based on availability." },
+	{ id: "suit", name: "Suit", category: "Aesthetics", scrip: 3, kp: null, tags: [],
+		text: "High quality tailored suit. Only available to CAT 2+ exorcists." },
+	{ id: "casual-wear", name: "Casual Wear", category: "Aesthetics", scrip: 4, kp: null, tags: [],
+		text: "Sanctioned casual wear that can bypass CAIN dress restrictions when off-duty. Strictly not for mission wear. Only available to CAT 3+ exorcists." },
+	{ id: "formalwear", name: "Formalwear", category: "Aesthetics", scrip: 6, kp: null, tags: ["Conspicuous"],
+		text: "Sanctioned formalwear for organization events. Finely tailored. Not approved for field use. Includes allowances for jewelry. Only available for CAT 2+ exorcists." },
+	{ id: "well-overcoat", name: "\"Well\" overcoat", category: "Aesthetics", scrip: 4, kp: null, tags: [],
+		text: "Overcoat that fits over all uniforms. Weather resistant, tailored and extremely high quality. Some customization options. Available only to CAT 4+ exorcists." },
+	{ id: "dress-uniform", name: "Dress uniform", category: "Aesthetics", scrip: 3, kp: null, tags: ["Conspicuous"],
+		text: "Formal uniform including half cape, originally for ceremonial event wear. Available only to CAT 3+ exorcists." },
+
+	// Comfort / Career: personal allowances pursuant to CASTLE doctrine c9880.
+	{ id: "living-quarters-expansion", name: "Living Quarters Expansion", category: "Comfort / Career", scrip: 8, kp: null, tags: [],
+		text: "Kitchenette, choice of two pieces of furniture. Window. Roll a single resting die during a mission, once, when a scene passes. You gain its benefits as if you rested." },
+	{ id: "private-room", name: "Private Room", category: "Comfort / Career", scrip: 8, kp: null, tags: [],
+		text: "Room available only for CAT 3+ exorcists. +1 max stress.",
+		modifiers: [{ stat: "maxStress", add: 1 }] },
+	{ id: "visitation-rights", name: "Visitation rights", category: "Comfort / Career", scrip: 15, kp: null, tags: [],
+		text: "Expanded leave rights to visit potential family or relations, under observation. +1 max injury.",
+		modifiers: [{ stat: "maxInjuries", add: 1 }] },
+	{ id: "relaxed-grooming", name: "Relaxed Grooming Guidelines", category: "Comfort / Career", scrip: 6, kp: null, tags: [],
+		text: "Allowances for different hairstyles that exceed CASTLE restrictions and makes small allowances for jewelry or makeup. CAT 3+ exorcists only. +2 sin overflow cap.",
+		modifiers: [{ stat: "sinCap", add: 2 }] },
+	{ id: "improved-meal-plan", name: "Improved meal plan", category: "Comfort / Career", scrip: 4, kp: null, tags: [],
 		text: "Move to the 'B' meal plan. +1 max KP.",
-		modifiers: [{ stat: "kitPoints", add: 1 }]
-	}
+		modifiers: [{ stat: "kitPoints", add: 1 }] },
+	{ id: "sanctioned-indulgences", name: "Sanctioned indulgences", category: "Comfort / Career", scrip: 2, kp: 1, tags: ["Consumable"],
+		text: "Small personal indulgences, sanctioned by CASTLE. Cigarettes, coffee, candy, chewing gum, spending money. Use to roll an extra resting die when resting." },
+	{ id: "leave-of-absence", name: "Leave of Absence", category: "Comfort / Career", scrip: 12, kp: null, tags: [],
+		text: "You are allowed one week off a year with some travel allowances. You gain +1 max stress, +1 KP, and +1 sin overflow cap.",
+		modifiers: [{ stat: "maxStress", add: 1 }, { stat: "kitPoints", add: 1 }, { stat: "sinCap", add: 1 }] },
+	{ id: "pieces-of-silver", name: "Pieces of Silver", category: "Comfort / Career", scrip: 44, kp: null, tags: [],
+		text: "You are permitted to retire from exorcism. The work continues. You may work at CAIN in one of its many branches in an administrative capacity for the rest of your life, with potential opportunity for advancement." },
+
+	// Possessions: spend 1 KP to pull out anything on a kit list once you have it.
+	{ id: "cell-phone", name: "Cell Phone", category: "Possessions", scrip: 1, kp: 1, tags: [],
+		text: "Personal cell phone. Pay 3 scrip instead to have one with more options and internet browsing available." },
+	{ id: "cash-card", name: "Cash Card", category: "Possessions", scrip: 1, kp: 1, tags: [],
+		text: "Card that works with most currencies with pre-loaded allowance for mundane world purchases. Never enough to buy anything major." },
+	{ id: "clerical-kit", name: "Clerical Kit", category: "Possessions", scrip: 3, kp: 1, tags: ["Focus"],
+		text: "Some items may need Focus. Official kit of exorcists performing clerical or research duties for senior CAIN staff. Spend 1 KP to pull out one of the following: Hard copy of a SEER archive almanac (2 KP), good quality eyeglasses, a few good pens, thick binder, local area history notes." },
+	{ id: "cleaner-kit", name: "Cleaner Kit", category: "Possessions", scrip: 3, kp: 1, tags: ["Conspicuous"],
+		text: "Official kit of exorcists performing cleaning duties in their off-time, tasked with cleaning up the aftermath of other hunts. Odious work. Spend 1 KP to pull out one of the following: Stain and waterproof overalls, goggles, gas mask, heavy gloves, antitoxin (2 KP, 1 charge)." },
+	{ id: "delinquent-kit", name: "Delinquent Kit", category: "Possessions", scrip: 2, kp: 1, tags: [],
+		text: "Unsanctioned by commissary, mostly black market. Spend 1 KP to pull out one of the following: Pocket knife, lighter, boot knife, pack of various cigarettes, hair pins, hair grease." },
+	{ id: "driver-kit", name: "Driver Kit", category: "Possessions", scrip: 6, kp: 1, tags: ["Conspicuous"],
+		text: "Allocated with approval. You have good quality driving gloves (1 KP) and access to a car on missions. The car has a 10 talisman for harm and can fit four people comfortably. If it's totaled, you are docked 2 scrip for a replacement." },
+	{ id: "field-kit", name: "Field Kit", category: "Possessions", scrip: 3, kp: 1, tags: ["Conspicuous"],
+		text: "Official kit of exorcists performing field monitoring work. Spend 1 KP to pull out one of the following: Waterproof notebook, all-weather cape, good boots, survival food, tent and sleeping bag (3 KP), optical scope." },
+	{ id: "junk-kit", name: "Junk Kit", category: "Possessions", scrip: 2, kp: 1, tags: ["Conspicuous"],
+		text: "Scrounged in parts. Spend 1 KP to pull out one of the following: Rubber bands, wiring kit, good pen, chewing gum, screwdriver, tape, c-clamps, crowbar, dented toolbox." },
+	{ id: "monitor-kit", name: "Monitor Kit", category: "Possessions", scrip: 3, kp: 1, tags: [],
+		text: "Official kit of exorcists working as monitors in its storage facilities. Spend 1 KP to pull out one of the following: Two way radio, heavy duty flashlight, shock baton, cap, flash bang grenade (2 KP)." },
+	{ id: "morgue-kit", name: "Morgue Kit", category: "Possessions", scrip: 3, kp: 1, tags: ["Focus"],
+		text: "Some items may need Focus. Official kit of exorcists performing forensic work on the classified bodies of mundane humans brought into CAIN facilities. Some have been affected by terrifying forces and require memory wipes post work. Spend 1 KP to pull out one of the following: Tweezers, compact magnifying scope, scalpel, sample collector, compact breathing mask, wet wipes." },
+	{ id: "porter-kit", name: "Porter Kit", category: "Possessions", scrip: 3, kp: 1, tags: ["Conspicuous"],
+		text: "Official kit of junior exorcists working as porters in its cavernous internal facilities. Spend 1 KP to pull out one of the following: Sturdy backpack, foldable ladder, pitons, ice pick, 30ft of good quality cord for securing cargo, flashlight." },
+	{ id: "study-kit", name: "Study Kit", category: "Possessions", scrip: 2, kp: 1, tags: [],
+		text: "Official kit of students of all ages continuing their education in school facilities while on-job. Spend 1 KP to pull out one of the following: Electronic dictionary, translation guide, local map, pencil case, notebook, textbook on a relevant subject (2 KP)." },
+	{ id: "warden-kit", name: "Warden Kit", category: "Possessions", scrip: 2, kp: 1, tags: [],
+		text: "Official kit of junior exorcists working as door watchmen for extremely sensitive TEMERITY facilities built to contain forces beyond human comprehension. Highly vetted. Spend 1 KP to pull out one of the following: Holy text (2 KP), prayer beads, standard issue great dagger, suicide pill, scented oil, antique censer." },
+
+	// Occult / Medical: items cultivated by TEMERITY for field use.
+	{ id: "qlippoth", name: "Qlippoth", category: "Occult / Medical", scrip: 3, kp: 2, tags: ["Consumable"],
+		text: "Cursed fruit of the Ymir tree. Crush to regain 1d3 psyche burst." },
+	{ id: "green-herb", name: "Green Herb", category: "Occult / Medical", scrip: 2, kp: 1, tags: ["Consumable", "Focus"],
+		text: "Consume to heal 1d3 stress.",
+		use: { healStress: { dice: "1d3", plus: 0 } } },
+	{ id: "red-herb", name: "Red Herb", category: "Occult / Medical", scrip: 4, kp: 2, tags: ["Consumable", "Focus"],
+		text: "Consume to heal 1d3+3 stress.",
+		use: { healStress: { dice: "1d3", plus: 3 } } },
+	{ id: "adrenal-pill", name: "Adrenal Pill", category: "Occult / Medical", scrip: 3, kp: 1, tags: ["Consumable"],
+		text: "Consume to heal 2d3 stress, then reduce max stress by 1 for the rest of the mission. Can be used while under duress.",
+		use: { healStress: { dice: "2d3", plus: 0 } } },
+	{ id: "seed-of-the-ymir-tree", name: "Seed of the Ymir Tree", category: "Occult / Medical", scrip: 4, kp: 2, tags: ["Consumable"],
+		text: "During a rest, you can spend two resting dice to heal an injury, removing it." },
+	{ id: "black-blood-medicine", name: "Black Blood Medicine", category: "Occult / Medical", scrip: 6, kp: 2, tags: ["Consumable"],
+		text: "Consume on a dead exorcist that died in the same scene and has a (relatively) intact body to revive them. They come back with 2 injuries and permanently mark 1 sin box. All actions are hard for them until a rest." },
+	{ id: "white-body", name: "White Body", category: "Occult / Medical", scrip: 2, kp: 1, tags: ["Consumable"],
+		text: "Condensed sinseed of a large sin. May break to clear an affliction." },
+	{ id: "black-body", name: "Black Body", category: "Occult / Medical", scrip: 3, kp: 1, tags: ["Consumable"],
+		text: "Condensed sinseed of a large sin. Can be broken to lower sin by 3d3, but permanently lowers sin overflow cap by 1." },
+	{ id: "cursed-salt", name: "Cursed Salt", category: "Occult / Medical", scrip: 2, kp: 1, tags: ["Consumable"],
+		text: "When spread over a room sized area, prevents humans from entering until pressure increases." },
+	{ id: "ambrosia", name: "Ambrosia", category: "Occult / Medical", scrip: 5, kp: 1, tags: ["Consumable"],
+		text: "Consume to gain 1 max and current psyche burst. Effect does not stack and lasts until the mission is over." }
 ];

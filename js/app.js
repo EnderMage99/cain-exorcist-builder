@@ -42,7 +42,7 @@ window.CAIN = window.CAIN || {};
 		{ id: "M6", text: "Export and import", done: true },
 		{ id: "M7", text: "Print view and polish", done: true },
 		{ id: "M8", text: "All agendas and blasphemies, book colours", done: true },
-		{ id: "M9", text: "All sin marks and kit", done: false }
+		{ id: "M9", text: "All sin marks and kit", done: true }
 	];
 
 	// Import state for the registry: result messages, characters waiting on a
@@ -299,7 +299,23 @@ window.CAIN = window.CAIN || {};
 			})));
 	}
 
+	function kitEntry(k) {
+		return h("li", { class: "entry" },
+			h("div", { class: "entry-name" }, k.name),
+			h("div", { class: "tags" },
+				h("span", { class: "tag" }, k.scrip + " scrip"),
+				k.kp !== null ? h("span", { class: "tag" }, k.kp + " KP") : null,
+				k.tags.map(function (t) { return h("span", { class: "tag" }, t); })),
+			h("div", { class: "entry-text" }, h("p", null, k.text)));
+	}
+
 	function kitView() {
+		var blurbs = {
+			"Aesthetics": "No mechanical benefit. All are 0 KP. CAIN dress code is tightly regulated.",
+			"Comfort / Career": "Personal allowances pursuant to CASTLE doctrine c9880.",
+			"Possessions": "Spend 1 KP to pull out anything on a kit list once you have access to it.",
+			"Occult / Medical": "Items cultivated by TEMERITY for field use. Approval required. May be cursed."
+		};
 		return h("div", { class: "grid" },
 			h("article", { class: "card" },
 				h("div", { class: "card-head" }, h("h2", null, "Registered kit"), h("span", { class: "label" }, core.base.kitPoints + " KP")),
@@ -307,24 +323,17 @@ window.CAIN = window.CAIN || {};
 					return h("li", { class: "entry" },
 						h("div", { class: "entry-name" }, k.name, h("span", { class: "tag" }, k.kp + " KP")),
 						h("div", { class: "entry-text" }, h("p", null, k.text)));
-				}))),
-			h("article", { class: "card" },
-				h("div", { class: "card-head" }, h("h2", null, "Kit expansion"), h("span", { class: "label" }, "Scrip")),
-				h("ul", { class: "entries" },
-					CAIN.kit.map(function (k) {
-						return h("li", { class: "entry" },
-							h("div", { class: "entry-name" }, k.name),
-							h("div", { class: "tags" },
-								h("span", { class: "tag" }, k.scrip + " scrip"),
-								k.kp !== null ? h("span", { class: "tag" }, k.kp + " KP") : null,
-								k.tags.map(function (t) { return h("span", { class: "tag" }, t); }),
-								h("span", { class: "tag" }, k.category)),
-							h("div", { class: "entry-text" }, h("p", null, k.text)));
-					}),
-					h("li", { class: "entry" },
-						h("div", { class: "entry-name" }, "Service weapon upgrade"),
-						h("div", { class: "tags" }, h("span", { class: "tag" }, core.weaponUpgrade.cost + " scrip per CAT")),
-						h("div", { class: "entry-text" }, h("p", null, "Upgrade both service weapons by +1 CAT, to a max of CAT " + core.weaponUpgrade.maxCat + "."))))));
+				}),
+				h("li", { class: "entry" },
+					h("div", { class: "entry-name" }, "Service weapon upgrade"),
+					h("div", { class: "tags" }, h("span", { class: "tag" }, core.weaponUpgrade.cost + " scrip per CAT")),
+					h("div", { class: "entry-text" }, h("p", null, "Upgrade both service weapons by +1 CAT, to a max of CAT " + core.weaponUpgrade.maxCat + ". Weapons start at CAT 0; choose their look freely."))))),
+			CAIN.kitCategories.map(function (cat) {
+				return h("article", { class: "card" },
+					h("div", { class: "card-head" }, h("h2", null, cat), h("span", { class: "label" }, "Kit expansion")),
+					h("p", { class: "note" }, blurbs[cat]),
+					h("ul", { class: "entries" }, CAIN.kit.filter(function (k) { return k.category === cat; }).map(kitEntry)));
+			}));
 	}
 
 	function catView(cat) {
@@ -356,7 +365,7 @@ window.CAIN = window.CAIN || {};
 	// re-render so the search box keeps focus. A card whose name or summary
 	// matches shows whole; otherwise only its matching powers or abilities.
 	var docQuery = "";
-	var SEARCH_TABS = ["agendas", "blasphemies", "sinmarks"];
+	var SEARCH_TABS = ["agendas", "blasphemies", "sinmarks", "kit"];
 	var DOC_SIZES = [{ id: "normal", label: "100%" }, { id: "small", label: "85%" }, { id: "smaller", label: "70%" }];
 
 	function applySearch(body, status) {

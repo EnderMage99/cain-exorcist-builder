@@ -337,6 +337,12 @@ window.CAIN = window.CAIN || {};
 	}
 
 	// Uses a consumable: pays its KP, applies its effect with the die rolled, uses one up.
+	// The lowest and highest total of dice like "2d3".
+	function diceRange(dice) {
+		var m = /^(d+)d(d+)$/.exec(dice || "") || [0, 1, 3];
+		return { min: +m[1], max: m[1] * m[2] };
+	}
+
 	function useConsumable(ch, itemId, roll) {
 		var events = [];
 		var owned = ch.purchases.filter(function (p) { return p.item === itemId; })[0];
@@ -344,7 +350,8 @@ window.CAIN = window.CAIN || {};
 		if (!item || !owned || owned.count <= 0) return { events: events, ok: false };
 		if (kpLeft(ch) < item.kp) return { events: events, ok: false, reason: "Not enough KP." };
 		var heal = item.use && item.use.healStress;
-		if (heal && !validDie(roll, 3)) return { events: events, ok: false, needsRoll: heal.dice };
+		var range = heal ? diceRange(heal.dice) : null;
+		if (heal && !(roll >= range.min && roll <= range.max && roll % 1 === 0)) return { events: events, ok: false, needsRoll: heal.dice };
 		ch.hunt.kpSpent += item.kp;
 		owned.count -= 1;
 		if (owned.count <= 0) ch.purchases.splice(ch.purchases.indexOf(owned), 1);
@@ -839,6 +846,7 @@ window.CAIN = window.CAIN || {};
 		spendAdvance: spendAdvance,
 		addItem: addItem,
 		addCustomItem: addCustomItem,
+		diceRange: diceRange,
 		swapAgenda: swapAgenda,
 		swapBlasphemy: swapBlasphemy
 	};

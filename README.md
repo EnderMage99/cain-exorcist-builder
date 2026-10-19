@@ -22,9 +22,9 @@ move them as files or text:
 
 ## Status
 
-All 16 agendas and all 12 blasphemies from CAIN 1.4.5, each blasphemy in the
-colours of its pages in the book. Sin marks (Eyes, Arms or Hands) and kit are
-still the two-item test set. See [BUILD_PLAN.md](BUILD_PLAN.md) for the
+All of CAIN 1.4.5's player content: 16 agendas, 12 blasphemies (each in the
+colours of its pages in the book), all 5 sin mark locations, and the full kit
+expansion (Aesthetics, Comfort / Career, Possessions, Occult / Medical). See [BUILD_PLAN.md](BUILD_PLAN.md) for the
 milestones.
 
 - **Registry** - the home screen: your exorcists, Register exorcist,

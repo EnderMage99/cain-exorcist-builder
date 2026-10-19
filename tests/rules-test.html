@@ -291,7 +291,7 @@
 		eq("location 1 is Eyes", R.markForFace(1).mark, "eyes");
 		eq("location 4 is Arms or Hands", R.markForFace(4).mark, "arms");
 		eq("location 6 is choose", R.markForFace(6).choose, true);
-		eq("location 2 isn't in this build", [R.markForFace(2).missing, R.markForFace(2).name], [true, "Jaw"]);
+		eq("location 2 is Jaw, 3 Back, 5 Skin", [2, 3, 5].map(function (f) { return R.markForFace(f).mark; }), ["jaw", "back", "skin"]);
 		eq("halve sin rounds up", [R.halveSin(7), R.halveSin(6), R.halveSin(0)], [4, 3, 0]);
 
 		group("Creation helpers");

@@ -289,8 +289,13 @@ Each blasphemy carries the colours of its pages in the book (`theme`), shown
 as a blackletter name plate and tinted powers; custom blasphemies pick their
 own colours.
 
-## After the test build
+### M9 - All sin marks and kit (done)
 
-1. Remaining content: the other 4 sin-mark locations, the full kit list (Aesthetics, Comfort/Career, Possessions,
-   Occult/Medical).
-2. Optional Admin tools: tension and pressure talismans, a hunt tracker.
+The Jaw, Back or Chest, and Skin, Hair, or Legs sin marks, and all 40 kit
+expansion items in four categories. Stat items (Private Room, Visitation
+rights, Relaxed Grooming, Leave of Absence) change the sheet's numbers;
+healing consumables (Green and Red Herb, Adrenal Pill) take the rolled total.
+
+## Next
+
+1. Optional Admin tools: tension and pressure talismans, a hunt tracker.

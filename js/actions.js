@@ -132,7 +132,7 @@ window.CAIN = window.CAIN || {};
 		parts.push(h("div", { class: "btn-row" }, btn("Gain this mark", function () {
 			var r = onDone ? onDone(markId, m.ability) : H.gainSinMark(ch, markId, m.ability);
 			if (!r.ok) { ctx.flash([r.reason]); return; }
-			if (r.choose && r.choose.length) st.markSkill = { mark: r.mark, ability: r.ability, choices: r.choose };
+			if (r.choose && r.choose.length > 1) st.markSkill = { mark: r.mark, ability: r.ability, choices: r.choose };
 			st.mark = { face: 1, chosen: "", ability: 1 };
 			ctx.act(r);
 		}, { disabled: !markId || dup || !ability })));
@@ -186,7 +186,7 @@ window.CAIN = window.CAIN || {};
 			var r = H.spendAdvance(ch, choice);
 			if (!r.ok) { ctx.flash([r.reason]); return; }
 			st.advance = null;
-			if (r.choose && r.choose.length) st.markSkill = { mark: r.mark, ability: r.ability, choices: r.choose };
+			if (r.choose && r.choose.length > 1) st.markSkill = { mark: r.mark, ability: r.ability, choices: r.choose };
 			ctx.act(r);
 		}
 		function replaceStep(choice, kind) {
@@ -592,7 +592,7 @@ window.CAIN = window.CAIN || {};
 			if (consumable && st.useItem && st.useItem.id === p.item) {
 				pullRows.push(h("li", { class: "use-row" }, h("span", null, item.name + ": " + item.text),
 					h("span", { class: "row-tools" },
-						dieEntry(item.use.healStress.dice + " rolled", 3, st.useItem.roll, function (v) { st.useItem.roll = v; ctx.save(true); }),
+						stepper(item.use.healStress.dice + " rolled", st.useItem.roll, H.diceRange(item.use.healStress.dice).min, H.diceRange(item.use.healStress.dice).max, function (v) { st.useItem.roll = v; ctx.save(true); }, { small: true, title: "Enter the total you rolled at the table" }),
 						btn("Use", function () {
 							var r = H.useConsumable(ch, p.item, st.useItem.roll);
 							if (!r.ok) { ctx.flash([r.reason || "Can't use that."]); return; }
@@ -606,14 +606,18 @@ window.CAIN = window.CAIN || {};
 				h("span", null, item.name + (p.count > 1 ? " x" + p.count : ""), item.custom ? h("span", { class: "tag" }, "Custom") : null),
 				consumable
 					? chip("Use " + item.kp + " KP", false, function () {
-						if (item.use && item.use.healStress) { st.useItem = { id: p.item, roll: 2 }; ctx.save(true); return; }
+						if (item.use && item.use.healStress) { st.useItem = { id: p.item, roll: H.diceRange(item.use.healStress.dice).min }; ctx.save(true); return; }
 						var r = H.useConsumable(ch, p.item);
 						if (!r.ok) ctx.flash([r.reason || "Can't use that."]); else ctx.act(r);
 					}, { disabled: left < item.kp })
 					: chip("Pull " + item.kp + " KP", false, function () { ctx.act(H.spendKp(ch, item.kp, item.name)); }, { disabled: left < item.kp })));
 		});
 
-		var catalog = CAIN.kit.map(function (item) {
+		var kitCat = CAIN.kitCategories.indexOf(st.kitCat) >= 0 ? st.kitCat : "Occult / Medical";
+		var catChips = h("div", { class: "chips", role: "group", "aria-label": "Kit category" }, CAIN.kitCategories.map(function (c) {
+			return chip(c + " (" + CAIN.kit.filter(function (k) { return k.category === c; }).length + ")", c === kitCat, function () { st.kitCat = c; ctx.save(true); });
+		}));
+		var catalog = CAIN.kit.filter(function (item) { return item.category === kitCat; }).map(function (item) {
 			var owned = ch.purchases.filter(function (p) { return p.item === item.id; })[0];
 			var consumable = item.tags.indexOf("Consumable") >= 0;
 			var listed = owned && !consumable;
@@ -657,7 +661,8 @@ window.CAIN = window.CAIN || {};
 						ctx.act(r);
 					}, { small: true }))),
 			h("div", { class: "subhead" }, "Add from the book"),
-			h("ul", { class: "entries" }, catalog));
+			catChips,
+			h("ul", { class: "entries kit-catalog" }, catalog));
 	}
 
 	function logPanel(ch, ctx) {
