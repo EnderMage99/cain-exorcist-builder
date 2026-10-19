@@ -341,8 +341,9 @@ window.CAIN = window.CAIN || {};
 	function iconSrc(icon) {
 		var m = /^(agenda|blasphemy):([a-z-]+)$/.exec(icon || "");
 		if (!m) return null;
-		if (m[1] === "agenda") return CAIN.agendas.some(function (a) { return a.id === m[2]; }) ? "img/agenda/" + m[2] + ".png" : null;
-		return CAIN.blasphemies.some(function (b) { return b.id === m[2]; }) ? "img/blasphemy/" + m[2] + ".jpg" : null;
+		if (m[1] === "agenda") { var a = byId(CAIN.agendas, m[2]); return a ? (a.image || "img/agenda/" + a.id + ".png") : null; }
+		var b = byId(CAIN.blasphemies, m[2]);
+		return b ? (b.image || "img/blasphemy/" + b.id + ".jpg") : null;
 	}
 
 	function agendaAllowed(ch, a) {
@@ -555,11 +556,11 @@ window.CAIN = window.CAIN || {};
 		var ids = shuffled(core.skills.map(function (s) { return s.id; }), rng);
 		ids.slice(0, core.creation.raise).forEach(function (id) { ch.skills[id] = 2; });
 		ids.slice(core.creation.raise, core.creation.raise + core.creation.lower).forEach(function (id) { ch.skills[id] = 0; });
-		var agendas = CAIN.agendas.filter(function (a) { return agendaAllowed(ch, a).ok; });
+		var agendas = CAIN.agendas.filter(function (a) { return agendaAllowed(ch, a).ok && !a.source; });
 		var a = pick(agendas, rng);
 		ch.agenda = a.id;
 		ch.agendaAbilities = [{ agenda: a.id, ability: pick(a.abilities, rng).id }];
-		var b = pick(CAIN.blasphemies, rng);
+		var b = pick(CAIN.blasphemies.filter(function (x) { return !x.source; }), rng);
 		ch.blasphemies = [{ id: b.id, powers: shuffled(b.powers, rng).slice(0, 2).map(function (p) { return p.id; }) }];
 		ch.xid = generateXid(rng);
 		var p = CAIN.prompts;

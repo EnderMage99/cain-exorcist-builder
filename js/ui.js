@@ -234,7 +234,7 @@ window.CAIN = window.CAIN || {};
 		var c2 = /^#[0-9a-f]{6}$/i.test(t.color2 || "") ? t.color2 : c;
 		var title = luminance(c2) > luminance(c) ? c2 : c;
 		if (luminance(title) < 45) title = "#c9c4b8";
-		return { class: "blas-themed" + (t.dark ? " blas-dark" : ""), style: "--blas:" + c + ";--blas-2:" + c2 + ";--blas-title:" + title };
+		return { class: "blas-themed" + (t.dark ? " blas-dark" : "") + sourceClass(b), style: "--blas:" + c + ";--blas-2:" + c2 + ";--blas-title:" + title };
 	}
 
 	// An agenda drawn like its card in the rulebook: the paper it's printed on,
@@ -246,7 +246,7 @@ window.CAIN = window.CAIN || {};
 		var hex = /^#[0-9a-f]{6}$/i;
 		var paper = PAPERS.indexOf(l.paper) >= 0 ? l.paper : "grey";
 		return {
-			class: "agenda-look paper-" + paper + (l.splatter ? " splatter" : ""),
+			class: "agenda-look paper-" + paper + (l.splatter ? " splatter" : "") + sourceClass(a),
 			style: "--ag-accent:" + (hex.test(l.accent || "") ? l.accent : "#141414") + ";--ag-tape:" + (hex.test(l.tape || "") ? l.tape : "#f2b318")
 		};
 	}
@@ -259,7 +259,8 @@ window.CAIN = window.CAIN || {};
 		return h("div", { class: "ag-head" }, emblem,
 			h("div", { class: "ag-titles" },
 				h("h2", { class: "ag-name" }, a.name),
-				h("span", { class: "ag-reg" }, a.custom ? "Custom Agenda" : "Registered Agenda")),
+				h("span", { class: "ag-reg" }, a.custom ? "Custom Agenda" : "Registered Agenda"),
+				sourceBadge(a)),
 			extra || null);
 	}
 
@@ -273,10 +274,11 @@ window.CAIN = window.CAIN || {};
 	// portrait. Custom ones borrow either by id ("agenda:beast", "blasphemy:gate").
 	function iconSrc(icon) { return CAIN.rules.iconSrc(icon); }
 
-	function agendaIcon(a) { return a.custom ? iconSrc(a.icon) : "img/agenda/" + a.id + ".png"; }
+	function agendaIcon(a) { return a.custom ? iconSrc(a.icon) : (a.image || "img/agenda/" + a.id + ".png"); }
 
 	function blasphemyIcon(b) {
 		if (b.custom) return iconSrc(b.icon);
+		if (b.image) return b.image;
 		return CAIN.blasphemies.some(function (x) { return x.id === b.id; }) ? "img/blasphemy/" + b.id + ".jpg" : null;
 	}
 
@@ -287,8 +289,8 @@ window.CAIN = window.CAIN || {};
 
 	// Every picture a custom agenda or blasphemy can use, as { value, label, src }.
 	function iconChoices() {
-		return CAIN.agendas.map(function (a) { return { value: "agenda:" + a.id, label: a.name + " emblem", src: "img/agenda/" + a.id + ".png" }; })
-			.concat(CAIN.blasphemies.map(function (b) { return { value: "blasphemy:" + b.id, label: b.name + " portrait", src: "img/blasphemy/" + b.id + ".jpg" }; }));
+		return CAIN.agendas.map(function (a) { return { value: "agenda:" + a.id, label: a.name + " emblem", src: agendaIcon(a) }; })
+			.concat(CAIN.blasphemies.map(function (b) { return { value: "blasphemy:" + b.id, label: b.name + " portrait", src: blasphemyIcon(b) }; }));
 	}
 
 	// A row of picture buttons for an editor; onSet gets the value or "".
@@ -304,8 +306,10 @@ window.CAIN = window.CAIN || {};
 
 	// A kit item's drawing from the book, as black ink that follows the theme.
 	function kitPicture(item, cls) {
-		if (!item || !/^img\/kit\/[a-z-]+\.png$/.test(item.image || "")) return null;
-		return h("span", { class: "art kit-pic" + (cls ? " " + cls : ""), "aria-hidden": "true" }, h("img", { src: item.image, alt: "", draggable: "false" }));
+		if (!item || !/^img\/(kit\/|ishmael\/kit-)[a-z0-9-]+\.png$/.test(item.image || "")) return null;
+		// Fan supplement pictures are in colour, so they skip the ink treatment.
+		var color = item.image.indexOf("img/kit/") !== 0;
+		return h("span", { class: "art kit-pic" + (color ? " kit-pic-color" : "") + (cls ? " " + cls : ""), "aria-hidden": "true" }, h("img", { src: item.image, alt: "", draggable: "false" }));
 	}
 
 	// Virtues: portrait, the bond track (ranks 0-III, ones not reached dimmed when
@@ -313,7 +317,7 @@ window.CAIN = window.CAIN || {};
 	var RANKS = ["0", "I", "II", "III"];
 
 	function virtuePortrait(v, cls) {
-		return h("img", { class: "blas-portrait" + (cls ? " " + cls : ""), src: "img/virtue/" + v.id + ".jpg", alt: "", draggable: "false" });
+		return h("img", { class: "blas-portrait" + (cls ? " " + cls : ""), src: v.image || "img/virtue/" + v.id + ".jpg", alt: "", draggable: "false" });
 	}
 
 	function virtueBondList(v, cat, rank) {
@@ -340,7 +344,39 @@ window.CAIN = window.CAIN || {};
 	CAIN.virtuePortrait = virtuePortrait;
 	CAIN.virtueBondList = virtueBondList;
 	CAIN.virtuePowers = virtuePowers;
+	// Supporting rules that come with a blasphemy (building the Buddy, drifters,
+	// weapon mods...), folded away until opened.
+	function blasExtras(b, cat) {
+		if (!b || !b.extras || !b.extras.length) return null;
+		return h("div", { class: "blas-extras" }, b.extras.map(function (x) {
+			return h("details", { class: "blas-extra" }, h("summary", null, x.title), richText(x.text, cat));
+		}));
+	}
+
+	// Fan-made content: a badge naming the supplement, and the class that gives
+	// its cards their own border. Core-book entries get neither.
+	function sourceOf(entry) {
+		var id = entry && entry.source;
+		return id && CAIN.sources && CAIN.sources[id] ? Object.assign({ id: id }, CAIN.sources[id]) : null;
+	}
+
+	function sourceClass(entry) {
+		var src = sourceOf(entry);
+		return src && src.fan ? " fan-made src-" + src.id : "";
+	}
+
+	function sourceBadge(entry, short) {
+		var src = sourceOf(entry);
+		if (!src || !src.fan) return null;
+		return h("span", { class: "fan-badge", title: "Fan-made content from " + src.name + " by " + src.author + ". Not official CAIN material." },
+			short ? "Fan-made: " + (src.short || src.name) : "Fan-made: " + src.name + ", by " + src.author);
+	}
+
 	CAIN.kitPicture = kitPicture;
+	CAIN.sourceOf = sourceOf;
+	CAIN.blasExtras = blasExtras;
+	CAIN.sourceClass = sourceClass;
+	CAIN.sourceBadge = sourceBadge;
 	CAIN.powerHead = powerHead;
 	CAIN.agendaIcon = agendaIcon;
 	CAIN.blasphemyIcon = blasphemyIcon;

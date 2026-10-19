@@ -374,7 +374,8 @@ window.CAIN = window.CAIN || {};
 				h("span", null,
 					CAIN.kitPicture(item, "kit-pic-sm"),
 					(item.name + (item.kp === null ? " (permanent)" : " (" + item.kp + " KP)") + (consumable ? ", consumable" : "") + (!self.editable && p.count > 1 ? " x" + p.count : "")).toUpperCase(),
-					item.custom && item.text ? h("span", { class: "kit-desc" }, item.text) : null),
+					item.custom && item.text ? h("span", { class: "kit-desc" }, item.text) : null,
+					CAIN.sourceBadge(item, true)),
 				self.editable ? h("span", { class: "row-tools" },
 					consumable ? CAIN.stepper(null, p.count, 1, 99, function (v) { p.count = v; self.onChange(true); }, { small: true, aria: item.name + " count" }) : null,
 					removeBtn(item.name, function () { ch.purchases.splice(i, 1); self.onChange(true); })) : null));
@@ -493,7 +494,9 @@ window.CAIN = window.CAIN || {};
 					h("h2", null, "Agenda"),
 					this.editable
 						? CAIN.select(null, ch.agenda || "", (function () {
-							var groups = [{ group: "From the book", options: CAIN.agendas.map(function (ag) { return { value: ag.id, label: ag.name }; }) }];
+							var groups = [{ group: "From the book", options: CAIN.agendas.filter(function (ag) { return !ag.source; }).map(function (ag) { return { value: ag.id, label: ag.name }; }) }];
+							var fan = CAIN.agendas.filter(function (ag) { return ag.source; });
+							if (fan.length) groups.push({ group: "Fan-made", options: fan.map(function (ag) { var src = CAIN.sourceOf(ag); return { value: ag.id, label: ag.name + " (" + (src ? src.short || src.name : ag.source) + ")" }; }) });
 							if (ch.custom.agendas.length) groups.push({ group: "Your agendas", options: ch.custom.agendas.map(function (ag) { return { value: ag.id, label: ag.name }; }) });
 							return groups;
 						})(), function (v) { CAIN.hunt.swapAgenda(ch, v || null); self.onChange(true); }, { placeholder: "None", aria: "Agenda" })
@@ -528,7 +531,8 @@ window.CAIN = window.CAIN || {};
 				h("div", { class: "blas-head" },
 					CAIN.blasPortrait(b, "blas-portrait-sm"),
 					h("span", { class: "sticker blas-plate" }, b.name),
-					h("span", { class: "label" }, b.custom ? "Custom blasphemy" : "Blasphemy " + b.numeral),
+					h("span", { class: "label" }, b.custom ? "Custom blasphemy" : (b.numeral ? "Blasphemy " + b.numeral : b.group || "Blasphemy")),
+					CAIN.sourceBadge(b, true),
 					b.custom && self.editable && self.openPanel ? h("button", { class: "mini-btn", type: "button", onclick: function () { self.openPanel("customBlasphemy", b.id); } }, "Edit") : null,
 					self.editable && self.openPanel ? h("button", { class: "mini-btn", type: "button", "aria-label": "Swap " + b.name, onclick: function () { self.openPanel("swap", bi); } }, "Swap") : null,
 					self.editable ? removeBtn(b.name, function () { ch.blasphemies.splice(bi, 1); self.onChange(true); }) : null),
@@ -545,7 +549,8 @@ window.CAIN = window.CAIN || {};
 							CAIN.powerHead(p, self.editable ? removeBtn(p.name, function () { owned.powers.splice(pi, 1); self.onChange(true); }) : null),
 							CAIN.powerTags(p, d.cat),
 							CAIN.richText(p.text, d.cat)));
-				})));
+				})),
+				CAIN.blasExtras(b, d.cat));
 		});
 		var blast = CAIN.blast;
 		var legend = h("p", { class: "tiny burst-legend" },
@@ -581,6 +586,7 @@ window.CAIN = window.CAIN || {};
 					CAIN.virtuePortrait(v, "blas-portrait-sm"),
 					h("span", { class: "sticker blas-plate" }, v.name),
 					h("span", { class: "label" }, v.epithet),
+					CAIN.sourceBadge(v, true),
 					h("span", { class: "virtue-rank-pips" }, h("span", { class: "label" }, "Bond"),
 						bubbles(owned.rank, CAIN.virtueRules.maxRank, { label: v.name + " bond rank" },
 							self.tracked(v.name + " bond", function () { return owned.rank; }, function (val) { owned.rank = val; }))),
@@ -597,7 +603,7 @@ window.CAIN = window.CAIN || {};
 						bonding ? h("div", { class: "passive virtue-stricture" },
 							h("div", { class: "entry-name" }, "Stricture", h("span", { class: "tag stamp" }, "While bonding")),
 							h("p", null, v.stricture),
-							h("p", { class: "tiny" }, "Ignore it for one roll by taking 2 nonlethal stress.")) : null,
+							h("p", { class: "tiny" }, v.strictureCost || "Ignore it for one roll by taking 2 nonlethal stress.")) : null,
 						CAIN.virtueBondList(v, d.cat, owned.rank)),
 					h("div", null,
 						CAIN.virtuePowers(v, d.cat, owned.rank, function (p) {

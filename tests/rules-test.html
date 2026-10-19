@@ -34,11 +34,13 @@
 </main>
 
 <script src="../data/core.js"></script>
+<script src="../data/sources.js"></script>
 <script src="../data/agendas.js"></script>
 <script src="../data/blasphemies.js"></script>
 <script src="../data/sinmarks.js"></script>
 <script src="../data/kit.js"></script>
 <script src="../data/virtues.js"></script>
+<script src="../data/ishmael.js"></script>
 <script src="../data/prompts.js"></script>
 <script src="../js/rules.js"></script>
 <script src="../js/hunt.js"></script>
@@ -90,8 +92,8 @@
 		group("Data integrity");
 		var ids = {};
 		CAIN.agendas.forEach(function (a) {
-			// Departed and Survivor are one-ability agendas (with fewer items) in the book.
-			var single = a.id === "departed" || a.id === "survivor";
+			// One-ability agendas (Departed, Survivor, Ishmael's Ace and Traitor) explain themselves in a note.
+			var single = a.abilities.length === 1 && !!a.note;
 			if (single) check("agenda " + a.id + " has one free ability and a note", a.abilities.length === 1 && !!a.note);
 			else {
 				check("agenda " + a.id + " has 2 items, 1 bold", a.items.length === 2 && a.items.filter(function (i) { return i.bold; }).length === 1);
@@ -99,7 +101,7 @@
 			}
 			a.abilities.forEach(function (ab) { ids[a.id + "/" + ab.id] = (ids[a.id + "/" + ab.id] || 0) + 1; });
 		});
-		var bursts = ["required", "onSuccess", "multiple", "none"];
+		var bursts = CAIN.core.burstKinds.map(function (k) { return k.id; });
 		CAIN.blasphemies.forEach(function (b) {
 			check("blasphemy " + b.id + " has a passive", !!(b.passive && b.passive.text));
 			check("blasphemy " + b.id + " has 5+ powers", b.powers.length >= 5);
@@ -313,8 +315,8 @@
 			seenBlasphemies[rc.blasphemies[0].id] = 1;
 		}
 		eq("300 Quick Exorcists are all legal", bad.slice(0, 3), []);
-		eq("Quick Exorcist uses every agenda a new exorcist may take", Object.keys(seenAgendas).sort(), CAIN.agendas.filter(function (a) { return !a.requires; }).map(function (a) { return a.id; }).sort());
-		eq("Quick Exorcist uses every blasphemy", Object.keys(seenBlasphemies).sort(), CAIN.blasphemies.map(function (b) { return b.id; }).sort());
+		eq("Quick Exorcist uses every core agenda a new exorcist may take", Object.keys(seenAgendas).sort(), CAIN.agendas.filter(function (a) { return !a.requires && !a.source; }).map(function (a) { return a.id; }).sort());
+		eq("Quick Exorcist uses every core blasphemy", Object.keys(seenBlasphemies).sort(), CAIN.blasphemies.filter(function (b) { return !b.source; }).map(function (b) { return b.id; }).sort());
 		var named = R.randomCharacter(R.makeRng(5));
 		check("Quick Exorcist fills name, looks, questions and weapons", !!(named.name && named.looks.hair && named.questions.mother && named.weaponLook));
 
@@ -667,6 +669,18 @@
 		veteran.purchases.push({ item: "improved-meal-plan", count: 1 });
 		// Gate +1 KP, meal plan +1 KP; extra blasphemy: sin cap 9, XP 5; CAT 5: PSYCHE 3.
 		eq("CAT 5 veteran with two blasphemies", sheetNumbers(veteran), [7, 6, 9, 5, 3, 3]);
+
+		group("Fan-made content");
+		["agendas", "blasphemies", "virtues", "kit"].forEach(function (k) {
+			var fan = CAIN[k].filter(function (x) { return x.source; });
+			check("Ishmael " + k + " are loaded and labelled", fan.length > 0 && fan.every(function (x) { return x.source === "ishmael" && CAIN.sources[x.source].fan; }));
+		});
+		check("core book entries have no source", CAIN.agendas.concat(CAIN.blasphemies).filter(function (x) { return !x.source; }).length === 28);
+		check("Ishmael blasphemies have no numeral and don't clash with core ids", CAIN.blasphemies.filter(function (b) { return b.source; }).every(function (b) { return !b.numeral; }));
+		var fanAgenda = guardianTension();
+		H.normalize(fanAgenda);
+		fanAgenda.blasphemies.push({ id: "pandora", powers: ["sensorial"] });
+		eq("taking an Ishmael blasphemy counts like any other (sin cap -1)", R.derived(fanAgenda).sinCap, R.derived(guardianTension()).sinCap - 1);
 
 		group("Virtues");
 		CAIN.virtues.forEach(function (v) {

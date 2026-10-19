@@ -43,7 +43,8 @@ window.CAIN = window.CAIN || {};
 		{ id: "M7", text: "Print view and polish", done: true },
 		{ id: "M8", text: "All agendas and blasphemies, book colours", done: true },
 		{ id: "M9", text: "All sin marks and kit", done: true },
-		{ id: "M10", text: "Virtues (Games for Freaks)", done: true }
+		{ id: "M10", text: "Virtues (Games for Freaks)", done: true },
+		{ id: "M11", text: "Fan content: The Ishmael Protocol", done: true }
 	];
 
 	// Import state for the registry: result messages, characters waiting on a
@@ -284,12 +285,14 @@ window.CAIN = window.CAIN || {};
 				h("div", { class: "blas-intro-text" },
 					h("div", { class: "card-head" },
 						h("h2", { class: "blas-title" }, b.name),
-						h("span", { class: "label" }, b.numeral ? "Blasphemy " + b.numeral : "All exorcists")),
+						h("span", { class: "label" }, b.numeral ? "Blasphemy " + b.numeral : b.powers ? (b.group || "Blasphemy") : "All exorcists")),
+					CAIN.sourceBadge(b),
 					b.flavor ? h("p", { class: "note" }, b.flavor) : null)),
 			b.passive ? h("div", { class: "passive" },
 				h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
 				richText(b.passive.text, cat)) : null,
-			h("ul", { class: "entries" }, (b.powers || [b]).map(function (p) { return powerEntry(p, cat); })));
+			h("ul", { class: "entries" }, (b.powers || [b]).map(function (p) { return powerEntry(p, cat); })),
+			CAIN.blasExtras(b, cat));
 	}
 
 	function sinMarkCard(m, cat) {
@@ -310,6 +313,7 @@ window.CAIN = window.CAIN || {};
 					h("div", { class: "card-head" },
 						h("h2", { class: "blas-title" }, v.name),
 						h("span", { class: "label" }, v.epithet)),
+					CAIN.sourceBadge(v),
 					h("p", { class: "note" }, v.flavor),
 					h("dl", { class: "virtue-facts" },
 						h("dt", null, "Likes"), h("dd", null, v.likes.join(", ")),
@@ -319,7 +323,8 @@ window.CAIN = window.CAIN || {};
 				h("div", null,
 					h("div", { class: "passive virtue-stricture" },
 						h("div", { class: "entry-name" }, "Stricture", h("span", { class: "tag stamp" }, "While bonding")),
-						h("p", null, v.stricture)),
+						h("p", null, v.stricture),
+						v.strictureCost ? h("p", { class: "tiny" }, v.strictureCost) : null),
 					h("div", { class: "subhead" }, "Bond abilities"),
 					CAIN.virtueBondList(v, cat)),
 				h("div", null,
@@ -338,14 +343,17 @@ window.CAIN = window.CAIN || {};
 	}
 
 	function kitEntry(k) {
-		return h("li", { class: "entry" + (k.image ? " has-pic" : "") },
+		return h("li", { class: "entry" + (k.image ? " has-pic" : "") + CAIN.sourceClass(k) },
 			CAIN.kitPicture(k),
-			h("div", { class: "entry-name" }, k.name),
+			h("div", { class: "entry-name" }, k.name, CAIN.sourceBadge(k, true)),
 			h("div", { class: "tags" },
-				h("span", { class: "tag" }, k.scrip + " scrip"),
+				h("span", { class: "tag" }, k.scrip === null ? "Auction" : k.scrip + " scrip"),
 				k.kp !== null ? h("span", { class: "tag" }, k.kp + " KP") : null,
 				k.tags.map(function (t) { return h("span", { class: "tag" }, t); })),
-			h("div", { class: "entry-text" }, h("p", null, k.text)));
+			h("div", { class: "entry-text" }, h("p", null, k.text)),
+			k.quote ? h("p", { class: "kit-quote" }, "\u201c" + k.quote + "\u201d") : null,
+			k.credit ? h("p", { class: "tiny" }, k.credit) : null,
+			k.stock ? h("p", { class: "tiny" }, k.stock >= 99 ? "Stock: plenty" : "Stock: " + k.stock) : null);
 	}
 
 	function kitView() {
@@ -368,10 +376,17 @@ window.CAIN = window.CAIN || {};
 					h("div", { class: "tags" }, h("span", { class: "tag" }, core.weaponUpgrade.cost + " scrip per CAT")),
 					h("div", { class: "entry-text" }, h("p", null, "Upgrade both service weapons by +1 CAT, to a max of CAT " + core.weaponUpgrade.maxCat + ". Weapons start at CAT 0; choose their look freely."))))),
 			CAIN.kitCategories.map(function (cat) {
-				return h("article", { class: "card" },
+				return h("article", { class: "card" + CAIN.sourceClass(CAIN.kit.filter(function (k) { return k.category === cat; })[0])  },
 					h("div", { class: "card-head" }, h("h2", null, cat), h("span", { class: "label" }, "Kit expansion")),
-					h("p", { class: "note" }, blurbs[cat]),
+					CAIN.sourceBadge(CAIN.kit.filter(function (k) { return k.category === cat; })[0]),
+					blurbs[cat] ? h("p", { class: "note" }, blurbs[cat]) : null,
 					h("ul", { class: "entries" }, CAIN.kit.filter(function (k) { return k.category === cat; }).map(kitEntry)));
+			}),
+			(CAIN.kitSections || []).map(function (sec) {
+				return h("article", { class: "card" + CAIN.sourceClass(sec) },
+					h("div", { class: "card-head" }, h("h2", null, sec.name), h("span", { class: "label" }, "Shop rules")),
+					CAIN.sourceBadge(sec),
+					richText(sec.text, 1));
 			}));
 	}
 
@@ -415,6 +430,8 @@ window.CAIN = window.CAIN || {};
 		}
 		var shown = 0;
 		[].forEach.call(body.querySelectorAll(".grid > .card"), function (card) {
+			var fan = card.classList.contains("fan-made");
+			var srcOk = doctrine.src === "fan" ? fan : doctrine.src === "core" ? !fan : true;
 			var parts = [].slice.call(card.querySelectorAll(".entries > .entry, .passive, .virtue-bonds > li"));
 			var head = [].slice.call(card.querySelectorAll(".card-head, .ag-head, :scope > .note, .ag-items"));
 			var whole = !words.length || head.some(hit);
@@ -424,11 +441,11 @@ window.CAIN = window.CAIN || {};
 				p.classList.toggle("is-hidden", !on);
 				if (on && !p.classList.contains("passive")) any = true;
 			});
-			var visible = whole || any || parts.some(function (p) { return !p.classList.contains("is-hidden"); });
+			var visible = srcOk && (whole || any || parts.some(function (p) { return !p.classList.contains("is-hidden"); }));
 			card.classList.toggle("is-hidden", !visible);
 			if (visible) shown += 1;
 		});
-		status.textContent = words.length ? (shown ? shown + (shown === 1 ? " match" : " matches") : "Nothing matches \"" + docQuery + "\".") : "";
+		status.textContent = words.length || (doctrine.src && doctrine.src !== "all") ? (shown ? shown + (shown === 1 ? " match" : " matches") : "Nothing matches \"" + docQuery + "\".") : "";
 	}
 
 	function searchBox(body) {
@@ -437,7 +454,12 @@ window.CAIN = window.CAIN || {};
 		input.addEventListener("input", function () { docQuery = input.value; applySearch(body, status); });
 		input.addEventListener("keydown", function (e) { if (e.key === "Escape") { input.value = ""; docQuery = ""; applySearch(body, status); } });
 		applySearch(body, status);
-		return h("div", { class: "doc-search-row" }, input, status);
+		var sources = h("div", { class: "doc-source", role: "group", "aria-label": "Show content from" },
+			h("span", { class: "label" }, "Show"),
+			[["all", "All books"], ["core", "Official only"], ["fan", "Fan-made only"]].map(function (o) {
+				return h("button", { class: "chip", type: "button", "aria-pressed": String((doctrine.src || "all") === o[0]), onclick: function () { setDoctrine({ src: o[0] }); } }, o[1]);
+			}));
+		return h("div", { class: "doc-search-row" }, input, status, sources);
 	}
 
 	function sizePicker() {

@@ -306,6 +306,15 @@ and high blasphemies apply by rank; Justice adds an XP question, Faith II
 crosses out one sin box on overflow, and a chosen Immaculate Defiance gives +1
 max injury.
 
+### M11 - Fan content: The Ishmael Protocol (done)
+
+`data/sources.js` names each book; entries with `source: "ishmael"` come from
+`data/ishmael.js` (Sib_PHI, v1.2.2): 9 agendas, 8 blasphemies with their
+extra rules (Buddy, Drifters, Weapon Mods, Berserk), the virtue Patience, and
+23 shop items with the shop rules. Fan entries get a badge and their own
+border everywhere they appear, are labelled in pick lists, and stay out of the
+Quick exorcist. Doctrine filters by All / Official / Fan-made.
+
 ## Next
 
 1. Optional Admin tools: tension and pressure talismans, a hunt tracker.

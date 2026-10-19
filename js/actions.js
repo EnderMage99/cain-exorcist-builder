@@ -41,6 +41,12 @@ window.CAIN = window.CAIN || {};
 		return { skill: skill, setup: false, ability: 0, circumstance: 0, burst: false, burstSin: false, burstSinRoll: 2, agony: false, hard: false, successes: 0 };
 	}
 
+	// " (Fan-made: Ishmael)" after a fan supplement entry's name in pick lists.
+	function fanTag(x) {
+		var src = CAIN.sourceOf(x);
+		return src && src.fan ? " (Fan-made: " + (src.short || src.name) + ")" : "";
+	}
+
 	function btn(label, onclick, opts) {
 		opts = opts || {};
 		return h("button", { class: "btn" + (opts.ghost ? " ghost" : "") + (opts.small ? " small" : "") + (opts.danger ? " danger" : ""), type: "button", disabled: !!opts.disabled, title: opts.title || null, onclick: onclick }, label);
@@ -270,7 +276,7 @@ window.CAIN = window.CAIN || {};
 		var ag = R.agenda(from);
 		var open = ag.abilities.filter(function (ab) { return !ch.agendaAbilities.some(function (r) { return r.agenda === ag.id && r.ability === ab.id; }); });
 		return panel(ctx, "Add an agenda ability", ch.agendaAbilities.length >= 5 ? "You already have 5. The rules cap it at 5, so remove one on the sheet, or add anyway." : null,
-			row(CAIN.select("From agenda", from, agendas.map(function (x) { return { value: x.id, label: x.name + (x.custom ? " (yours)" : "") + (x.id === ch.agenda ? " (current)" : "") }; }),
+			row(CAIN.select("From agenda", from, agendas.map(function (x) { return { value: x.id, label: x.name + (x.custom ? " (yours)" : "") + fanTag(x) + (x.id === ch.agenda ? " (current)" : "") }; }),
 				function (v) { st.addFrom = v; ctx.save(true); }),
 				ch.advances > 0 ? chip("Use up 1 advance (" + ch.advances + ")", st.useAdvance, function () { st.useAdvance = !st.useAdvance; ctx.save(true); }) : null,
 				btn("Create your own agenda", function () { ctx.open("customAgenda"); }, { small: true, ghost: true })),
@@ -297,7 +303,7 @@ window.CAIN = window.CAIN || {};
 		var total = ch.blasphemies.reduce(function (n, x) { return n + x.powers.length; }, 0);
 		var th = CAIN.blasTheme(b);
 		return panel(ctx, "Add a power", total >= 5 ? "You already have 5 powers. The rules cap it at 5, so remove one on the sheet, or add anyway." : null,
-			row(CAIN.select("From blasphemy", from, list.map(function (x) { return { value: x.id, label: x.name + (x.custom ? " (yours)" : "") + (owned.indexOf(x.id) >= 0 ? "" : " (new blasphemy)") }; }),
+			row(CAIN.select("From blasphemy", from, list.map(function (x) { return { value: x.id, label: x.name + (x.custom ? " (yours)" : "") + fanTag(x) + (owned.indexOf(x.id) >= 0 ? "" : " (new blasphemy)") }; }),
 				function (v) { st.addFrom = v; ctx.save(true); }),
 				ch.advances > 0 ? chip("Use up 1 advance (" + ch.advances + ")", st.useAdvance, function () { st.useAdvance = !st.useAdvance; ctx.save(true); }) : null,
 				btn("Create your own blasphemy", function () { ctx.open("customBlasphemy"); }, { small: true, ghost: true })),
@@ -626,11 +632,11 @@ window.CAIN = window.CAIN || {};
 			var listed = owned && !consumable;
 			return h("li", { class: "entry" + (item.image ? " has-pic" : "") },
 				CAIN.kitPicture(item),
-				h("div", { class: "entry-name" }, item.name, owned ? h("span", { class: "tag" }, owned.count > 1 ? "Have x" + owned.count : "Have it") : null),
+				h("div", { class: "entry-name" }, item.name, CAIN.sourceBadge(item, true), owned ? h("span", { class: "tag" }, owned.count > 1 ? "Have x" + owned.count : "Have it") : null),
 				h("div", { class: "tags" },
 					item.kp !== null ? h("span", { class: "tag" }, item.kp + " KP") : h("span", { class: "tag" }, "Permanent"),
 					item.tags.map(function (t) { return h("span", { class: "tag" }, t); }),
-					h("span", { class: "tag" }, "Book price " + item.scrip + " scrip")),
+					h("span", { class: "tag" }, item.scrip === null ? "Auction item" : "Book price " + item.scrip + " scrip")),
 				h("div", { class: "entry-text" }, h("p", null, item.text)),
 				h("div", { class: "btn-row" }, btn(listed ? "On your list" : "Add", function () {
 					var r = H.addItem(ch, item.id);
