@@ -51,6 +51,7 @@ window.CAIN = window.CAIN || {};
 			looks: { sex: "", height: "", weight: "", hair: "", eyes: "" },
 			questions: questions,
 			weaponLook: "",
+			kitNotes: "",
 			notes: "",
 			skills: skills,
 			skillImprovements: 0,

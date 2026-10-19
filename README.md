@@ -23,25 +23,34 @@ system before the rest of the book's content goes in. See
 - **Registration** - character creation, step by step: Concept, Skills,
   Agenda, Blasphemy, Kit, Review. Next stays locked until a step is legal,
   and the draft saves itself so you can leave and come back.
-- **Exorcist sheet** - laid out like the official sheet, and fully editable:
-  text saves as you type, every number has a - / + stepper, and agenda,
-  abilities, blasphemies, powers, sin marks and kit can be added or removed
-  freely. Rule problems show as warnings, never locks. Tap an underlined
-  term for its rule. Duplicate, Export and Delete live at the top.
-- **Play** - during a hunt. **The site never rolls dice**: roll at the
-  table where the Admin can see, and enter what you rolled. It covers
-  starting the hunt (Oilfinger's d3, Jack!), taking stress (roll-over into
-  injuries, Painkiller, Iron Soul with your d6, nonlethal, brink of death,
-  instant death and defying fate), psyche bursts or the 1d3 sin you rolled,
-  the dice pool (tells you how many dice to roll, then records your
-  successes and spends the burst or Divine Agony), hooks, afflictions, kit
-  points and consumables, resting with your 2d3, and the sin overflow check
-  and sin mark with your d6s. Every value can also be set by hand, and those
-  changes are logged.
-- **Between missions** - end of session (the four XP questions, advances
-  when the track fills), spending advances (only legal options, replacing
-  one at the cap of 5), closing the mission (pay, halve sin, missions
-  survived and CAT, full reset) and the kit shop.
+- **Exorcist sheet** - one page laid out like the official editable PDF
+  (CAINsheets 1.4), changed directly like the PDF: click a bubble or box to
+  fill up to it (click the last filled one to clear it), type into any
+  field. Stress, injuries, hooks, skills, improvements, pathos, XP,
+  advances, CAT (click a triangle), bursts, kit points and sin all work
+  that way. Agenda, abilities, powers, sin marks and kit can be changed or
+  removed in place. Rule problems show as warnings, never locks. Clicks on
+  tracked numbers are logged so the Admin can follow along.
+- **Action bar** above the sheet, for things a website does better than a
+  PDF. **The site never rolls dice**: roll at the table where the Admin can
+  see, and enter what you rolled.
+  - **+ XP**: the end-of-session questions, or +1 XP.
+  - **Spend advance**: only the options the rules allow, replacing one at
+    the cap of 5.
+  - **Add ability / Add power**: pick from the cards, optionally using up
+    an advance.
+  - **Take stress**: roll-over into injuries, Painkiller, Iron Soul with
+    your d6, nonlethal, brink of death, instant death and defying fate.
+  - **Dice pool**: how many dice to roll; records your successes, spends
+    the burst (or the 1d3 sin you rolled) or Divine Agony.
+  - **Rest**: enter your 2d3, then put each on bursts, stress or a hook.
+  - **Mission**: close one (pay, halve sin, missions survived, CAT, reset)
+    or start a new one (Oilfinger's d3, Jack!).
+  - **Kit & shop**: pull out kit, use consumables, buy with scrip.
+  - **Log**: everything recorded.
+
+  Sin overflow, instant death and new sin marks appear as alerts at the top
+  when they happen.
 - **Doctrine** - browse all loaded content. Pick a CAT and every CAT-scaled
   value in the text resolves to it (hover a highlighted value to see where
   it came from).
@@ -61,8 +70,8 @@ js/hunt.js        play and between-mission actions (no DOM)
 js/ui.js          DOM helpers, glossary popover
 js/store.js       saved characters and the registration draft
 js/registration.js character creation steps
-js/sheet.js       the exorcist sheet and the character screen's tabs
-js/play.js        Play and Between missions views
+js/sheet.js       the one-page exorcist sheet and the character screen
+js/actions.js     the action bar, its panels, and alerts
 js/app.js         theme, routing, Registry and Doctrine screens
 data/*.js         rules content: core, agendas, blasphemies, sin marks, kit
 tests/            rules checks page

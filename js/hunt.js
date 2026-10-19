@@ -19,6 +19,9 @@ window.CAIN = window.CAIN || {};
 		if (!Array.isArray(ch.log)) ch.log = [];
 		if (ch.weaponLook === undefined) ch.weaponLook = "";
 		if (ch.notes === undefined) ch.notes = "";
+		if (ch.kitNotes === undefined) ch.kitNotes = "";
+		// Bursts start full: a fresh hunt holds null until first shown.
+		if (ch.hunt.bursts === null) ch.hunt.bursts = R.derived(ch).psycheBursts;
 		return ch;
 	}
 
@@ -502,6 +505,14 @@ window.CAIN = window.CAIN || {};
 		}
 	}
 
+	// Adds XP outside the end-of-session questions.
+	function addXpOnly(ch, n) {
+		var events = [];
+		log(ch, events, "+" + n + " XP.");
+		addXp(ch, n, events);
+		return { events: events };
+	}
+
 	// answers: { survived, firstItem, boldItem, harmed } booleans.
 	function endSession(ch, answers) {
 		var events = [];
@@ -643,6 +654,7 @@ window.CAIN = window.CAIN || {};
 		gainSinMark: gainSinMark,
 		setMarkSkill: setMarkSkill,
 		endSession: endSession,
+		addXpOnly: addXpOnly,
 		spendAdvance: spendAdvance,
 		canBuy: canBuy,
 		buy: buy,
