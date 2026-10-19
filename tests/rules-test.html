@@ -41,6 +41,7 @@
 <script src="../data/kit.js"></script>
 <script src="../data/virtues.js"></script>
 <script src="../data/ishmael.js"></script>
+<script src="../data/harpocrates.js"></script>
 <script src="../data/prompts.js"></script>
 <script src="../js/rules.js"></script>
 <script src="../js/hunt.js"></script>
@@ -673,7 +674,8 @@
 		group("Fan-made content");
 		["agendas", "blasphemies", "virtues", "kit"].forEach(function (k) {
 			var fan = CAIN[k].filter(function (x) { return x.source; });
-			check("Ishmael " + k + " are loaded and labelled", fan.length > 0 && fan.every(function (x) { return x.source === "ishmael" && CAIN.sources[x.source].fan; }));
+			check("fan " + k + " are loaded and name a known fan book", fan.length > 0 && fan.every(function (x) { return CAIN.sources[x.source] && CAIN.sources[x.source].fan; }));
+			check("Harpocrates " + k + " are loaded", fan.some(function (x) { return x.source === "harpocrates"; }));
 		});
 		check("core book entries have no source", CAIN.agendas.concat(CAIN.blasphemies).filter(function (x) { return !x.source; }).length === 28);
 		check("Ishmael blasphemies have no numeral and don't clash with core ids", CAIN.blasphemies.filter(function (b) { return b.source; }).every(function (b) { return !b.numeral; }));
@@ -681,6 +683,10 @@
 		H.normalize(fanAgenda);
 		fanAgenda.blasphemies.push({ id: "pandora", powers: ["sensorial"] });
 		eq("taking an Ishmael blasphemy counts like any other (sin cap -1)", R.derived(fanAgenda).sinCap, R.derived(guardianTension()).sinCap - 1);
+
+		var xk = CAIN.blasphemies.filter(function (b) { return b.group === "XK"; });
+		eq("four XK blasphemies, each with the 66-segment XK talisman", xk.map(function (b) { return b.trackers && b.trackers[0].segments; }), [66, 66, 66, 66]);
+		check("XK and LVL 4 blasphemies need Admin approval", CAIN.blasphemies.filter(function (b) { return b.group === "XK" || b.group === "LVL 4 Clearance"; }).every(function (b) { return b.requiresApproval; }));
 
 		group("Virtues");
 		CAIN.virtues.forEach(function (v) {

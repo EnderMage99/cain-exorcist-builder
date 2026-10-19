@@ -5,5 +5,6 @@ window.CAIN = window.CAIN || {};
 CAIN.sources = {
 	core: { name: "CAIN 1.4.5", author: "Tom Bloom / CHASM" },
 	gff: { name: "Games for Freaks, issue 1", author: "Tom Bloom / CHASM" },
-	ishmael: { name: "The Ishmael Protocol", short: "Ishmael", author: "Sib_PHI", version: "1.2.2", fan: true }
+	ishmael: { name: "The Ishmael Protocol", short: "Ishmael", author: "Sib_PHI", version: "1.2.2", fan: true },
+	harpocrates: { name: "The Harpocrates Dossier", short: "Harpocrates", author: "SvelteSnorlax (Dillon Nguyen)", version: "3.1", fan: true }
 };

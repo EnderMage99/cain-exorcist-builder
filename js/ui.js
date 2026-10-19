@@ -234,7 +234,10 @@ window.CAIN = window.CAIN || {};
 		var c2 = /^#[0-9a-f]{6}$/i.test(t.color2 || "") ? t.color2 : c;
 		var title = luminance(c2) > luminance(c) ? c2 : c;
 		if (luminance(title) < 45) title = "#c9c4b8";
-		return { class: "blas-themed" + (t.dark ? " blas-dark" : "") + sourceClass(b), style: "--blas:" + c + ";--blas-2:" + c2 + ";--blas-title:" + title };
+		// Very light accents (white, pale grey) can't be read on paper; text uses the
+		// darker second colour for those.
+		var text = luminance(c) > 180 && luminance(c2) < luminance(c) ? c2 : c;
+		return { class: "blas-themed" + (t.dark ? " blas-dark" : "") + sourceClass(b), style: "--blas:" + c + ";--blas-2:" + c2 + ";--blas-title:" + title + ";--blas-text:" + text };
 	}
 
 	// An agenda drawn like its card in the rulebook: the paper it's printed on,
@@ -370,11 +373,16 @@ window.CAIN = window.CAIN || {};
 		if (!src || !src.fan) return null;
 		// Inside a card that already has the fan-made border and tab, CSS hides the
 		// short badge and the "Fan-made:" prefix, leaving just the credit.
-		return h("span", { class: "fan-badge" + (short ? " short" : " full"), title: "Fan-made content from " + src.name + " by " + src.author + ". Not official CAIN material." },
+		return h("span", { class: "fan-badge src-" + src.id + (short ? " short" : " full"), title: "Fan-made content from " + src.name + " by " + src.author + ". Not official CAIN material." },
 			h("span", { class: "fan-prefix" }, "Fan-made: "), short ? (src.short || src.name) : src.name + ", by " + src.author);
 	}
 
 	CAIN.kitPicture = kitPicture;
+	// Some fan blasphemies need the Admin's say-so before an exorcist takes them.
+	function approvalTag(entry) {
+		return entry && entry.requiresApproval ? h("span", { class: "approval-tag", title: "This book asks you to agree it with your Admin before taking it." }, "Admin approval needed") : null;
+	}
+	CAIN.approvalTag = approvalTag;
 	CAIN.sourceOf = sourceOf;
 	CAIN.blasExtras = blasExtras;
 	CAIN.sourceClass = sourceClass;

@@ -550,6 +550,7 @@ window.CAIN = window.CAIN || {};
 							CAIN.powerTags(p, d.cat),
 							CAIN.richText(p.text, d.cat)));
 				})),
+				self.trackers(b, owned),
 				CAIN.blasExtras(b, d.cat));
 		});
 		var blast = CAIN.blast;
@@ -566,6 +567,50 @@ window.CAIN = window.CAIN || {};
 				CAIN.powerHead({ name: blast.name, burst: blast.burst }),
 				CAIN.powerTags(blast, d.cat),
 				CAIN.richText(blast.text, d.cat)));
+	};
+
+	// Segment talismans a blasphemy carries, like the XK-Class talisman. Sized by
+	// a number or CAT token; the slashes are kept on the owned blasphemy.
+	// milestones: [{ at, text }] mark events along the track; names: choices the
+	// talisman can be named after (an XK-Scenario), kept in owned.trackNames.
+	Sheet.prototype.trackers = function (b, owned) {
+		var self = this;
+		var d = this.d;
+		if (!b.trackers || !b.trackers.length) return null;
+		function count(v, max) {
+			var n = parseInt(R.resolveText(String(v === undefined ? 0 : v), d.cat), 10);
+			return isNaN(n) ? 0 : Math.max(0, Math.min(max || 99, n));
+		}
+		if (!owned.tracks) owned.tracks = {};
+		if (!owned.trackNames) owned.trackNames = {};
+		return h("div", { class: "blas-trackers" }, b.trackers.map(function (t) {
+			var size = count(t.segments);
+			var filled = owned.tracks[t.id] === undefined ? Math.min(size, count(t.start)) : Math.min(size, owned.tracks[t.id]);
+			var named = owned.trackNames[t.id] || "";
+			var marks = (t.milestones || []).filter(function (m) { return m.at <= size; });
+			var reached = marks.filter(function (m) { return filled >= m.at; });
+			var next = marks.filter(function (m) { return filled < m.at; })[0];
+			var pips = bubbles(filled, size, { shape: "box", label: t.name + " talisman" },
+				self.tracked((named || t.name) + " talisman", function () { return filled; }, function (v) { owned.tracks[t.id] = v; }));
+			// Event markers sit after their box: a notch and the slash count.
+			marks.forEach(function (m) {
+				var box = pips.children[m.at - 1];
+				if (box) { box.classList.add("milestone"); box.setAttribute("data-at", m.at); box.title = m.at + " slashes: " + m.text; }
+			});
+			return h("div", { class: "blas-tracker" + (marks.length ? " has-milestones" : "") },
+				h("div", { class: "blas-tracker-head" },
+					h("span", { class: "blas-tracker-name" }, named ? t.name + ": " + named : t.name),
+					t.names && self.editable ? CAIN.select(null, named, t.names.map(function (n) { return { value: n, label: n }; }), function (v) {
+						var before = named || "unnamed";
+						owned.trackNames[t.id] = v;
+						self.change(t.name + " named", before, v || "unnamed");
+					}, { placeholder: "Name it after...", aria: "Name the " + t.name + " talisman" }) : null,
+					h("span", { class: "label" }, filled + " / " + size + " slashes")),
+				pips,
+				reached.length ? h("p", { class: "tracker-event reached" }, h("strong", null, reached[reached.length - 1].at + " slashes: "), reached[reached.length - 1].text) : null,
+				next ? h("p", { class: "tracker-event" }, h("strong", null, "Next at " + next.at + ": "), next.text) : null,
+				t.text ? h("details", { class: "blas-extra" }, h("summary", null, "How this talisman works"), CAIN.richText(t.text, d.cat)) : null);
+		}));
 	};
 
 	// Virtue bonds: any number tracked, each with its rank (0-III), the one being

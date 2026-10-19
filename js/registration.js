@@ -240,6 +240,7 @@ window.CAIN = window.CAIN || {};
 						h("div", { class: "blas-intro-text" },
 							h("div", { class: "card-head" }, h("h2", { class: "blas-title" }, b.name), h("span", { class: "label" }, selected ? count + " / 2 powers" : (b.numeral ? "Blasphemy " + b.numeral : b.group || "Blasphemy"))),
 							CAIN.sourceBadge(b),
+							CAIN.approvalTag(b),
 							h("p", { class: "note" }, b.summary))),
 					h("div", { class: "passive" },
 						h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),

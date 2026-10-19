@@ -44,7 +44,8 @@ window.CAIN = window.CAIN || {};
 		{ id: "M8", text: "All agendas and blasphemies, book colours", done: true },
 		{ id: "M9", text: "All sin marks and kit", done: true },
 		{ id: "M10", text: "Virtues (Games for Freaks)", done: true },
-		{ id: "M11", text: "Fan content: The Ishmael Protocol", done: true }
+		{ id: "M11", text: "Fan content: The Ishmael Protocol", done: true },
+		{ id: "M12", text: "Fan content: The Harpocrates Dossier", done: true }
 	];
 
 	// Import state for the registry: result messages, characters waiting on a
@@ -287,6 +288,7 @@ window.CAIN = window.CAIN || {};
 						h("h2", { class: "blas-title" }, b.name),
 						h("span", { class: "label" }, b.numeral ? "Blasphemy " + b.numeral : b.powers ? (b.group || "Blasphemy") : "All exorcists")),
 					CAIN.sourceBadge(b),
+					CAIN.approvalTag(b),
 					b.flavor ? h("p", { class: "note" }, b.flavor) : null)),
 			b.passive ? h("div", { class: "passive" },
 				h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
@@ -339,7 +341,13 @@ window.CAIN = window.CAIN || {};
 				h("p", null, "Virtues are CAIN's six living weapons of last resort, background mentors your exorcist can study under or emulate between missions. At the start of any mission, pick a virtue to bond with: you gain its rank 0 ability at once. Survive the mission and the bond rises by 1, to III, granting each ability in turn. Bonds are permanent, and you can bond with a different virtue each mission, so you can hold several."),
 				h("p", null, CAIN.virtueRules.stricture),
 				h("p", null, CAIN.virtueRules.highBlasphemy)),
-			CAIN.virtues.map(function (v) { return virtueCard(v, cat); }));
+			CAIN.virtues.map(function (v) { return virtueCard(v, cat); }),
+			(CAIN.virtueSections || []).map(function (sec) {
+				return h("article", { class: "card" + CAIN.sourceClass(sec) },
+					h("div", { class: "card-head" }, h("h2", null, sec.name), h("span", { class: "label" }, "Virtue rules")),
+					CAIN.sourceBadge(sec),
+					richText(sec.text, cat));
+			}));
 	}
 
 	function kitEntry(k) {
@@ -431,7 +439,8 @@ window.CAIN = window.CAIN || {};
 		var shown = 0;
 		[].forEach.call(body.querySelectorAll(".grid > .card"), function (card) {
 			var fan = card.classList.contains("fan-made");
-			var srcOk = doctrine.src === "fan" ? fan : doctrine.src === "core" ? !fan : true;
+			var want = doctrine.src || "all";
+			var srcOk = want === "all" ? true : want === "fan" ? fan : want === "core" ? !fan : card.classList.contains("src-" + want);
 			var parts = [].slice.call(card.querySelectorAll(".entries > .entry, .passive, .virtue-bonds > li"));
 			var head = [].slice.call(card.querySelectorAll(".card-head, .ag-head, :scope > .note, .ag-items"));
 			var whole = !words.length || head.some(hit);
@@ -456,7 +465,7 @@ window.CAIN = window.CAIN || {};
 		applySearch(body, status);
 		var sources = h("div", { class: "doc-source", role: "group", "aria-label": "Show content from" },
 			h("span", { class: "label" }, "Show"),
-			[["all", "All books"], ["core", "Official only"], ["fan", "Fan-made only"]].map(function (o) {
+			[["all", "All books"], ["core", "Official only"]].concat(Object.keys(CAIN.sources).filter(function (id) { return CAIN.sources[id].fan; }).map(function (id) { return [id, (CAIN.sources[id].short || CAIN.sources[id].name) + " (fan)"]; })).map(function (o) {
 				return h("button", { class: "chip", type: "button", "aria-pressed": String((doctrine.src || "all") === o[0]), onclick: function () { setDoctrine({ src: o[0] }); } }, o[1]);
 			}));
 		return h("div", { class: "doc-search-row" }, input, status, sources);

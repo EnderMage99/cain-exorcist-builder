@@ -110,6 +110,7 @@ Text can hold CAT tokens: `{cat}`, `{cat+2}`, `{2+cat}`, `{halfcat}`, and
 table lookups like `{cat:area}` or `{halfcat:size}`.
 
 The Ishmael Protocol is a fan supplement by Sib_PHI, included here unofficially;
-its art is in `img/ishmael/`.
+its art is in `img/ishmael/`. The Harpocrates Dossier is a fan
+supplement by SvelteSnorlax (Dillon Nguyen); its art is in `img/harpocrates/`.
 CAIN and Games for Freaks are by Tom Bloom / CHASM. This is an unofficial fan tool; the sheet
 artwork in `img/sheet/` is from the official CAIN character sheet.

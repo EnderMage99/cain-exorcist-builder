@@ -315,6 +315,16 @@ extra rules (Buddy, Drifters, Weapon Mods, Berserk), the virtue Patience, and
 border everywhere they appear, are labelled in pick lists, and stay out of the
 Quick exorcist. Doctrine filters by All / Official / Fan-made.
 
+### M12 - Fan content: The Harpocrates Dossier (done)
+
+`data/harpocrates.js` (SvelteSnorlax, v3.1): 21 agendas, 22 blasphemies with
+their hooks and side rules, 3 virtues, the Cardinal Virtuoso affinity rules,
+29 kit items and 10 gear/rules sections. XK and LVL 4 blasphemies are tagged
+as needing Admin approval. Blasphemies can carry `trackers` (segment
+talismans with milestones and names); the XK blasphemies use one for the
+66-slash XK-Class talisman. Fan borders are now per book via CSS variables
+(Ishmael red, Harpocrates green), and Doctrine filters by each fan book.
+
 ## Next
 
 1. Optional Admin tools: tension and pressure talismans, a hunt tracker.
