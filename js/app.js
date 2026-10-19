@@ -300,7 +300,8 @@ window.CAIN = window.CAIN || {};
 	}
 
 	function kitEntry(k) {
-		return h("li", { class: "entry" },
+		return h("li", { class: "entry" + (k.image ? " has-pic" : "") },
+			CAIN.kitPicture(k),
 			h("div", { class: "entry-name" }, k.name),
 			h("div", { class: "tags" },
 				h("span", { class: "tag" }, k.scrip + " scrip"),

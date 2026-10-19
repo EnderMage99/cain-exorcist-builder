@@ -372,6 +372,7 @@ window.CAIN = window.CAIN || {};
 			var consumable = item.tags.indexOf("Consumable") >= 0;
 			items.push(h("li", { class: "kit-bought" },
 				h("span", null,
+					CAIN.kitPicture(item, "kit-pic-sm"),
 					(item.name + (item.kp === null ? " (permanent)" : " (" + item.kp + " KP)") + (consumable ? ", consumable" : "") + (!self.editable && p.count > 1 ? " x" + p.count : "")).toUpperCase(),
 					item.custom && item.text ? h("span", { class: "kit-desc" }, item.text) : null),
 				self.editable ? h("span", { class: "row-tools" },

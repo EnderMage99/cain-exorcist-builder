@@ -2,6 +2,7 @@
 // kp: kit points to pull it out on a mission (null: not pulled out, like clothing
 // or quarters). Kits are pulled one item at a time for 1 KP, as the book says.
 // modifiers change derived stats; use.healStress heals when a consumable is used.
+// image: the item's drawing from the book (only Occult / Medical items have one).
 // Service weapons are cosmetic; their CAT upgrade lives in CAIN.core.weaponUpgrade.
 window.CAIN = window.CAIN || {};
 
@@ -78,27 +79,27 @@ CAIN.kit = [
 		text: "Official kit of junior exorcists working as door watchmen for extremely sensitive TEMERITY facilities built to contain forces beyond human comprehension. Highly vetted. Spend 1 KP to pull out one of the following: Holy text (2 KP), prayer beads, standard issue great dagger, suicide pill, scented oil, antique censer." },
 
 	// Occult / Medical: items cultivated by TEMERITY for field use.
-	{ id: "qlippoth", name: "Qlippoth", category: "Occult / Medical", scrip: 3, kp: 2, tags: ["Consumable"],
+	{ id: "qlippoth", name: "Qlippoth", category: "Occult / Medical", image: "img/kit/qlippoth.png", scrip: 3, kp: 2, tags: ["Consumable"],
 		text: "Cursed fruit of the Ymir tree. Crush to regain 1d3 psyche burst." },
-	{ id: "green-herb", name: "Green Herb", category: "Occult / Medical", scrip: 2, kp: 1, tags: ["Consumable", "Focus"],
+	{ id: "green-herb", name: "Green Herb", category: "Occult / Medical", image: "img/kit/green-herb.png", scrip: 2, kp: 1, tags: ["Consumable", "Focus"],
 		text: "Consume to heal 1d3 stress.",
 		use: { healStress: { dice: "1d3", plus: 0 } } },
-	{ id: "red-herb", name: "Red Herb", category: "Occult / Medical", scrip: 4, kp: 2, tags: ["Consumable", "Focus"],
+	{ id: "red-herb", name: "Red Herb", category: "Occult / Medical", image: "img/kit/red-herb.png", scrip: 4, kp: 2, tags: ["Consumable", "Focus"],
 		text: "Consume to heal 1d3+3 stress.",
 		use: { healStress: { dice: "1d3", plus: 3 } } },
-	{ id: "adrenal-pill", name: "Adrenal Pill", category: "Occult / Medical", scrip: 3, kp: 1, tags: ["Consumable"],
+	{ id: "adrenal-pill", name: "Adrenal Pill", category: "Occult / Medical", image: "img/kit/adrenal-pill.png", scrip: 3, kp: 1, tags: ["Consumable"],
 		text: "Consume to heal 2d3 stress, then reduce max stress by 1 for the rest of the mission. Can be used while under duress.",
 		use: { healStress: { dice: "2d3", plus: 0 } } },
-	{ id: "seed-of-the-ymir-tree", name: "Seed of the Ymir Tree", category: "Occult / Medical", scrip: 4, kp: 2, tags: ["Consumable"],
+	{ id: "seed-of-the-ymir-tree", name: "Seed of the Ymir Tree", category: "Occult / Medical", image: "img/kit/seed-of-the-ymir-tree.png", scrip: 4, kp: 2, tags: ["Consumable"],
 		text: "During a rest, you can spend two resting dice to heal an injury, removing it." },
-	{ id: "black-blood-medicine", name: "Black Blood Medicine", category: "Occult / Medical", scrip: 6, kp: 2, tags: ["Consumable"],
+	{ id: "black-blood-medicine", name: "Black Blood Medicine", category: "Occult / Medical", image: "img/kit/black-blood-medicine.png", scrip: 6, kp: 2, tags: ["Consumable"],
 		text: "Consume on a dead exorcist that died in the same scene and has a (relatively) intact body to revive them. They come back with 2 injuries and permanently mark 1 sin box. All actions are hard for them until a rest." },
-	{ id: "white-body", name: "White Body", category: "Occult / Medical", scrip: 2, kp: 1, tags: ["Consumable"],
+	{ id: "white-body", name: "White Body", category: "Occult / Medical", image: "img/kit/white-body.png", scrip: 2, kp: 1, tags: ["Consumable"],
 		text: "Condensed sinseed of a large sin. May break to clear an affliction." },
-	{ id: "black-body", name: "Black Body", category: "Occult / Medical", scrip: 3, kp: 1, tags: ["Consumable"],
+	{ id: "black-body", name: "Black Body", category: "Occult / Medical", image: "img/kit/black-body.png", scrip: 3, kp: 1, tags: ["Consumable"],
 		text: "Condensed sinseed of a large sin. Can be broken to lower sin by 3d3, but permanently lowers sin overflow cap by 1." },
-	{ id: "cursed-salt", name: "Cursed Salt", category: "Occult / Medical", scrip: 2, kp: 1, tags: ["Consumable"],
+	{ id: "cursed-salt", name: "Cursed Salt", category: "Occult / Medical", image: "img/kit/cursed-salt.png", scrip: 2, kp: 1, tags: ["Consumable"],
 		text: "When spread over a room sized area, prevents humans from entering until pressure increases." },
-	{ id: "ambrosia", name: "Ambrosia", category: "Occult / Medical", scrip: 5, kp: 1, tags: ["Consumable"],
+	{ id: "ambrosia", name: "Ambrosia", category: "Occult / Medical", image: "img/kit/ambrosia.png", scrip: 5, kp: 1, tags: ["Consumable"],
 		text: "Consume to gain 1 max and current psyche burst. Effect does not stack and lasts until the mission is over." }
 ];

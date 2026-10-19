@@ -2389,6 +2389,13 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 
 .icon-choice[aria-pressed="true"] { border-color: var(--stamp); outline: 3px solid var(--stamp); outline-offset: 1px; }
 
+/* Kit drawings from the book (Occult / Medical). */
+.entry.has-pic { display: flow-root; }
+
+.kit-pic { float: right; width: 64px; height: 84px; margin: 0 0 6px 12px; opacity: 0.9; }
+
+.kit-pic-sm { float: none; display: inline-block; width: 28px; height: 34px; margin: 0 8px 0 0; vertical-align: middle; }
+
 /* Kit catalogue in the Kit panel: columns on wide screens. */
 @media (min-width: 1000px) {
 	.kit-catalog { columns: 300px 3; column-gap: 18px; }

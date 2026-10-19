@@ -621,7 +621,8 @@ window.CAIN = window.CAIN || {};
 			var owned = ch.purchases.filter(function (p) { return p.item === item.id; })[0];
 			var consumable = item.tags.indexOf("Consumable") >= 0;
 			var listed = owned && !consumable;
-			return h("li", { class: "entry" },
+			return h("li", { class: "entry" + (item.image ? " has-pic" : "") },
+				CAIN.kitPicture(item),
 				h("div", { class: "entry-name" }, item.name, owned ? h("span", { class: "tag" }, owned.count > 1 ? "Have x" + owned.count : "Have it") : null),
 				h("div", { class: "tags" },
 					item.kp !== null ? h("span", { class: "tag" }, item.kp + " KP") : h("span", { class: "tag" }, "Permanent"),

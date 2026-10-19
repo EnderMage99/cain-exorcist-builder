@@ -302,6 +302,13 @@ window.CAIN = window.CAIN || {};
 			}));
 	}
 
+	// A kit item's drawing from the book, as black ink that follows the theme.
+	function kitPicture(item, cls) {
+		if (!item || !/^img\/kit\/[a-z-]+\.png$/.test(item.image || "")) return null;
+		return h("span", { class: "art kit-pic" + (cls ? " " + cls : ""), "aria-hidden": "true" }, h("img", { src: item.image, alt: "", draggable: "false" }));
+	}
+
+	CAIN.kitPicture = kitPicture;
 	CAIN.powerHead = powerHead;
 	CAIN.agendaIcon = agendaIcon;
 	CAIN.blasphemyIcon = blasphemyIcon;
