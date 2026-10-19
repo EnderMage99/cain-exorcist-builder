@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Rules Checks</title>
+<style>
+	:root { --bg: #ece8df; --ink: #141414; --muted: #5d5a54; --pass: #1f6b3a; --fail: #a3161b; --line: #c9c3b6; }
+	@media (prefers-color-scheme: dark) {
+		:root { --bg: #111; --ink: #e8e4da; --muted: #9a958a; --pass: #6fcf8f; --fail: #ff6b6b; --line: #333; }
+	}
+	body { margin: 0; padding: 24px 16px; background: var(--bg); color: var(--ink); font: 15px/1.5 "Courier New", monospace; }
+	main { max-width: 860px; margin: 0 auto; }
+	h1 { font: 700 22px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 4px; }
+	#summary { font-weight: 700; margin: 0 0 20px; }
+	#summary.pass { color: var(--pass); }
+	#summary.fail { color: var(--fail); }
+	h2 { font: 700 13px/1.2 system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 4px; margin: 20px 0 6px; }
+	ul { list-style: none; margin: 0; padding: 0; }
+	li { padding: 2px 0; overflow-wrap: anywhere; }
+	li.pass::before { content: "PASS "; color: var(--pass); font-weight: 700; }
+	li.fail::before { content: "FAIL "; color: var(--fail); font-weight: 700; }
+	li.fail { color: var(--fail); }
+	a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+	<h1>CAIN rules checks</h1>
+	<p id="summary">Running...</p>
+	<div id="results"></div>
+	<p><a href="../index.html">Back to the registry</a></p>
+</main>
+
+<script src="../data/core.js"></script>
+<script src="../data/agendas.js"></script>
+<script src="../data/blasphemies.js"></script>
+<script src="../data/sinmarks.js"></script>
+<script src="../data/kit.js"></script>
+<script src="../js/rules.js"></script>
+<script>
+(function () {
+	var R = CAIN.rules;
+	var groups = [];
+	var current = null;
+	var passed = 0;
+	var failed = 0;
+
+	function group(name) { current = { name: name, results: [] }; groups.push(current); }
+
+	function check(label, ok, detail) {
+		current.results.push({ label: label + (ok || detail === undefined ? "" : " -> " + detail), ok: !!ok });
+		if (ok) passed++; else failed++;
+	}
+
+	function eq(label, actual, expected) {
+		var ok = JSON.stringify(actual) === JSON.stringify(expected);
+		check(label, ok, "got " + JSON.stringify(actual) + ", expected " + JSON.stringify(expected));
+	}
+
+	// An rng that yields fixed d6 faces in order.
+	function faces(list) {
+		var i = 0;
+		return function () { var f = list[i++ % list.length]; return (f - 0.5) / 6; };
+	}
+
+	// A legal fresh character.
+	function build(agendaId, abilityId, blasphemyId, powers) {
+		var ch = R.newCharacter();
+		ch.name = "Test Exorcist";
+		ch.skills.force = 2;
+		ch.skills.surveillance = 2;
+		ch.skills.covert = 0;
+		ch.skills.negotiation = 0;
+		ch.skills.authority = 0;
+		ch.agenda = agendaId;
+		ch.agendaAbilities = [{ agenda: agendaId, ability: abilityId }];
+		ch.blasphemies = [{ id: blasphemyId, powers: powers }];
+		return ch;
+	}
+
+	function guardianTension() { return build("guardian", "painkiller", "tension", ["aegis", "fortress"]); }
+	function firebugGate() { return build("firebug", "oilfinger", "gate", ["tear", "maze"]); }
+
+	try {
+		group("Data integrity");
+		var ids = {};
+		CAIN.agendas.forEach(function (a) {
+			check("agenda " + a.id + " has 2 items, 1 bold", a.items.length === 2 && a.items.filter(function (i) { return i.bold; }).length === 1);
+			check("agenda " + a.id + " has 5 abilities", a.abilities.length === 5);
+			a.abilities.forEach(function (ab) { ids[a.id + "/" + ab.id] = (ids[a.id + "/" + ab.id] || 0) + 1; });
+		});
+		var bursts = ["required", "onSuccess", "multiple", "none"];
+		CAIN.blasphemies.forEach(function (b) {
+			check("blasphemy " + b.id + " has a passive", !!(b.passive && b.passive.text));
+			check("blasphemy " + b.id + " has 5+ powers", b.powers.length >= 5);
+			b.powers.forEach(function (p) {
+				ids[b.id + "/" + p.id] = (ids[b.id + "/" + p.id] || 0) + 1;
+				check(b.id + "/" + p.id + " has a valid burst rule", bursts.indexOf(p.burst) >= 0, p.burst);
+				check(b.id + "/" + p.id + " has duration and range tags", !!(p.tags.duration && p.tags.range));
+			});
+		});
+		CAIN.sinMarks.forEach(function (m) {
+			eq("sin mark " + m.id + " abilities roll 1-6", m.abilities.map(function (a) { return a.roll; }), [1, 2, 3, 4, 5, 6]);
+		});
+		check("content ids are unique", Object.keys(ids).every(function (k) { return ids[k] === 1; }));
+		check("10 skills", CAIN.core.skills.length === 10);
+
+		// Every token in every text must resolve at every CAT.
+		var texts = [CAIN.blast.text];
+		CAIN.blasphemies.forEach(function (b) {
+			texts.push(b.passive.text);
+			b.powers.forEach(function (p) { texts.push(p.text, p.tags.range, p.talisman || ""); });
+		});
+		CAIN.sinMarks.forEach(function (m) { m.abilities.forEach(function (a) { texts.push(a.text); }); });
+		var leftovers = [];
+		texts.forEach(function (t) {
+			for (var cat = 0; cat <= 7; cat++) {
+				if (/[{}]/.test(R.resolveText(t, cat))) leftovers.push(t.slice(0, 40));
+			}
+		});
+		eq("every CAT token resolves at CAT 0-7", leftovers, []);
+
+		group("CAT and PSYCHE");
+		eq("0 missions -> CAT 1", R.catFromMissions(0), 1);
+		eq("1 mission -> CAT 2", R.catFromMissions(1), 2);
+		eq("2 missions -> CAT 3", R.catFromMissions(2), 3);
+		eq("3 missions -> CAT 3", R.catFromMissions(3), 3);
+		eq("4 missions -> CAT 4", R.catFromMissions(4), 4);
+		eq("6 missions -> CAT 4", R.catFromMissions(6), 4);
+		eq("7 missions -> CAT 5", R.catFromMissions(7), 5);
+		eq("20 missions -> CAT 5", R.catFromMissions(20), 5);
+		eq("PSYCHE at CAT 1-5", [1, 2, 3, 4, 5].map(R.psycheFromCat), [1, 1, 2, 2, 3]);
+		eq("next CAT at 0 missions is 1", R.nextCatAt(0), 1);
+		eq("next CAT at 4 missions is 7", R.nextCatAt(4), 7);
+		eq("no next CAT at CAT 5", R.nextCatAt(7), null);
+		var vet = guardianTension();
+		vet.missionsSurvived = 4;
+		eq("derived CAT/PSYCHE at 4 missions", [R.derived(vet).cat, R.derived(vet).psyche], [4, 2]);
+
+		group("CAT text");
+		eq("{cat:area} at CAT 1", R.resolveText("{cat:area}", 1), "a few people");
+		eq("{cat:area} at CAT 2", R.resolveText("{cat:area}", 2), "an entire room");
+		eq("{cat+2:range} caps at CAT 7", R.resolveText("{cat+2:range}", 7), "over the horizon");
+		eq("{halfcat:size} at CAT 3", R.resolveText("{halfcat:size}", 3), "a large animal");
+		eq("{halfcat} at CAT 5", R.resolveText("{halfcat}", 5), "3");
+		eq("{2+cat} at CAT 3 (Fortress talisman)", R.resolveText(R.power("tension", "fortress").talisman, 3), "5");
+		eq("{cat+1} at CAT 2 (Bloom limbs)", R.resolveText("{cat+1}", 2), "3");
+		eq("unknown token is left alone", R.resolveText("{nonsense}", 3), "{nonsense}");
+		var seg = R.resolveSegments("up to {cat:size}.", 4);
+		eq("segments mark the token", [seg[1].dim, seg[1].level, seg[1].text], ["size", 4, "a large vehicle"]);
+
+		group("Creation validation");
+		eq("Guardian/Tension is legal", R.validateCreation(guardianTension()), []);
+		eq("Firebug/Gate is legal", R.validateCreation(firebugGate()), []);
+		var bad = R.newCharacter();
+		bad.name = "x";
+		check("all skills at 1 is rejected", R.validateCreation(bad).some(function (p) { return p.step === "skills"; }));
+		bad = guardianTension();
+		bad.skills.connection = 2;
+		check("three skills at 2 is rejected", R.validateCreation(bad).some(function (p) { return p.step === "skills"; }));
+		bad = guardianTension();
+		bad.agendaAbilities.push({ agenda: "guardian", ability: "castle" });
+		check("two agenda abilities is rejected", R.validateCreation(bad).some(function (p) { return p.step === "agenda"; }));
+		bad = guardianTension();
+		bad.agendaAbilities = [{ agenda: "firebug", ability: "jack" }];
+		check("ability from another agenda is rejected", R.validateCreation(bad).some(function (p) { return p.step === "agenda"; }));
+		bad = guardianTension();
+		bad.blasphemies[0].powers.push("stasis");
+		check("three powers is rejected", R.validateCreation(bad).some(function (p) { return p.step === "blasphemy"; }));
+		bad = guardianTension();
+		bad.blasphemies[0].powers = ["aegis", "tear"];
+		check("power from another blasphemy is rejected", R.validateCreation(bad).some(function (p) { return p.step === "blasphemy"; }));
+		bad = guardianTension();
+		bad.name = "  ";
+		check("blank name is rejected", R.validateCreation(bad).some(function (p) { return p.step === "concept"; }));
+		eq("fresh legal character passes career validation", R.validateCharacter(guardianTension()), []);
+		bad = guardianTension();
+		bad.skills.force = 3;
+		check("skill raised without an improvement is rejected", R.validateCharacter(bad).length > 0);
+		bad.skillImprovements = 1;
+		eq("skill raised with an improvement is fine", R.validateCharacter(bad), []);
+
+		group("Derived stats and modifiers");
+		var gt = R.derived(guardianTension());
+		eq("Guardian/Tension base stats", [gt.kitPoints, gt.maxStress, gt.maxInjuries, gt.sinCap, gt.xpToAdvance, gt.psycheBursts, gt.restDice], [5, 6, 3, 10, 4, 3, 2]);
+		var fg = firebugGate();
+		eq("Gate Pocket gives 6 KP", R.derived(fg).kitPoints, 6);
+		fg.purchases.push({ item: "improved-meal-plan", count: 1 });
+		eq("Gate + Improved meal plan gives 7 KP", R.derived(fg).kitPoints, 7);
+		fg.purchases.push({ item: "red-herb", count: 3 });
+		eq("consumables don't change KP", R.derived(fg).kitPoints, 7);
+		fg.hunt.kpBonus = 3;
+		eq("Oilfinger roll of 3 adds to KP", R.derived(fg).kitPoints, 10);
+
+		var pk = guardianTension();
+		pk.hunt.injuries = 1;
+		eq("Painkiller: first injury keeps max stress 6", R.derived(pk).maxStress, 6);
+		pk.hunt.injuries = 2;
+		eq("Painkiller: second injury drops to 5", R.derived(pk).maxStress, 5);
+		var np = build("guardian", "castle", "tension", ["aegis", "fortress"]);
+		np.hunt.injuries = 1;
+		eq("without Painkiller first injury drops to 5", R.derived(np).maxStress, 5);
+		np.hunt.injuries = 3;
+		eq("three injuries drop to 3", R.derived(np).maxStress, 3);
+
+		var two = guardianTension();
+		two.blasphemies.push({ id: "gate", powers: ["tear"] });
+		eq("extra blasphemy: sin cap 9, XP 5", [R.derived(two).sinCap, R.derived(two).xpToAdvance], [9, 5]);
+		two.sinBoxesCrossed = 2;
+		eq("two boxes crossed: sin cap 7", R.derived(two).sinCap, 7);
+		two.settings.sinCapBonus = 2;
+		eq("house rule +2 sin cap: 9", R.derived(two).sinCap, 9);
+		var hr = guardianTension();
+		hr.settings.psycheBursts = 4;
+		eq("house rule 4 psyche bursts", R.derived(hr).psycheBursts, 4);
+
+		var eyes = guardianTension();
+		eyes.skills.surveillance = 3;
+		eyes.sinMarks = [{ mark: "eyes", abilities: [{ roll: 6, skill: "surveillance" }] }];
+		eq("Eyes 6 on Surveillance 3 gives 4 dice", R.derived(eyes).skillDice.surveillance, 4);
+		eq("Eyes 6 doesn't touch Investigation", R.derived(eyes).skillDice.investigation, 1);
+		var jack = firebugGate();
+		jack.hunt.jackSkill = "covert";
+		eq("Jack! raises a 0 skill to 1", R.derived(jack).skillDice.covert, 1);
+		jack.hunt.jackSkill = "force";
+		eq("Jack! does nothing for a skill above 0", R.derived(jack).skillDice.force, 2);
+
+		group("Advances");
+		var fresh = guardianTension();
+		var kinds = R.legalAdvances(fresh).map(function (o) { return o.kind; });
+		eq("fresh character advance options", kinds, ["agendaAbility", "blasphemyPower", "newBlasphemy", "scrip", "skill"]);
+		var opt = R.legalAdvances(fresh);
+		eq("4 agenda abilities left", opt[0].choices.length, 4);
+		eq("3 Tension powers left", opt[1].choices.length, 3);
+		eq("Gate is the new blasphemy option", opt[2].choices, ["gate"]);
+		var maxed = guardianTension();
+		maxed.skills.force = 3;
+		maxed.skills.surveillance = 3;
+		maxed.skillImprovements = 2;
+		var skillOpt = R.legalAdvances(maxed).filter(function (o) { return o.kind === "skill"; })[0];
+		check("two skills at 3: no other skill can reach 3", skillOpt.choices.indexOf("investigation") >= 0 && skillOpt.choices.indexOf("connection") >= 0 && skillOpt.choices.indexOf("force") < 0);
+		maxed.skills.connection = 2;
+		skillOpt = R.legalAdvances(maxed).filter(function (o) { return o.kind === "skill"; })[0];
+		check("a skill at 2 can't be raised when two are at 3", skillOpt.choices.indexOf("connection") < 0);
+		var spent = guardianTension();
+		spent.skillImprovements = 6;
+		check("6 improvements: no skill option", R.legalAdvances(spent).every(function (o) { return o.kind !== "skill"; }));
+		var full = guardianTension();
+		full.blasphemies[0].powers = ["aegis", "stasis", "severance", "malleate", "fortress"];
+		var fullKinds = R.legalAdvances(full);
+		check("all Tension powers taken: no Tension power option", fullKinds.every(function (o) { return o.kind !== "blasphemyPower"; }));
+		check("5 powers: new blasphemy must replace one", fullKinds.filter(function (o) { return o.kind === "newBlasphemy"; })[0].mustReplace === true);
+		var marked = guardianTension();
+		marked.sinMarks = [{ mark: "arms", abilities: [{ roll: 2 }] }];
+		check("a sin mark can evolve", R.legalAdvances(marked).some(function (o) { return o.kind === "evolveSinMark"; }));
+
+		group("Dice");
+		var a = R.makeRng(42), b = R.makeRng(42);
+		eq("seeded rng repeats", R.rollDice(10, 6, a), R.rollDice(10, 6, b));
+		eq("d3 maps 1-2/3-4/5-6", [1, 2, 3, 4, 5, 6].map(function (f) { return R.d3(faces([f])); }), [1, 1, 2, 2, 3, 3]);
+		var r = R.actionRoll({ skill: 0 }, faces([5, 2]));
+		eq("0 dice: roll 2, keep lowest", [r.zeroPool, r.dice, r.kept, r.successes], [true, [5, 2], [2], 0]);
+		r = R.actionRoll({ skill: 2, bonus: 5 }, faces([1]));
+		eq("bonus dice cap at +3", [r.pool, r.bonusUsed], [5, 3]);
+		r = R.actionRoll({ skill: 1, bonus: 3, agony: 2 }, faces([1]));
+		eq("Divine Agony goes past the cap", r.pool, 6);
+		r = R.actionRoll({ skill: 3 }, faces([4, 5, 6]));
+		eq("normal roll: 4+ succeeds", r.successes, 3);
+		r = R.actionRoll({ skill: 3, hard: true }, faces([4, 5, 6]));
+		eq("hard roll: only 6s succeed", r.successes, 1);
+		r = R.actionRoll({ skill: 2 }, faces([1, 3]));
+		eq("no successes is a failure", r.success, false);
+		eq("risk die outcomes", [1, 2, 3, 4, 5, 6].map(function (f) { return R.riskOutcome(f).label; }),
+			["Much worse", "Worse", "Worse", "Expected", "Expected", "Better"]);
+
+		group("Sin overflow and sin marks");
+		var so = guardianTension();
+		eq("no sin marks: automatic pass", R.resistOverflow(so, faces([6])).pass, true);
+		so.sinMarks = [{ mark: "eyes", abilities: [{ roll: 1 }] }];
+		eq("1 mark, roll 5 (total 6) passes", R.resistOverflow(so, faces([5])).pass, true);
+		eq("1 mark, roll 6 (total 7) fails", R.resistOverflow(so, faces([6])).pass, false);
+		so.sinMarks.push({ mark: "arms", abilities: [{ roll: 1 }] }, { mark: "eyes", abilities: [{ roll: 2 }] });
+		eq("3 marks, natural 1 passes", R.resistOverflow(so, faces([1])).pass, true);
+		eq("3 marks, roll 4 (total 7) fails", R.resistOverflow(so, faces([4])).pass, false);
+		so.sinBoxesCrossed = 10;
+		eq("no sin boxes left: automatic fail", R.resistOverflow(so, faces([1])).pass, false);
+		eq("location 1 is Eyes", R.rollSinMarkLocation(faces([1])).mark, "eyes");
+		eq("location 4 is Arms or Hands", R.rollSinMarkLocation(faces([4])).mark, "arms");
+		eq("location 6 is choose", R.rollSinMarkLocation(faces([6])).choose, true);
+		var sub = R.rollSinMarkLocation(faces([2, 1]));
+		check("unloaded location rerolls among loaded ones", sub.substituted === true && !!R.sinMark(sub.mark));
+		eq("halve sin rounds up", [R.halveSin(7), R.halveSin(6), R.halveSin(0)], [4, 3, 0]);
+	} catch (err) {
+		group("Crash");
+		check("tests ran without throwing", false, err && err.stack ? err.stack : String(err));
+	}
+
+	var out = document.getElementById("results");
+	groups.forEach(function (g) {
+		var h = document.createElement("h2");
+		h.textContent = g.name;
+		out.appendChild(h);
+		var ul = document.createElement("ul");
+		g.results.forEach(function (res) {
+			var li = document.createElement("li");
+			li.className = res.ok ? "pass" : "fail";
+			li.textContent = res.label;
+			ul.appendChild(li);
+		});
+		out.appendChild(ul);
+	});
+	var summary = document.getElementById("summary");
+	summary.textContent = (failed ? "FAILED: " : "ALL PASSED: ") + passed + " passed, " + failed + " failed";
+	summary.className = failed ? "fail" : "pass";
+	document.title = (failed ? "FAIL " : "PASS ") + passed + "/" + (passed + failed);
+})();
+</script>
+</body>
+</html>
