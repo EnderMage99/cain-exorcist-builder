@@ -23,13 +23,15 @@ window.CAIN = window.CAIN || {};
 			if (i < filled) cls += " filled";
 			if (opts.crossed && i >= usable) cls += " crossed";
 			if (opts.extraFrom !== undefined && i >= opts.extraFrom) cls += " extra";
+			// Brain bubbles carry the brain drawing, as on the sheet's Burst box.
+			var inner = opts.shape === "brain" && CAIN.art ? CAIN.art("brain") : null;
 			if (onSet && i < usable) {
 				(function (n) {
 					out.push(h("button", { class: cls, type: "button", "aria-label": (opts.label || "Value") + " " + n,
-						onclick: function () { onSet(filled === n ? n - 1 : n); } }));
+						onclick: function () { onSet(filled === n ? n - 1 : n); } }, inner));
 				})(i + 1);
 			} else {
-				out.push(h("span", { class: cls, "aria-hidden": "true" }));
+				out.push(h("span", { class: cls, "aria-hidden": "true" }, inner));
 			}
 		}
 		return h("span", { class: "pips" + (onSet ? " clickable" : ""), role: onSet ? "group" : "img", "aria-label": (opts.label || "") + " " + filled + " of " + total }, out);
@@ -115,22 +117,55 @@ window.CAIN = window.CAIN || {};
 		var ch = this.ch;
 		var a = ch.agenda ? R.agenda(ch.agenda) : null;
 		var blas = ch.blasphemies.map(function (b) { var x = R.blasphemy(b.id); return x ? x.name : b.id; }).join(", ");
-		return h("section", { class: "card sheet-id" },
-			h("div", { class: "id-head" },
-				h("span", { class: "id-title" }, "Registered exorcist"),
-				h("span", { class: "cat-badge", title: "Category " + this.d.cat }, h("span", { class: "label" }, "CAT"), String(this.d.cat))),
-			h("div", { class: "id-body" },
-				this.field("Name", "name", { placeholder: "Name", wide: true }),
-				this.field("XID", "xid", { placeholder: "XX-0000" }),
-				h("div", { class: "field" }, h("span", { class: "field-label" }, "Agnd"), h("div", { class: "field-value" }, a ? a.name : "-")),
-				h("div", { class: "field wide" }, h("span", { class: "field-label" }, "Blsph"), h("div", { class: "field-value" }, blas || "-")),
-				h("div", { class: "looks" },
-					this.field("Sx", "looks.sex"),
-					this.field("Ht", "looks.height"),
-					this.field("Wt", "looks.weight"),
-					this.field("Hair", "looks.hair"),
-					this.field("Eyes", "looks.eyes"))),
-			h("div", { class: "id-foot" }, h("span", null, "CID: XXX" + (ch.xid ? " " + ch.xid : "")), h("span", null, "CASTLE")));
+		return h("div", { class: "id-wrap" },
+			h("div", { class: "affix" }, "Affix ", CAIN.censor(4), " firmly"),
+			h("section", { class: "card sheet-id" },
+				h("span", { class: "tape tape-left", "aria-hidden": "true" }),
+				h("span", { class: "tape tape-right", "aria-hidden": "true" }),
+				h("div", { class: "id-head" },
+					h("span", { class: "id-title" }, "Registered exorcist"),
+					h("span", { class: "cat-badge", title: "Category " + this.d.cat }, h("span", { class: "label" }, "CAT"), String(this.d.cat))),
+				h("div", { class: "id-main" },
+					this.photo(),
+					h("div", { class: "id-body" },
+						CAIN.art("brain", "id-brain"),
+						this.field("Name", "name", { placeholder: "Name", wide: true }),
+						this.field("XID", "xid", { placeholder: "XX-0000" }),
+						h("div", { class: "field" }, h("span", { class: "field-label" }, "Agnd"), h("div", { class: "field-value" }, a ? a.name : "-")),
+						h("div", { class: "field wide" }, h("span", { class: "field-label" }, "Blsph"), h("div", { class: "field-value" }, blas || "-")),
+						h("div", { class: "looks" },
+							this.field("Sx", "looks.sex"),
+							this.field("Ht", "looks.height"),
+							this.field("Wt", "looks.weight"),
+							this.field("Hair", "looks.hair"),
+							this.field("Eyes", "looks.eyes")))),
+				h("div", { class: "id-foot" },
+					h("span", null, "CID: XXX" + (ch.xid ? " " + ch.xid : "")),
+					h("span", { class: "castle-stamp" }, h("span", { class: "castle-box" }, "c"), "CASTLE"))));
+	};
+
+	// "Affix photo": the CAIN emblem until a portrait is added. Portraits are
+	// shrunk before saving so they stay small in storage and exports.
+	Sheet.prototype.photo = function () {
+		var self = this;
+		var ch = this.ch;
+		var frame = h("div", { class: "photo-frame" + (ch.portrait ? " has-photo" : "") },
+			ch.portrait ? h("img", { src: ch.portrait, alt: "Portrait of " + (ch.name || "this exorcist") }) : CAIN.art("emblem"));
+		if (!this.editable) return h("div", { class: "photo" }, frame, h("span", { class: "photo-note" }, "Do not cover eyes when affixing photo"));
+		var picker = h("input", { type: "file", accept: "image/*", class: "visually-hidden", id: "portrait-" + ch.id, "aria-label": "Choose a portrait" });
+		picker.addEventListener("change", function () {
+			CAIN.readPortrait(picker.files[0], function (data) {
+				if (!data) { picker.value = ""; return; }
+				ch.portrait = data;
+				self.onChange(true);
+			});
+		});
+		return h("div", { class: "photo" }, frame,
+			h("div", { class: "photo-tools" },
+				h("label", { class: "mini-btn", for: "portrait-" + ch.id }, ch.portrait ? "Change photo" : "Add photo"),
+				picker,
+				ch.portrait ? h("button", { class: "mini-btn", type: "button", onclick: function () { delete ch.portrait; self.onChange(true); } }, "Remove") : null),
+			h("span", { class: "photo-note" }, "Do not cover eyes when affixing photo"));
 	};
 
 	Sheet.prototype.execution = function () {
@@ -139,6 +174,7 @@ window.CAIN = window.CAIN || {};
 		var lost = d.stressCapacity - d.maxStress;
 		return h("section", { class: "card sheet-execution" },
 			h("div", { class: "exec-row" },
+				h("span", { class: "exec-seal" }, CAIN.art("dagger")),
 				h("span", { class: "exec-stress" }, String(hu.stress)),
 				bubbles(hu.stress, d.stressCapacity, { shape: "box", crossed: lost, label: "Stress" },
 					this.tracked("Stress", function () { return hu.stress; }, function (v) { hu.stress = v; })),
@@ -181,9 +217,12 @@ window.CAIN = window.CAIN || {};
 					h("div", { class: "big-label" }, term("Injuries:", "injury")),
 					h("p", { class: "tiny" }, "Each gives -1 stress. Suffer an injury when execution fills up. Clear all stress, then the remainder rolls over. When suffering instant death, you may suffer sin overflow instead and erase 1 injury.")),
 				h("div", { class: "injury-box" },
-					bubbles(hu.injuries, d.maxInjuries, { label: "Injuries", extraFrom: core.base.maxInjuries },
-						this.tracked("Injuries", function () { return hu.injuries; }, function (v) { hu.injuries = v; })),
-					h("span", { class: "tiny" }, d.maxInjuries > core.base.maxInjuries ? "Includes the visitation rights box." : "4th box with visitation rights."))),
+					h("div", { class: "injury-row" },
+						bubbles(hu.injuries, d.maxInjuries, { label: "Injuries", extraFrom: core.base.maxInjuries },
+							this.tracked("Injuries", function () { return hu.injuries; }, function (v) { hu.injuries = v; })),
+						CAIN.art("skull", "injury-skull"),
+						h("span", { class: "brink-side" }, "!!Brink of death!! Any more harm will cause instant death")),
+					h("span", { class: "tiny" }, d.maxInjuries > core.base.maxInjuries ? "Includes the visitation rights box." : "Gain a 4th box if visitation rights have been acquired."))),
 			h("div", { class: "health-block" },
 				h("div", null,
 					h("div", { class: "big-label" }, term("Hooks:", "hook")),
@@ -236,6 +275,7 @@ window.CAIN = window.CAIN || {};
 		var self = this;
 		return section("agony", { text: "Divine Agony", goth: true }, null,
 			h("div", { class: "agony-row" },
+				h("span", { class: "agony-blades" }, CAIN.art("dagger"), CAIN.art("dagger", "flip")),
 				h("ul", { class: "tiny-list" },
 					h("li", null, "When you take no successes on a roll, gain an affliction, fill out a hook, gain an injury, or an exorcist dies or suffers sin overflow, store a pathos."),
 					h("li", null, "Once a session, and once a scene for the whole group, you may burn away all pathos to add one extra die to a roll per pathos burned, stacking with all bonuses.")),
@@ -301,6 +341,7 @@ window.CAIN = window.CAIN || {};
 		return h("section", { class: "card sheet-psyche" },
 			h("div", { class: "psyche-row" },
 				h("div", { class: "psyche-main" },
+					CAIN.art("inkblot", "psyche-blot"),
 					h("span", { class: "psyche-title goth" }, "Psyche"),
 					h("span", { class: "pips" }, (function () {
 						var out = [];
@@ -364,7 +405,7 @@ window.CAIN = window.CAIN || {};
 		var marks = ch.sinMarks.map(function (owned, mi) {
 			var m = R.sinMark(owned.mark);
 			return h("div", { class: "mark-box" },
-				h("div", { class: "entry-name goth-name" }, m ? m.name : owned.mark,
+				h("div", { class: "entry-name goth-name" }, CAIN.art(mi % 2 ? "fly" : "grub", "mark-bug"), m ? m.name : owned.mark,
 					self.editable ? removeBtn("the whole mark", function () { ch.sinMarks.splice(mi, 1); self.onChange(true); }) : null),
 				m ? h("p", { class: "tiny" }, m.appearance) : null,
 				owned.abilities.map(function (a, ai) {
@@ -405,6 +446,7 @@ window.CAIN = window.CAIN || {};
 		}
 		return section("sin", { text: "Sin", goth: true }, ch.sin + " / " + d.sinCap,
 			h("div", { class: "sin-web" },
+				CAIN.art("web", "sin-veins"),
 				bubbles(ch.sin, boxes, { shape: "blot", crossed: crossed, label: "Sin" },
 					this.tracked("Sin", function () { return ch.sin; }, function (v) { ch.sin = v; }))),
 			h("div", { class: "stepper-row" },
@@ -548,9 +590,14 @@ window.CAIN = window.CAIN || {};
 					chip("Cleared", s.clearSinAfterMission, function () { s.clearSinAfterMission = true; self.onChange(true); }))));
 	};
 
+	var docrefs = { "1": "XX0011", "2": "XX0012", "3": "XX0014", "4": "XX0015" };
+
 	function page(n, title) {
-		var el = h("div", { class: "sheet-page" }, h("div", { class: "page-tag" }, h("span", null, title), h("span", null, n)));
+		var el = h("div", { class: "sheet-page page-" + n }, h("div", { class: "page-tag" }, h("span", null, title), h("span", null, n)));
 		for (var i = 2; i < arguments.length; i++) CAIN.append(el, arguments[i]);
+		el.appendChild(h("div", { class: "docref" },
+			h("span", null, "Docref ", CAIN.censor(3), " ", docrefs[n] || ""),
+			h("span", { class: "motto-line" }, "As above, so below")));
 		return el;
 	}
 

@@ -40,6 +40,10 @@ system before the rest of the book's content goes in. See
   that way. Agenda, abilities, powers, sin marks and kit can be changed or
   removed in place. Rule problems show as warnings, never locks. Clicks on
   tracked numbers are logged so the Admin can follow along.
+  Styled after the paper sheet: typewriter and blackletter type, worn
+  paper, tape and censor bars, a photo slot on the ID card (**Add photo**
+  stores a small portrait with the exorcist), brain-shaped bursts and ink
+  splats for sin. The drawings are original, not copied from the book.
 - **Action bar** above the sheet, for things a website does better than a
   PDF. **The site never rolls dice**: roll at the table where the Admin can
   see, and enter what you rolled.
@@ -85,6 +89,7 @@ css/main.css      styles, light and dark themes
 js/rules.js       rules engine: derived stats, validation, dice (no DOM)
 js/hunt.js        play and between-mission actions (no DOM)
 js/ui.js          DOM helpers, glossary popover
+js/art.js         sheet illustrations (inline SVG) and portrait resizing
 js/store.js       saved characters and the registration draft
 js/transfer.js    export and import: the .cain.json format and its checks
 js/registration.js character creation steps
