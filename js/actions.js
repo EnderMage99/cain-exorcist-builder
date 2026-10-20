@@ -549,7 +549,8 @@ window.CAIN = window.CAIN || {};
 		var zeroSkills = core.skills.filter(function (s) { return ch.skills[s.id] === 0; });
 		var needs = H.missionRollsNeeded(ch);
 		needs.forEach(function (n) { if (!dep.rolls[n.id]) dep.rolls[n.id] = 2; });
-		return panel(ctx, "Mission", null,
+		// On a mission you can only close it; between missions you can only start one.
+		if (H.onMission(ch)) return panel(ctx, "Mission", null,
 			h("div", { class: "subhead" }, "Mission over"),
 			h("p", { class: "note" }, "Pays scrip, halves sin" + (ch.settings.clearSinAfterMission ? " (house rule: clears it)" : "") + ", adds a mission survived, and clears stress, injuries, hooks and afflictions."),
 			row(h("span", { class: "chips" },
@@ -562,7 +563,8 @@ window.CAIN = window.CAIN || {};
 				var r = H.endMission(ch, { outcome: ms.outcome, bodies: ms.bodies, died: ms.died });
 				st.mission = { outcome: "execute", bodies: 0, died: false };
 				ctx.act(r);
-			}, { danger: ms.died })),
+			}, { danger: ms.died })));
+		return panel(ctx, "Mission", null,
 			h("div", { class: "subhead" }, "New mission"),
 			h("p", { class: "note" }, "Arrive fresh: no stress, injuries or hooks, " + R.derived(ch).psycheBursts + " psyche bursts and full kit points."),
 			needs.map(function (n) {
@@ -579,7 +581,7 @@ window.CAIN = window.CAIN || {};
 				if (!r.ok) { ctx.flash(["Enter the dice first."]); return; }
 				st.deploy = { jack: "", rolls: {} };
 				ctx.act(r);
-			}, { ghost: true })));
+			})));
 	}
 
 	// Kit: pull out and use what's on your list, add catalog items for free, or make
@@ -697,7 +699,7 @@ window.CAIN = window.CAIN || {};
 		{ id: "stress", label: "Take stress", title: "Take stress with the rules applied", render: stressPanel },
 		{ id: "pool", label: "Dice pool", title: "How many dice to roll, and record the result", render: poolPanel },
 		{ id: "rest", label: "Rest", title: "Rest and assign the resting dice", render: restPanel, badge: function (ch) { return ch.hunt.restDice ? "!" : null; } },
-		{ id: "mission", label: "Mission", title: "Close a mission or start a new one", render: missionPanel },
+		{ id: "mission", label: "Mission", title: "Start a mission, or close the one you're on", render: missionPanel },
 		{ id: "shop", label: "Kit", title: "Pull out and use kit, add or create items, set scrip", render: kitPanel },
 		{ id: "log", label: "Log", title: "Everything recorded", render: logPanel },
 		// Opened from Add ability / Add power and the sheet, not shown on the bar.

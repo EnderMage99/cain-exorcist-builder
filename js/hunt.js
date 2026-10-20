@@ -65,6 +65,12 @@ window.CAIN = window.CAIN || {};
 	function burstsMax(ch) { return R.derived(ch).psycheBursts; }
 	function kpLeft(ch) { return R.derived(ch).kitPoints - ch.hunt.kpSpent; }
 	function atBrink(ch) { return ch.hunt.injuries >= R.derived(ch).maxInjuries; }
+	// On a mission once one is started, or once anything has happened on the hunt
+	// (characters saved before missions had a start). Closing one makes a fresh hunt.
+	function onMission(ch) {
+		var h = ch.hunt;
+		return !!(h.started || h.stress || h.injuries || h.kpSpent || h.rolls.length || h.hooks.length || h.pulled.length || h.rests);
+	}
 
 	// Missions
 
@@ -842,6 +848,7 @@ window.CAIN = window.CAIN || {};
 		hasPassive: hasPassive,
 		missionRollsNeeded: missionRollsNeeded,
 		startMission: startMission,
+		onMission: onMission,
 		endMission: endMission,
 		ironSoulApplies: ironSoulApplies,
 		takeStress: takeStress,
