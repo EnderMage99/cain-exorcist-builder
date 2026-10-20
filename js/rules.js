@@ -227,8 +227,10 @@ window.CAIN = window.CAIN || {};
 		});
 	}
 
+	// Each blasphemy past the first costs a sin box and +1 XP to advance, unless it
+	// came free (marked free: Mother's infection, a virtue bond).
 	function extraBlasphemies(ch) {
-		return Math.max(0, ch.blasphemies.length - 1);
+		return Math.max(0, ch.blasphemies.filter(function (b) { return !b.free; }).length - 1);
 	}
 
 	// Max stress before injuries.
@@ -278,6 +280,7 @@ window.CAIN = window.CAIN || {};
 			maxInjuries: core.base.maxInjuries + modifierTotal(ch, "maxInjuries"),
 			kitPoints: kitPoints(ch),
 			sinCap: sinCap(ch),
+			extraBlasphemies: extraBlasphemies(ch),
 			xpToAdvance: core.base.xpToAdvance + modifierTotal(ch, "xpToAdvance") + extraBlasphemies(ch),
 			psycheBursts: ch.settings.psycheBursts + modifierTotal(ch, "psycheBursts"),
 			restDice: core.base.restDice + modifierTotal(ch, "restDice"),
@@ -378,13 +381,18 @@ window.CAIN = window.CAIN || {};
 				problems.push({ step: "agenda", message: "Pick exactly 1 ability from your agenda." });
 			}
 		}
-		if (ch.blasphemies.length !== 1 || !blasphemy(ch.blasphemies[0].id)) {
+		// The first blasphemy starts with 2 powers; an extra one, like one bought with
+		// an advance, starts with 1.
+		if (!ch.blasphemies.length || !ch.blasphemies.every(function (b) { return blasphemy(b.id); })) {
 			problems.push({ step: "blasphemy", message: "Pick a blasphemy." });
 		} else {
-			var powers = ch.blasphemies[0].powers.filter(function (p) { return power(ch.blasphemies[0].id, p); });
-			if (powers.length !== 2 || ch.blasphemies[0].powers.length !== 2) {
-				problems.push({ step: "blasphemy", message: "Pick exactly 2 powers from your blasphemy." });
-			}
+			ch.blasphemies.forEach(function (owned, i) {
+				var want = i === 0 ? 2 : 1;
+				var powers = owned.powers.filter(function (p) { return power(owned.id, p); });
+				if (powers.length !== want || owned.powers.length !== want) {
+					problems.push({ step: "blasphemy", message: "Pick exactly " + want + " power" + (want > 1 ? "s" : "") + " from " + blasphemy(owned.id).name + "." });
+				}
+			});
 		}
 		if (!ch.name.trim()) problems.push({ step: "concept", message: "Give your exorcist a name." });
 		return problems;
@@ -592,6 +600,7 @@ window.CAIN = window.CAIN || {};
 		nextCatAt: nextCatAt,
 		modifierTotal: modifierTotal,
 		hasFlag: hasFlag,
+		extraBlasphemies: extraBlasphemies,
 		derived: derived,
 		skillDice: skillDice,
 		tokenValue: tokenValue,

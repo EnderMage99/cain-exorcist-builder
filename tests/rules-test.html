@@ -543,6 +543,19 @@
 		eq("replace a power at the cap", [ss.blasphemies[0].powers, ss.blasphemies[1].powers], [["aegis", "fortress"], ["tear", "maze", "bloom"]]);
 		eq("valid after all that", R.validateCharacter(ss), []);
 
+		group("Extra blasphemies");
+		var multi = guardianTension();
+		multi.blasphemies.push({ id: "flux", powers: ["stop"] });
+		eq("extra at creation is legal with 1 power", R.validateCreation(multi), []);
+		eq("extra: sin cap -1, XP +1", [R.derived(multi).extraBlasphemies, R.derived(multi).sinCap, R.derived(multi).xpToAdvance], [1, 9, 5]);
+		multi.blasphemies[1].powers = [];
+		check("extra with no power is refused", R.validateCreation(multi).some(function (p) { return p.step === "blasphemy"; }));
+		multi.blasphemies[1].powers = ["stop"];
+		multi.blasphemies[1].free = true;
+		eq("free extra costs nothing", [R.derived(multi).extraBlasphemies, R.derived(multi).sinCap, R.derived(multi).xpToAdvance], [0, 10, 4]);
+		multi.blasphemies.push({ id: "gate", powers: ["tear"] });
+		eq("one free and one paid extra: cost 1", R.derived(multi).extraBlasphemies, 1);
+
 		group("Export and import");
 		var T = CAIN.transfer;
 		var hero = guardianTension();

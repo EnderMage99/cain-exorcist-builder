@@ -248,41 +248,60 @@ window.CAIN = window.CAIN || {};
 	function blasphemyStep() {
 		var c = ch();
 		var cat = R.derived(c).cat;
-		var owned = c.blasphemies[0];
-		var b = owned ? R.blasphemy(owned.id) : null;
+		// The first blasphemy is the primary (2 powers). Extras, each with 1 power, cost
+		// what an advance would: a sin box and +1 XP to advance. 5 powers at most.
+		var owned = c.blasphemies;
+		var ids = owned.map(function (o) { return o.id; });
+		var canAddExtra = owned.length > 0 && owned.length < 4;
 		var tiles = CAIN.tileGrid("blasphemy", CAIN.blasphemies, function (x) {
-			var selected = !!owned && owned.id === x.id;
-			return { selected: selected, selectedLabel: selected ? owned.powers.length + " / 2 powers" : null,
-				actions: chooseButton(selected, false, function () {
-					if (!selected) c.blasphemies = [{ id: x.id, powers: [] }];
+			var i = ids.indexOf(x.id);
+			if (i >= 0) {
+				return { selected: true, selectedLabel: (i === 0 ? "Primary, " + owned[0].powers.length + " / 2" : "Extra, " + owned[i].powers.length + " / 1") + " powers",
+					actions: h("button", { class: "btn small", type: "button", "aria-label": "Remove " + x.name, onclick: function () {
+						owned.splice(i, 1);
+						if (owned[0]) owned[0].powers = owned[0].powers.slice(0, 2);
+						changed(true);
+					} }, "Remove") };
+			}
+			return { selected: false,
+				actions: [chooseButton(false, false, function () {
+					if (owned.length) owned[0] = { id: x.id, powers: [] };
+					else owned.push({ id: x.id, powers: [] });
 					changed(true);
 					revealPick();
-				}) };
+				}), canAddExtra ? h("button", { class: "btn small ghost", type: "button", title: "Sin cap -1, XP to advance +1. Needs your Admin's OK.", onclick: function () {
+					owned.push({ id: x.id, powers: [] });
+					changed(true);
+				} }, "Add as extra") : null] };
 		});
-		var detail = b ? (function () {
-			var count = owned.powers.length;
+		var details = owned.map(function (o, i) {
+			var b = R.blasphemy(o.id);
+			if (!b) return null;
+			var want = i === 0 ? 2 : 1;
+			var count = o.powers.length;
 			var th = CAIN.blasTheme(b);
 			return h("article", { class: "card pick-card pick-detail blas-card selected " + th.class, style: th.style, "data-view": "blasphemy:" + b.id },
 				h("div", { class: "blas-intro" },
 					CAIN.blasPortrait(b),
 					h("div", { class: "blas-intro-text" },
-						h("div", { class: "card-head" }, h("h2", { class: "blas-title" }, b.name), h("span", { class: "label" }, count + " / 2 powers")),
+						h("div", { class: "card-head" }, h("h2", { class: "blas-title" }, b.name), h("span", { class: "label" }, (i === 0 ? "Primary" : "Extra") + ", " + count + " / " + want + " power" + (want > 1 ? "s" : ""))),
 						CAIN.sourceBadge(b),
 						CAIN.approvalTag(b),
+						i > 0 ? h("span", { class: "tag stamp" }, "Extra blasphemy: sin cap -1, XP to advance +1") : null,
 						h("p", { class: "note" }, b.summary))),
 				h("div", { class: "passive" },
 					h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
 					CAIN.richText(b.passive.text, cat)),
-				h("div", { class: "label" }, "Choose 2 powers"),
+				h("div", { class: "label" }, want > 1 ? "Choose 2 powers" : "Choose 1 power"),
 				h("ul", { class: "options" }, b.powers.map(function (p) {
-					var on = owned.powers.indexOf(p.id) >= 0;
-					var full = count >= 2 && !on;
+					var on = o.powers.indexOf(p.id) >= 0;
+					var full = count >= want && !on;
 					return h("li", null, h("button", {
 						class: "option multi", type: "button", "aria-pressed": String(on), disabled: full,
-						title: full ? "Two powers chosen. Untick one first." : null,
+						title: full ? (want > 1 ? "Two powers chosen." : "Power chosen.") + " Untick one first." : null,
 						onclick: function () {
-							if (on) owned.powers = owned.powers.filter(function (x) { return x !== p.id; });
-							else owned.powers.push(p.id);
+							if (on) o.powers = o.powers.filter(function (x) { return x !== p.id; });
+							else o.powers.push(p.id);
 							changed(true);
 						}
 					}, h("span", { class: "option-mark", "aria-hidden": "true" }),
@@ -291,11 +310,17 @@ window.CAIN = window.CAIN || {};
 							CAIN.powerTags(p, cat),
 							CAIN.richText(p.text, cat))));
 				})));
-		})() : null;
+		}).filter(Boolean);
+		var extra = R.derived(c).extraBlasphemies;
+		var cost = extra ? h("div", { class: "card blas-cost-card" },
+			h("div", { class: "card-head" }, h("h2", null, "Extra blasphemies"), h("span", { class: "label" }, extra + " extra")),
+			h("p", { class: "note" }, "The core book starts every exorcist with one blasphemy and adds more through advances, so starting with extras needs your Admin's OK."),
+			h("p", { class: "blas-cost" }, "Sin cap -" + extra + " (now " + R.derived(c).sinCap + "), XP to advance +" + extra + " (now " + R.derived(c).xpToAdvance + ").")) : null;
 		return h("div", null,
-			h("p", { class: "lede" }, "Your blasphemy is your psychic power. Choose one, then pick two powers below. Click a tile to read it in full. Values in purple are worked out for your CAT (" + cat + ")."),
+			h("p", { class: "lede" }, "Your blasphemy is your psychic power. Choose one, then pick two powers below. With your Admin's OK you can add extra blasphemies, one power each, at the book's cost: each crosses out a sin box and adds 1 to XP to advance. Click a tile to read it in full. Values in purple are worked out for your CAT (" + cat + ")."),
 			tiles,
-			detail ? h("div", { class: "pick-detail-wrap" }, detail) : null,
+			cost,
+			details.length ? h("div", { class: "pick-detail-wrap" }, details) : null,
 			h("section", { class: "card", style: "margin-top:16px" },
 				h("div", { class: "card-head" }, h("h2", null, "Blast"), h("span", { class: "label" }, "Every exorcist has this")),
 				CAIN.richText(CAIN.blast.text, cat)));

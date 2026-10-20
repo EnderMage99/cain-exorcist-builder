@@ -1747,6 +1747,12 @@ label.btn { user-select: none; }
 .blas-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 
 .blas-head .mini-btn { margin-left: auto; }
+/* Extra blasphemies: the cost tag on each extra, and the running total. */
+.blas-cost-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: -4px 0 10px; }
+.blas-cost-row .mini-btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.blas-cost { font-family: var(--font-type); font-size: 0.85rem; margin: 4px 0 8px; padding: 6px 10px; border-left: 3px solid var(--ink); background: var(--paper-2); }
+.blas-cost-card { margin: 6px 0 14px; }
+.pick-detail-wrap > .pick-detail + .pick-detail { margin-top: 14px; }
 
 .power-grid { display: grid; gap: 10px; }
 

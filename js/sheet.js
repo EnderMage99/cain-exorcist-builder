@@ -401,7 +401,7 @@ window.CAIN = window.CAIN || {};
 		var self = this;
 		var ch = this.ch;
 		var d = this.d;
-		var extra = Math.max(0, ch.blasphemies.length - 1);
+		var extra = d.extraBlasphemies;
 		var boxes = d.sinCap + extra + ch.sinBoxesCrossed;
 		var crossed = boxes - d.sinCap;
 		var marks = ch.sinMarks.map(function (owned, mi) {
@@ -536,6 +536,15 @@ window.CAIN = window.CAIN || {};
 					b.custom && self.editable && self.openPanel ? h("button", { class: "mini-btn", type: "button", onclick: function () { self.openPanel("customBlasphemy", b.id); } }, "Edit") : null,
 					self.editable && self.openPanel ? h("button", { class: "mini-btn", type: "button", "aria-label": "Swap " + b.name, onclick: function () { self.openPanel("swap", bi); } }, "Swap") : null,
 					self.editable ? removeBtn(b.name, function () { ch.blasphemies.splice(bi, 1); self.onChange(true); }) : null),
+				bi > 0 ? h("div", { class: "blas-cost-row" },
+					h("span", { class: "tag" + (owned.free ? "" : " stamp") }, owned.free ? "Extra blasphemy: free" : "Extra blasphemy: sin cap -1, XP to advance +1"),
+					self.editable ? h("button", { class: "mini-btn", type: "button", "aria-pressed": String(!!owned.free),
+						title: "Some extras cost nothing: Mother's infection (Games for Freaks 3) or a virtue bond (Games for Freaks)",
+						onclick: function () {
+							var before = owned.free ? "free" : "paid";
+							if (owned.free) delete owned.free; else owned.free = true;
+							self.change(b.name + " extra cost", before, owned.free ? "free" : "paid");
+						} }, owned.free ? "Charge the cost" : "Mark as free") : null) : null,
 				b.summary && b.custom ? h("p", { class: "tiny" }, b.summary) : null,
 				h("div", { class: "passive" },
 					h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
@@ -553,6 +562,10 @@ window.CAIN = window.CAIN || {};
 				self.trackers(b, owned),
 				CAIN.blasExtras(b, d.cat));
 		});
+		var free = ch.blasphemies.filter(function (b, i) { return i > 0 && b.free; }).length;
+		var cost = d.extraBlasphemies || free ? h("p", { class: "blas-cost" },
+			d.extraBlasphemies ? d.extraBlasphemies + " extra blasphem" + (d.extraBlasphemies > 1 ? "ies" : "y") + ": sin cap -" + d.extraBlasphemies + ", XP to advance +" + d.extraBlasphemies + "." : "No paid extra blasphemies.",
+			free ? " " + free + " free extra" + (free > 1 ? "s" : "") + " cost nothing." : null) : null;
 		var blast = CAIN.blast;
 		var legend = h("p", { class: "tiny burst-legend" },
 			CAIN.burstIcon("required"), " needs a psyche burst   ",
@@ -560,6 +573,7 @@ window.CAIN = window.CAIN || {};
 			CAIN.burstIcon("none"), " no burst");
 		return section("blasphemy", "Blasphemy", "Observed powers " + total + " / 5",
 			h("p", { class: "tiny" }, "Keep sticker attached at all times. Spend an advance to gain a new power, or a new blasphemy: gain its passive, cross out a sin box, and increase XP to advance by +1."),
+			cost,
 			legend,
 			blocks.length ? blocks : h("p", { class: "note" }, "No blasphemy."),
 			h("div", { class: "btn-row" }, this.openButton("Add a power...", "power"), this.openButton("Create a blasphemy...", "customBlasphemy")),
