@@ -370,7 +370,9 @@ window.CAIN = window.CAIN || {};
 
 	function sourceBadge(entry, short) {
 		var src = sourceOf(entry);
-		if (!src || !src.fan) return null;
+		if (!src) return null;
+		// Official supplements get a plain tag naming the book, no fan styling.
+		if (!src.fan) return h("span", { class: "book-badge" + (short ? " short" : " full") }, short ? (src.short || src.name) : src.name + ", by " + src.author);
 		// Inside a card that already has the fan-made border and tab, CSS hides the
 		// short badge and the "Fan-made:" prefix, leaving just the credit.
 		return h("span", { class: "fan-badge src-" + src.id + (short ? " short" : " full"), title: "Fan-made content from " + src.name + " by " + src.author + ". Not official CAIN material." },

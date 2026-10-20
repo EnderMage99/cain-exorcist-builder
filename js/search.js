@@ -22,7 +22,7 @@ window.CAIN = window.CAIN || {};
 		out.push({ name: "Doctrine", kind: "Every section", icon: "img/sheet/emblem.png", ink: true, go: function () { location.hash = "#/doctrine"; } });
 		function entry(kind, x, label, icon, ink) {
 			var src = CAIN.sourceOf(x);
-			out.push({ name: x.name, kind: label + (src && src.fan ? " · " + (src.short || src.name) : ""), icon: icon, ink: ink, view: kind + ":" + x.id, section: sectionOf(kind) });
+			out.push({ name: x.name, kind: label + (src ? " · " + (src.short || src.name) : ""), icon: icon, ink: ink, view: kind + ":" + x.id, section: sectionOf(kind) });
 		}
 		CAIN.agendas.forEach(function (a) { entry("agenda", a, "Agenda", CAIN.agendaIcon(a)); });
 		CAIN.blasphemies.forEach(function (b) { entry("blasphemy", b, "Blasphemy", CAIN.blasphemyIcon(b)); });
@@ -32,7 +32,7 @@ window.CAIN = window.CAIN || {};
 		(CAIN.ruleSections ? CAIN.ruleSections() : []).forEach(function (r) {
 			var virtue = (CAIN.virtueSections || []).indexOf(r) >= 0;
 			var src = CAIN.sourceOf(r);
-			out.push({ name: r.name, kind: (virtue ? "Virtue rules" : "Shop and gear rules") + (src && src.fan ? " · " + (src.short || src.name) : ""), view: "rules:" + CAIN.ruleSlug(r.name), section: virtue ? "virtues" : "kit" });
+			out.push({ name: r.name, kind: (virtue ? "Virtue rules" : "Shop and gear rules") + (src ? " · " + (src.short || src.name) : ""), view: "rules:" + CAIN.ruleSlug(r.name), section: virtue ? "virtues" : "kit" });
 		});
 		Object.keys(CAIN.core.glossary || {}).forEach(function (t) {
 			out.push({ name: t, kind: "Glossary", detail: CAIN.core.glossary[t], go: function () { location.hash = "#/doctrine/reference"; } });

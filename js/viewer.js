@@ -29,7 +29,7 @@ window.CAIN = window.CAIN || {};
 
 	function credit(x) {
 		var src = CAIN.sourceOf(x);
-		return src && src.fan ? h("p", { class: "spread-credit" }, "Fan-made: " + src.name + ", by " + src.author) : null;
+		return src ? h("p", { class: "spread-credit" }, (src.fan ? "Fan-made: " : "From ") + src.name + ", by " + src.author) : null;
 	}
 
 	// Blasphemy: portrait, name and flavor on the left, passive beneath, then the

@@ -44,7 +44,7 @@ window.CAIN = window.CAIN || {};
 	// " (Fan-made: Ishmael)" after a fan supplement entry's name in pick lists.
 	function fanTag(x) {
 		var src = CAIN.sourceOf(x);
-		return src && src.fan ? " (Fan-made: " + (src.short || src.name) + ")" : "";
+		return src ? (src.fan ? " (Fan-made: " : " (") + (src.short || src.name) + ")" : "";
 	}
 
 	function btn(label, onclick, opts) {

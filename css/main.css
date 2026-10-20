@@ -3454,6 +3454,8 @@ body.viewer-open { overflow: hidden; }
 	white-space: normal;
 }
 
+.book-badge { display: inline-block; margin: 4px 0; padding: 1px 8px; border: 1px solid var(--line); border-radius: 4px; font-family: var(--font-typewriter); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
 .fan-made { position: relative; }
 
 /* Say it once: inside a bordered fan-made card the tab already says "Fan-made",
