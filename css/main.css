@@ -3144,7 +3144,10 @@ body[data-page^="doctrine:"] .page-head { border-bottom-color: var(--stamp); }
 }
 
 .tg-virtue .compact-tile:hover, .tg-virtue .compact-tile:focus-visible {
-	transform: perspective(700px) rotateX(9deg) rotate(calc(var(--tilt, 0deg) * 0.4));
+	/* A gentle swing on the pin that stays inside the gaps, lifted above the
+	   neighbouring posters so their pins and badges don't cover it. */
+	z-index: 6;
+	transform: perspective(1400px) rotateX(4deg) rotate(calc(var(--tilt, 0deg) * 0.4));
 	box-shadow: 3px 18px 24px rgba(0, 0, 0, 0.7);
 }
 
