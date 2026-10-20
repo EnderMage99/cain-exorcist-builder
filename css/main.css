@@ -2564,6 +2564,56 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 
 .size-value { min-width: 3.4em; font-weight: 800; font-size: 13px; }
 
+/* Doctrine hub: six big tiles. Section pages: a way back, no tabs. */
+.home-tiles.hub-tiles {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-template-areas: none;
+	grid-auto-rows: 210px;
+	margin-top: 18px;
+}
+
+.hub-tiles .home-tile-title { font-size: clamp(24px, 2.6vw, 40px); }
+
+@media (max-width: 720px) {
+	.home-tiles.hub-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 140px; }
+}
+
+.crumbs { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 6px; font-size: 13px; }
+
+.crumbs a { font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink); text-decoration: none; padding: 4px 10px; border: 1.5px solid var(--line); border-radius: 999px; }
+
+.crumbs a:hover, .crumbs a:focus-visible { border-color: var(--stamp); color: var(--stamp); }
+
+.crumbs-count { color: var(--muted); letter-spacing: 0.1em; font-size: 11px; }
+
+.doc-toolbar { align-items: flex-end; gap: 14px 28px; }
+
+/* The CAT picker uses the sheet's triangles. */
+.doc-cat { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin: 4px 0 10px; }
+
+.doc-cat > .label { padding-bottom: 18px; }
+
+.doc-cat-tiers { grid-template-columns: repeat(8, auto); gap: 6px; margin: 0; }
+
+.doc-cat-tiers .cat-btn { background: none; border: 0; padding: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; font: inherit; color: inherit; }
+
+.doc-cat-tiers .cat-tri { width: 44px; height: 38px; font-size: 12px; }
+
+.doc-cat-tiers .label { font-size: 8.5px; white-space: nowrap; }
+
+.doc-cat-tiers .cat-btn:focus-visible .cat-tri { outline: 3px solid var(--stamp); outline-offset: 2px; }
+
+/* Moving to a new page fades it in. */
+@keyframes route-in { from { transform: translateY(10px); } to { transform: none; } }
+
+#app.route-enter > * { animation: route-in 0.28s ease both; }
+
+#app.route-enter > *:nth-child(2) { animation-delay: 0.03s; }
+
+#app.route-enter > *:nth-child(3) { animation-delay: 0.06s; }
+
+#app.route-enter > *:nth-child(n+4) { animation-delay: 0.09s; }
+
 /* Compact tiles: picture on the left (35%), key facts on the right. */
 .grid.tile-grid, .tile-grid {
 	display: grid;
