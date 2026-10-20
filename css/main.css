@@ -2767,6 +2767,308 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 
 .rules-spread-text { font-size: 15px; line-height: 1.65; }
 
+/* Doctrine atmosphere and layouts */
+/* Slow background art and drifting embers (js/fx.js), Doctrine pages only. */
+.fx-bg, .fx-motes { position: fixed; pointer-events: none; z-index: 0; }
+
+.fx-bg {
+	inset: -10vh -10vw -60vh;
+	background: center 10vh / min(900px, 70vw) auto no-repeat;
+	opacity: 0.07;
+	filter: var(--ink-filter);
+	will-change: transform;
+}
+
+.fx-motes { inset: 0; width: 100vw; height: 100vh; }
+
+body:not([data-page^="doctrine"]) .fx-bg, body:not([data-page^="doctrine"]) .fx-motes { display: none; }
+
+#app, .masthead, .footer { position: relative; z-index: 1; }
+
+body[data-page="doctrine"] .fx-bg { background-image: url("../img/sheet/emblem.png"); }
+body[data-page="doctrine:agendas"] .fx-bg { background-image: url("../img/sheet/daggers.png"); background-size: auto 120vh; }
+body[data-page="doctrine:blasphemies"] .fx-bg { background-image: url("../img/sheet/brain.png"); }
+body[data-page="doctrine:virtues"] .fx-bg { background-image: url("../img/sheet/emblem.png"); }
+body[data-page="doctrine:sinmarks"] .fx-bg { background-image: url("../img/sheet/splat-1.png"); }
+body[data-page="doctrine:kit"] .fx-bg { background-image: url("../img/sheet/seal.png"); }
+body[data-page="doctrine:reference"] .fx-bg { background-image: url("../img/sheet/inkblot.png"); }
+
+/* The title catches like an old bulb, then holds. */
+@keyframes flicker {
+	0% { opacity: 0.2; } 8% { opacity: 1; } 12% { opacity: 0.35; } 18% { opacity: 1; }
+	24% { opacity: 0.6; } 30%, 100% { opacity: 1; }
+}
+
+h1.flicker { animation: flicker 0.9s steps(1, end) both; }
+
+/* Borders breathe: the hub frame and the section heading rule. */
+@keyframes breathe { 0%, 100% { box-shadow: 0 0 0 0 rgba(200, 20, 28, 0); } 50% { box-shadow: 0 0 18px 2px rgba(200, 20, 28, 0.35); } }
+
+.home-tiles.hub-tiles { animation: breathe 6s ease-in-out infinite; }
+
+body[data-page^="doctrine:"] .page-head { border-bottom-color: var(--stamp); }
+
+/* Hub tiles: the picture creeps closer under a red vignette. */
+.hub-tiles .home-tile-art img { transition: transform 6s ease-out; }
+.hub-tiles .home-tile:hover .home-tile-art img, .hub-tiles .home-tile:focus-visible .home-tile-art img { transform: scale(1.06); }
+.hub-tiles .home-tile:hover::before { background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.1) 30%, rgba(90, 6, 10, 0.75) 100%); }
+
+/* Every scattered card keeps its own small tilt. */
+.tg-agenda .compact-tile, .tg-blasphemy .compact-tile, .tg-virtue .compact-tile, .tg-kit .compact-tile { transform: rotate(var(--tilt, 0deg)); }
+
+/* Agendas: dog tags on a ball chain, swinging when touched. */
+.grid.tg-agenda {
+	row-gap: 46px;
+	padding-top: 30px;
+	background: linear-gradient(#3a3a3c, #1a1a1b) top / 100% 6px no-repeat;
+}
+
+.tg-agenda .compact-tile { overflow: visible; transform-origin: 50% -30px; border-radius: 22px 22px 14px 14px; }
+
+.tg-agenda .compact-tile .ct-pic { border-radius: 22px 0 0 14px; overflow: hidden; }
+
+.tg-agenda .compact-tile > .ct-body::before {
+	content: "";
+	position: absolute;
+	left: 50%;
+	top: -30px;
+	width: 2px;
+	height: 30px;
+	transform: translateX(-50%);
+	background: radial-gradient(circle, #b9b6ae 1.6px, transparent 1.9px) center top / 4px 5px repeat-y;
+}
+
+.tg-agenda .compact-tile > .ct-body { position: static; }
+
+@keyframes tag-swing {
+	0% { transform: rotate(var(--tilt, 0deg)); }
+	18% { transform: rotate(5deg); }
+	38% { transform: rotate(-3.5deg); }
+	58% { transform: rotate(2deg); }
+	78% { transform: rotate(-1deg); }
+	100% { transform: rotate(0deg); }
+}
+
+.tg-agenda .compact-tile:hover, .tg-agenda .compact-tile:focus-visible { animation: tag-swing 1.6s ease-out both; }
+
+.tg-agenda .compact-tile:hover .ct-emblem img { filter: brightness(1.15) drop-shadow(0 0 6px rgba(255, 255, 255, 0.35)); }
+
+/* Blasphemies: case files thrown on a table. */
+.grid.tg-blasphemy {
+	padding: 26px;
+	gap: 18px;
+	border-radius: 18px;
+	background:
+		radial-gradient(ellipse at 20% 30%, rgba(80, 20, 10, 0.35), transparent 45%),
+		radial-gradient(ellipse at 80% 70%, rgba(40, 30, 20, 0.4), transparent 50%),
+		repeating-linear-gradient(92deg, #1b1512 0 14px, #211a16 14px 15px, #1d1714 15px 31px),
+		#1a1411;
+	box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.8);
+}
+
+.tg-blasphemy .compact-tile { box-shadow: 4px 8px 18px rgba(0, 0, 0, 0.6); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+
+.tg-blasphemy .compact-tile:hover, .tg-blasphemy .compact-tile:focus-visible {
+	transform: rotate(0deg) translateY(-6px) scale(1.02);
+	box-shadow: 0 0 0 2px var(--blas), 0 14px 40px color-mix(in srgb, var(--blas) 45%, transparent);
+	z-index: 2;
+}
+
+/* The rising effect, in the blasphemy's own colour. */
+.ct-fx {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.4s ease;
+	border-radius: inherit;
+	mix-blend-mode: screen;
+	background: radial-gradient(circle, var(--blas) 1.5px, transparent 2.5px) 0 0 / 34px 46px, radial-gradient(circle, var(--blas) 1px, transparent 2px) 17px 23px / 34px 46px;
+	-webkit-mask: linear-gradient(to top, #000, transparent 85%);
+	mask: linear-gradient(to top, #000, transparent 85%);
+	animation: rise 4s linear infinite paused;
+}
+
+.compact-tile:hover .ct-fx, .compact-tile:focus-visible .ct-fx { opacity: 0.45; animation-play-state: running; }
+
+@keyframes rise { from { background-position: 0 0, 17px 23px; } to { background-position: 0 -184px, 17px -161px; } }
+
+/* Ardence: heat and flame licking up. */
+[data-fx="ardence"] .ct-fx {
+	background: radial-gradient(ellipse 18px 40px at 20% 100%, var(--blas), transparent 70%) 0 0 / 60px 90px,
+		radial-gradient(ellipse 14px 30px at 70% 100%, #ffb347, transparent 70%) 30px 45px / 60px 90px;
+	animation-name: flames;
+}
+
+@keyframes flames { from { background-position: 0 0, 30px 45px; } to { background-position: 0 -180px, 30px -135px; } }
+
+/* Flux: falling sand, the other way. */
+[data-fx="flux"] .ct-fx { background: radial-gradient(circle, #e9d9a6 1px, transparent 1.6px) 0 0 / 9px 13px; -webkit-mask: linear-gradient(#000, transparent 85%); mask: linear-gradient(#000, transparent 85%); animation-name: sand; }
+
+@keyframes sand { from { background-position: 0 0; } to { background-position: 0 130px; } }
+
+/* Whisper: wisps of shadow. */
+[data-fx="whisper"] .ct-fx { mix-blend-mode: multiply; background: radial-gradient(ellipse 60px 26px at 50% 50%, rgba(0, 0, 0, 0.8), transparent 70%) 0 0 / 120px 70px; animation-name: wisps; }
+
+@keyframes wisps { from { background-position: 0 0; } to { background-position: 120px -140px; } }
+
+/* Gate: a rippling tear. */
+[data-fx="gate"] .ct-fx { background: repeating-radial-gradient(circle at 50% 50%, transparent 0 14px, var(--blas) 15px 16px, transparent 17px 30px); -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%); mask: radial-gradient(circle, #000 30%, transparent 70%); animation: ripple 3s ease-in-out infinite paused; }
+
+@keyframes ripple { 0%, 100% { transform: scale(0.9); } 50% { transform: scale(1.1); } }
+
+/* Tension: a force-field sheen sweeping across. */
+[data-fx="tension"] .ct-fx { background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.55) 48%, var(--blas) 50%, transparent 62%) 0 0 / 250% 100%; -webkit-mask: none; mask: none; animation: sheen 2.4s ease-in-out infinite paused; }
+
+@keyframes sheen { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+
+/* Virtues: posters pinned to a concrete wall. */
+.grid.tg-virtue {
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+	gap: 34px 26px;
+	padding: 34px 26px;
+	border-radius: 14px;
+	background:
+		radial-gradient(circle at 15% 25%, rgba(255, 255, 255, 0.04), transparent 30%),
+		radial-gradient(circle at 75% 80%, rgba(0, 0, 0, 0.35), transparent 40%),
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.6' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+		#2b2a28;
+	box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.7);
+}
+
+.tg-virtue .compact-tile {
+	grid-template-columns: 1fr;
+	grid-template-rows: 250px auto;
+	overflow: visible;
+	border-radius: 3px;
+	transform-origin: 50% 0;
+	box-shadow: 3px 6px 14px rgba(0, 0, 0, 0.6);
+	transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.tg-virtue .ct-pic { overflow: visible; }
+
+.tg-virtue .ct-pic > img { border-radius: 3px 3px 0 0; }
+
+/* The pin. */
+.tg-virtue .ct-pic::after {
+	content: "";
+	position: absolute;
+	top: -7px;
+	left: 50%;
+	z-index: 3;
+	width: 16px;
+	height: 16px;
+	margin-left: -8px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 35% 35%, #ff7a7a, #b3121a 60%, #5a060a);
+	box-shadow: 1px 3px 3px rgba(0, 0, 0, 0.6);
+}
+
+.tg-virtue .compact-tile:hover, .tg-virtue .compact-tile:focus-visible {
+	transform: perspective(700px) rotateX(9deg) rotate(calc(var(--tilt, 0deg) * 0.4));
+	box-shadow: 3px 18px 24px rgba(0, 0, 0, 0.7);
+}
+
+.tg-virtue .compact-tile:hover .ct-pic > img { filter: saturate(1.4) brightness(1.1); }
+
+/* Sin marks: an anatomy chart, each mark threaded to the body. */
+.anatomy { display: grid; grid-template-columns: minmax(0, 1fr) minmax(160px, 260px) minmax(0, 1fr); gap: 16px 54px; align-items: center; }
+
+.anatomy > .tile-grid { display: contents; }
+
+.anatomy-body { grid-column: 2; grid-row: 1 / 4; width: 100%; filter: var(--ink-filter); opacity: 0.75; transition: filter 0.3s ease; }
+
+.anatomy .compact-tile:nth-child(1) { grid-column: 1; grid-row: 1; }
+.anatomy .compact-tile:nth-child(2) { grid-column: 1; grid-row: 2; }
+.anatomy .compact-tile:nth-child(3) { grid-column: 1; grid-row: 3; }
+.anatomy .compact-tile:nth-child(4) { grid-column: 3; grid-row: 1; }
+.anatomy .compact-tile:nth-child(5) { grid-column: 3; grid-row: 2; }
+
+.tg-sinmark .compact-tile { overflow: visible; }
+
+.tg-sinmark .compact-tile .ct-pic { border-radius: 16px 0 0 16px; }
+
+.tg-sinmark .compact-tile > .ct-body { position: static; }
+
+/* The thread. */
+.tg-sinmark .compact-tile > .ct-body::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	width: 54px;
+	height: 2px;
+	background: repeating-linear-gradient(90deg, #c0262d 0 6px, transparent 6px 9px);
+}
+
+.anatomy .compact-tile:nth-child(-n+3) > .ct-body::after { right: -54px; }
+
+.anatomy .compact-tile:nth-child(n+4) > .ct-body::after { left: -54px; }
+
+@keyframes thread { from { background-position: 0 0; } to { background-position: 18px 0; } }
+
+.tg-sinmark .compact-tile:hover > .ct-body::after { animation: thread 0.6s linear infinite; height: 3px; }
+
+.anatomy:has(.compact-tile:hover) .anatomy-body { filter: var(--ink-filter) drop-shadow(0 0 10px #c0262d); opacity: 1; }
+
+/* Kit: a CASTLE quartermaster's drawers. */
+.kit-group {
+	position: relative;
+	padding: 18px 18px 8px;
+	margin: 26px 0;
+	border-radius: 8px;
+	background: linear-gradient(#232221, #191918);
+	border: 2px solid #3b3a37;
+	box-shadow: inset 0 12px 24px rgba(0, 0, 0, 0.6), 0 3px 0 #0c0c0c;
+}
+
+.kit-group > .note { color: #b7b3aa; }
+
+.kit-group .kit-group-title {
+	display: inline-flex;
+	padding: 4px 14px;
+	margin: -32px 0 10px;
+	background: #d9d4c5;
+	color: #1d1c1a;
+	border: 2px solid #1d1c1a;
+	border-bottom: 0;
+	font-family: var(--font-typewriter);
+	letter-spacing: 0.14em;
+	font-size: 16px;
+}
+
+.tg-kit .compact-tile { transition: transform 0.2s ease; }
+
+.tg-kit .compact-tile:hover, .tg-kit .compact-tile:focus-visible { transform: translateY(-5px) rotate(0deg); }
+
+/* Fan-made shops hang their own sign instead. */
+.kit-group.fan-shop .kit-group-title {
+	background: #0d0d0d;
+	color: var(--fan-ink);
+	border: 2px solid var(--fan-ring);
+	box-shadow: 0 0 12px var(--fan-ring);
+	font-family: var(--font-goth2);
+	letter-spacing: 0.04em;
+	font-size: 22px;
+	text-transform: none;
+}
+
+.kit-group.fan-shop .compact-tile.fan-made.fan-made { box-shadow: 4px 8px 18px rgba(0, 0, 0, 0.6) !important; }
+
+.kit-group.fan-shop .compact-tile.fan-made::before { display: none !important; }
+
+.kit-group.fan-shop { box-shadow: inset 0 12px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--fan-ring); }
+
+/* Phones: straight cards, no anatomy threads. */
+@media (max-width: 760px) {
+	.tg-agenda .compact-tile, .tg-blasphemy .compact-tile, .tg-virtue .compact-tile, .tg-kit .compact-tile { transform: none; }
+	.anatomy { grid-template-columns: minmax(0, 1fr); }
+	.anatomy-body { grid-column: 1; grid-row: auto; max-width: 160px; justify-self: center; }
+	.anatomy .compact-tile:nth-child(n) { grid-column: 1; grid-row: auto; }
+	.tg-sinmark .compact-tile > .ct-body::after { display: none; }
+	.grid.tg-blasphemy, .grid.tg-virtue { padding: 14px; }
+}
+
 /* Focus viewer: hover lights a card up; clicking opens it over a darkened
    screen, laid out like the book's pages. */
 [data-view] { cursor: zoom-in; transition: transform 0.12s ease, outline-color 0.12s ease; outline: 3px solid transparent; outline-offset: 3px; }

@@ -77,20 +77,26 @@ window.CAIN = window.CAIN || {};
 			body.push(clamp(x.text, 2));
 		}
 		name = x.name;
+		// A steady per-card tilt (from the id), so the table and wall look scattered.
+		var hash = 0;
+		String(x.id).split("").forEach(function (ch) { hash = (hash * 31 + ch.charCodeAt(0)) % 997; });
+		var tilt = ((hash % 7) - 3) * 0.6;
+		style = (style ? style + ";" : "") + "--tilt:" + tilt.toFixed(1) + "deg;--lift:" + (hash % 5) + "px";
 		return h("article", { class: cls + (opts.selected ? " selected" : "") + (opts.locked ? " locked" : ""), style: style,
-			"data-view": kind + ":" + x.id, "data-search": searchText(x), tabindex: "0", "aria-label": "Open " + name },
+			"data-fx": kind === "blasphemy" ? x.id : null, "data-view": kind + ":" + x.id, "data-search": searchText(x), tabindex: "0", "aria-label": "Open " + name },
 			pic,
 			h("div", { class: "ct-body" },
 				h("h2", { class: "ct-name" }, name),
 				h("p", { class: "ct-sub" }, sub, opts.selected ? h("span", { class: "tag stamp" }, opts.selectedLabel || "Selected") : null),
 				opts.locked ? h("p", { class: "ct-locked" }, opts.locked) : null,
 				body,
-				opts.actions ? h("div", { class: "ct-actions" }, opts.actions) : null));
+				opts.actions ? h("div", { class: "ct-actions" }, opts.actions) : null),
+			kind === "blasphemy" ? h("span", { class: "ct-fx", "aria-hidden": "true" }) : null);
 	}
 
 	// A grid of tiles. items: the entries; opts(x) gives each tile's options.
 	function tileGrid(kind, items, opts) {
-		return h("div", { class: "grid tile-grid" }, items.map(function (x) { return tile(kind, x, opts ? opts(x) : null); }));
+		return h("div", { class: "grid tile-grid tg-" + kind }, items.map(function (x) { return tile(kind, x, opts ? opts(x) : null); }));
 	}
 
 	// Rules sections (virtue affinity, shop rules...) as one row of buttons; each

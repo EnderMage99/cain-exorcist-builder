@@ -281,7 +281,7 @@ window.CAIN = window.CAIN || {};
 		if (sec.id === "agendas") body = CAIN.tileGrid("agenda", CAIN.agendas);
 		else if (sec.id === "blasphemies") body = h("div", null, h("div", { class: "grid" }, blasphemyCard(CAIN.blast, cat)), CAIN.tileGrid("blasphemy", CAIN.blasphemies));
 		else if (sec.id === "virtues") body = virtuesView(cat);
-		else if (sec.id === "sinmarks") body = CAIN.tileGrid("sinmark", CAIN.sinMarks);
+		else if (sec.id === "sinmarks") body = h("div", { class: "anatomy" }, h("img", { class: "anatomy-body", src: "img/sheet/body.png", alt: "", "aria-hidden": "true" }), CAIN.tileGrid("sinmark", CAIN.sinMarks));
 		else if (sec.id === "kit") body = kitView();
 		else body = h("div", { class: "reference-view" }, h("h2", { class: "kit-group-title" }, "CAT scale"), catView(cat), h("h2", { class: "kit-group-title" }, "Glossary"), glossaryView());
 
@@ -363,7 +363,8 @@ window.CAIN = window.CAIN || {};
 						h("div", { class: "entry-text" }, h("p", null, "Upgrade both service weapons by +1 CAT, to a max of CAT " + core.weaponUpgrade.maxCat + ". Weapons start at CAT 0; choose their look freely.")))))),
 			CAIN.kitCategories.map(function (cat) {
 				var items = CAIN.kit.filter(function (k) { return k.category === cat; });
-				return h("section", { class: "kit-group", "data-group": cat },
+				var shop = items.length && items.every(function (k) { return CAIN.sourceOf(k) && CAIN.sourceOf(k).fan; });
+				return h("section", { class: "kit-group" + (shop ? " fan-shop" + CAIN.sourceClass(items[0]) : ""), "data-group": cat },
 					h("h2", { class: "kit-group-title" }, cat, CAIN.sourceBadge(items[0], true)),
 					blurbs[cat] ? h("p", { class: "note" }, blurbs[cat]) : null,
 					CAIN.tileGrid("kit", items));
@@ -503,6 +504,7 @@ window.CAIN = window.CAIN || {};
 
 	function render() {
 		var route = currentRoute();
+		document.body.setAttribute("data-page", route.id);
 		var y = window.scrollY;
 		app.textContent = "";
 		CAIN.append(app, route.render());
@@ -525,6 +527,7 @@ window.CAIN = window.CAIN || {};
 		var heading = app.querySelector("h1");
 		var name = heading ? heading.textContent.trim() : "";
 		document.title = name && route.id !== "registry" ? name + " - CAIN Exorcist Registry" : "CAIN Exorcist Registry";
+		if (CAIN.fx) CAIN.fx.update();
 	}
 
 	// Keyboard users can jump past the top bar. It focuses the content rather than
