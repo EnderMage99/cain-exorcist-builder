@@ -202,7 +202,7 @@ window.CAIN = window.CAIN || {};
 			tile("blas", "Blasphemies", null, ["img/blasphemy/tension.jpg", "img/blasphemy/ardence.jpg", "img/blasphemy/gate.jpg", "img/blasphemy/edit.jpg", "img/blasphemy/jaunt.jpg"], "photo", toDoctrine("blasphemies")),
 			tile("virt", "Virtues", null, ["img/virtue/justice.jpg", "img/virtue/faith.jpg", "img/virtue/charity.jpg", "img/virtue/fortitude.jpg", "img/virtue/hope.jpg", "img/virtue/prudence.jpg"], "photo", toDoctrine("virtues")),
 			tile("kit", "Kit", null, ["img/kit/red-herb.png", "img/kit/qlippoth.png", "img/kit/black-body.png"], "ink", toDoctrine("kit")),
-			tile("doc", "Doctrine", "Sin marks, CAT scale, glossary, and every section", "img/sheet/emblem.png", "ink", { href: "#/doctrine" }));
+			tile("doc", "Doctrine", "Sin marks, CAT scale, glossary", "img/sheet/emblem.png", "ink", { href: "#/doctrine" }));
 
 		return dropZone(h("div", { class: "registry-page" },
 			h("h1", { class: "visually-hidden" }, "CAIN Exorcist Registry"),
@@ -266,7 +266,6 @@ window.CAIN = window.CAIN || {};
 				h("div", null,
 					h("div", { class: "kicker" }, "Reference"),
 					h("h1", null, "Doctrine"))),
-			catPicker(),
 			h("nav", { class: "home-tiles hub-tiles", "aria-label": "Doctrine sections" }, doctrineSections.map(function (s) {
 				return bigTile("hub-" + s.id, s.name, s.blurb, s.art, s.kind, { href: "#/doctrine/" + s.id });
 			}))
