@@ -195,7 +195,7 @@ window.CAIN = window.CAIN || {};
 		function toDoctrine(id) { return { href: "#/doctrine/" + id }; }
 		var tile = bigTile;
 		var tiles = h("nav", { class: "home-tiles", "aria-label": "Start" },
-			tile("reg", draft ? "Continue registration" : "Register exorcist", draft ? (draft.character.name || "Unnamed") + ", " + draft.step + " step" : "Step by step", "img/virtue/justice.jpg", "photo", { href: "#/new" }),
+			tile("reg", draft ? "Resume exorcist" : "Register exorcist", draft ? "Unfinished: " + (draft.character.name || "unnamed") + ", at the " + draft.step.charAt(0).toUpperCase() + draft.step.slice(1) + " step" : "Step by step", "img/virtue/justice.jpg", "photo", { href: "#/new" }),
 			tile("quick", "Quick exorcist", "A random legal exorcist", "img/blasphemy/gate.jpg", "photo", { onclick: function () { CAIN.registration.quickExorcist(); location.hash = "#/new"; } }),
 			tile("imp", "Import", "A .cain.json file", "img/blasphemy/palace.jpg", "photo", { "for": "import-file", tabindex: "0", onkeydown: function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); } } }),
 			tile("ag", "Agendas", null, ["img/agenda/beast.png", "img/agenda/guardian.png", "img/agenda/loner.png", "img/agenda/firebug.png"], "emblem", toDoctrine("agendas")),
