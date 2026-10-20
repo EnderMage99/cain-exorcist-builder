@@ -279,6 +279,7 @@ window.CAIN = window.CAIN || {};
 			if (!b) return null;
 			var want = i === 0 ? 2 : 1;
 			var count = o.powers.length;
+			var q = R.quirk(o.quirk);
 			var th = CAIN.blasTheme(b);
 			return h("article", { class: "card pick-card pick-detail blas-card selected " + th.class, style: th.style, "data-view": "blasphemy:" + b.id },
 				h("div", { class: "blas-intro" },
@@ -289,11 +290,15 @@ window.CAIN = window.CAIN || {};
 						CAIN.approvalTag(b),
 						i > 0 ? h("span", { class: "tag stamp" }, "Extra blasphemy: sin cap -1, XP to advance +1") : null,
 						h("p", { class: "note" }, b.summary))),
-				h("div", { class: "passive" },
+				!q || q.addsToPassive ? h("div", { class: "passive" },
 					h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
-					CAIN.richText(b.passive.text, cat)),
+					CAIN.richText(b.passive.text, cat)) : null,
+				q ? CAIN.quirkBlock(q, b, cat) : null,
+				R.quirksFor(b.id).length ? h("div", { class: "quirk-row" },
+					h("span", { class: "field-label" }, "Quirk (optional)"),
+					CAIN.quirkPicker(b, o.quirk, function (v) { CAIN.hunt.setQuirk(c, o, v); changed(true); })) : null,
 				h("div", { class: "label" }, want > 1 ? "Choose 2 powers" : "Choose 1 power"),
-				h("ul", { class: "options" }, b.powers.map(function (p) {
+				h("ul", { class: "options" }, R.powersFor(o).map(function (p) {
 					var on = o.powers.indexOf(p.id) >= 0;
 					var full = count >= want && !on;
 					return h("li", null, h("button", {

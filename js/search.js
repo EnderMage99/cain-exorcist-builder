@@ -26,6 +26,10 @@ window.CAIN = window.CAIN || {};
 		}
 		CAIN.agendas.forEach(function (a) { entry("agenda", a, "Agenda", CAIN.agendaIcon(a)); });
 		CAIN.blasphemies.forEach(function (b) { entry("blasphemy", b, "Blasphemy", CAIN.blasphemyIcon(b)); });
+		(CAIN.quirks || []).forEach(function (q) {
+			var b = CAIN.rules.blasphemy(q.blasphemy);
+			if (b) out.push({ name: q.name, kind: "Quirk of " + b.name + " · Games for Freaks 4", icon: CAIN.blasphemyIcon(b), view: "blasphemy:" + b.id, section: "blasphemies" });
+		});
 		(CAIN.virtues || []).forEach(function (v) { entry("virtue", v, "Virtue", v.image || "img/virtue/" + v.id + ".jpg"); });
 		CAIN.sinMarks.forEach(function (m) { entry("sinmark", m, "Sin mark", null); });
 		CAIN.kit.forEach(function (k) { entry("kit", k, "Kit · " + k.category, k.image || null, !!k.image && k.image.indexOf("img/kit/") === 0); });

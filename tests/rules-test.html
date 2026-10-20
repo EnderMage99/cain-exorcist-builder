@@ -41,6 +41,7 @@
 <script src="../data/kit.js"></script>
 <script src="../data/virtues.js"></script>
 <script src="../data/gff3.js"></script>
+<script src="../data/gff4.js"></script>
 <script src="../data/ishmael.js"></script>
 <script src="../data/harpocrates.js"></script>
 <script src="../data/order.js"></script>
@@ -555,6 +556,29 @@
 		eq("free extra costs nothing", [R.derived(multi).extraBlasphemies, R.derived(multi).sinCap, R.derived(multi).xpToAdvance], [0, 10, 4]);
 		multi.blasphemies.push({ id: "gate", powers: ["tear"] });
 		eq("one free and one paid extra: cost 1", R.derived(multi).extraBlasphemies, 1);
+
+		group("Games for Freaks 4 quirks");
+		check("26 quirks", CAIN.quirks.length === 26, CAIN.quirks.length);
+		CAIN.quirks.forEach(function (q) {
+			var qb = R.blasphemy(q.blasphemy);
+			check(q.name + ": on " + q.blasphemy + ", replaces its passive", !!qb && qb.passive.id === q.replaces && q.source === "gff4");
+		});
+		check("Bind gains Sin Strike as a power", !!R.power("bind", "sin-strike"));
+		var furnace = build("guardian", "painkiller", "ardence", ["sabre", "fury"]);
+		H.setQuirk(furnace, furnace.blasphemies[0], "void-furnace");
+		eq("Void Furnace swaps Sabre and Fury for Nihil and Black Matter", furnace.blasphemies[0].powers, ["nihil", "black-matter"]);
+		check("powers on offer follow the swap", R.powersFor(furnace.blasphemies[0]).some(function (p) { return p.id === "nihil"; }) &&
+			!R.powersFor(furnace.blasphemies[0]).some(function (p) { return p.id === "sabre"; }));
+		eq("legal with the quirk", R.validateCreation(furnace), []);
+		H.setQuirk(furnace, furnace.blasphemies[0], null);
+		eq("clearing it swaps back", [furnace.blasphemies[0].powers, furnace.blasphemies[0].quirk], [["sabre", "fury"], undefined]);
+		var steel = guardianTension();
+		H.setQuirk(steel, steel.blasphemies[0], "steel-soul");
+		check("Steel Soul turns Iron Soul off", H.hasPassive(guardianTension(), "iron-soul") && !H.hasPassive(steel, "iron-soul"));
+
+		group("Passives that raise caps");
+		var wave = build("guardian", "painkiller", "wave", ["pressure", "breach"]);
+		eq("Wave's Wellspring: +1 psyche burst max", R.derived(wave).psycheBursts, R.derived(guardianTension()).psycheBursts + 1);
 
 		group("Export and import");
 		var T = CAIN.transfer;

@@ -61,7 +61,11 @@ window.CAIN = window.CAIN || {};
 				(b.trackers || []).map(function (t) {
 					return h("details", { class: "blas-extra" }, h("summary", null, t.name + " (" + R.resolveText(String(t.segments), cat) + " segments)"), CAIN.richText(t.text || "", cat));
 				}),
-				CAIN.blasExtras(b, cat)) : null);
+				CAIN.blasExtras(b, cat)) : null,
+			R.quirksFor(b.id).length ? h("div", { class: "spread-quirks" },
+				h("h3", { class: "spread-subtitle" }, "Quirks"),
+				h("p", { class: "tiny" }, "Optional and permanent alternate passives from Games for Freaks 4, one per blasphemy. Take one at the start or develop it between missions."),
+				R.quirksFor(b.id).map(function (q) { return CAIN.quirkBlock(q, b, cat); })) : null);
 	}
 
 	// Virtue: portrait, bond track and stricture on the left; name, story and the

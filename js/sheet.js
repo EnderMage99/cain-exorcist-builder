@@ -370,10 +370,12 @@ window.CAIN = window.CAIN || {};
 			var item = R.purchaseItem(p);
 			if (!item) return;
 			var consumable = item.tags.indexOf("Consumable") >= 0;
+			var cost = [item.kp === null ? "permanent" : item.kp + " KP"];
+			if (item.scrip !== undefined) cost.push(item.scrip === null ? "auction" : item.scrip + " scrip");
 			items.push(h("li", { class: "kit-bought" },
 				h("span", null,
 					CAIN.kitPicture(item, "kit-pic-sm"),
-					(item.name + (item.kp === null ? " (permanent)" : " (" + item.kp + " KP)") + (consumable ? ", consumable" : "") + (!self.editable && p.count > 1 ? " x" + p.count : "")).toUpperCase(),
+					(item.name + " (" + cost.join(", ") + ")" + (consumable ? ", consumable" : "") + (!self.editable && p.count > 1 ? " x" + p.count : "")).toUpperCase(),
 					item.custom && item.text ? h("span", { class: "kit-desc" }, item.text) : null,
 					CAIN.sourceBadge(item, true)),
 				self.editable ? h("span", { class: "row-tools" },
@@ -527,6 +529,7 @@ window.CAIN = window.CAIN || {};
 			var b = R.blasphemy(owned.id);
 			if (!b) return null;
 			var th = CAIN.blasTheme(b);
+			var quirk = R.quirk(owned.quirk);
 			return h("div", { class: "blas-block " + th.class, style: th.style },
 				h("div", { class: "blas-head" },
 					CAIN.blasPortrait(b, "blas-portrait-sm"),
@@ -546,9 +549,14 @@ window.CAIN = window.CAIN || {};
 							self.change(b.name + " extra cost", before, owned.free ? "free" : "paid");
 						} }, owned.free ? "Charge the cost" : "Mark as free") : null) : null,
 				b.summary && b.custom ? h("p", { class: "tiny" }, b.summary) : null,
-				h("div", { class: "passive" },
+				!quirk || quirk.addsToPassive ? h("div", { class: "passive" },
 					h("div", { class: "entry-name" }, b.passive.name, h("span", { class: "tag stamp" }, "Passive")),
-					CAIN.richText(b.passive.text, d.cat)),
+					CAIN.richText(b.passive.text, d.cat)) : null,
+				quirk ? CAIN.quirkBlock(quirk, b, d.cat) : null,
+				self.editable && R.quirksFor(b.id).length ? h("div", { class: "quirk-row" },
+					h("span", { class: "field-label" }, "Quirk"),
+					CAIN.quirkPicker(b, owned.quirk, function (v) { CAIN.hunt.setQuirk(ch, owned, v); self.onChange(true); }),
+					h("span", { class: "tiny" }, "Optional and permanent: take one at the start, or develop it between missions (Games for Freaks 4).")) : null,
 				h("div", { class: "power-grid", style: "--n:" + Math.min(3, Math.max(1, owned.powers.length)) }, owned.powers.map(function (pid, pi) {
 					var p = R.power(b.id, pid);
 					if (!p) return null;
@@ -799,6 +807,12 @@ window.CAIN = window.CAIN || {};
 	});
 
 	// Character screen: #/c/<id>. Old /play and /between links land here too.
+	// Exorcists at the GM desk get a way back to it from their sheet.
+	function atGmTable(id) {
+		var gm = CAIN.safeStore.get("cain.gm", null);
+		return !!(gm && Array.isArray(gm.party) && gm.party.indexOf(id) >= 0);
+	}
+
 	CAIN.screens.sheet = {
 		id: "registry",
 		render: function (id) {
@@ -880,6 +894,7 @@ window.CAIN = window.CAIN || {};
 					h("h1", null, ch.name || "Unnamed")),
 				h("div", { class: "head-actions" },
 					status,
+					atGmTable(ch.id) ? h("a", { class: "btn small", href: "#/gm", title: "Back to the GM desk" }, "GM desk") : null,
 					h("button", { class: "btn ghost small", type: "button", onclick: function () { location.hash = "#/c/" + duplicate(ch).id; } }, "Duplicate"),
 					h("button", { class: "btn ghost small", type: "button", title: "Download this exorcist as a .cain.json file", onclick: function () {
 						CAIN.downloadText(CAIN.transfer.fileName([ch]), CAIN.transfer.pack([ch]));

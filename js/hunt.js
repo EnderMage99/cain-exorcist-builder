@@ -52,7 +52,12 @@ window.CAIN = window.CAIN || {};
 	}
 
 	function hasPassive(ch, id) {
-		return ch.blasphemies.some(function (b) { var x = R.blasphemy(b.id); return x && x.passive.id === id; });
+		// A quirk that replaces the passive turns it off (Steel Soul has no Iron Soul).
+		return ch.blasphemies.some(function (b) {
+			var x = R.blasphemy(b.id);
+			var q = R.quirk(b.quirk);
+			return x && x.passive.id === id && (!q || q.addsToPassive);
+		});
 	}
 
 	function gainPathos(ch, events, why) {
@@ -107,6 +112,20 @@ window.CAIN = window.CAIN || {};
 		if (opts.virtue !== undefined) bondWith(ch, opts.virtue || null, events);
 		log(ch, events, "Deployed on a new hunt with " + ch.hunt.bursts + " psyche bursts and " + kpLeft(ch) + " KP.");
 		return { events: events, ok: true };
+	}
+
+	// Picks a quirk for an owned blasphemy (null clears it). Powers the quirk swaps
+	// out are swapped in place, and back again when it's cleared.
+	function setQuirk(ch, owned, id) {
+		var events = [];
+		var b = R.blasphemy(owned.id);
+		var before = R.quirk(owned.quirk);
+		var after = R.quirk(id);
+		if (before && before.powerSwaps) before.powerSwaps.forEach(function (s) { var i = owned.powers.indexOf(s.power.id); if (i >= 0) owned.powers[i] = s.replace; });
+		if (after && after.powerSwaps) after.powerSwaps.forEach(function (s) { var i = owned.powers.indexOf(s.replace); if (i >= 0) owned.powers[i] = s.power.id; });
+		if (after) owned.quirk = after.id; else delete owned.quirk;
+		if (b) log(ch, events, after ? b.name + " quirk: " + after.name + (after.addsToPassive ? " (added to " : " (replaces ") + b.passive.name + ")." : b.name + ": quirk removed, back to " + b.passive.name + ".");
+		return { events: events };
 	}
 
 	// Picks the virtue to bond with this mission (null for none). A new bond starts
@@ -883,6 +902,7 @@ window.CAIN = window.CAIN || {};
 		addCustomItem: addCustomItem,
 		diceRange: diceRange,
 		bondWith: bondWith,
+		setQuirk: setQuirk,
 		swapAgenda: swapAgenda,
 		swapBlasphemy: swapBlasphemy
 	};

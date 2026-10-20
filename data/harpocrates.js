@@ -887,7 +887,8 @@ window.CAIN = window.CAIN || {};
 			flavor: "Control the ebb and flow of the psychic sea itself.\nFun Fact: In recent years, Wave users previously located in [redacted], Bermuda for containment have been distributed for active service in global CASTLE divisions.\nCommon in: manic highs and lows; child of Sin-Seed bearer; born in CAIN facilities.",
 			passive: {
 				id: "wellspring", name: "Wellspring",
-				text: "You have an overflowing reservoir of psychic energy. You raise your psyche burst max by +1. Your psychic signature is easily detectable within 1/2 CAT ({halfcat:range}) distance to other supernatural beings, drifters, traces, and other exorcists. You can suppress your psychic signature for a scene by taking 2 non-lethal stress when the scene begins.\nExercise extreme caution: Drifters or certain sins may be attracted to your grace, and approach you if they detect it."
+				text: "You have an overflowing reservoir of psychic energy. You raise your psyche burst max by +1. Your psychic signature is easily detectable within 1/2 CAT ({halfcat:range}) distance to other supernatural beings, drifters, traces, and other exorcists. You can suppress your psychic signature for a scene by taking 2 non-lethal stress when the scene begins.\nExercise extreme caution: Drifters or certain sins may be attracted to your grace, and approach you if they detect it.",
+				modifiers: [{ stat: "psycheBursts", add: 1 }]
 			},
 			powers: [
 				{ id: "pressure", name: "Pressure",
@@ -1385,7 +1386,8 @@ window.CAIN = window.CAIN || {};
 			{ id: "timeline-anchored-note", name: "Timeline-Anchored Note & Pencil", category: "Auxiliary Items", source: "harpocrates", scrip: 2, kp: 1, tags: ["Consumable"],
 				text: "A sheet of paper and corresponding pencil that resists reality and memory altering effects. Information written on this note with the given pencil cannot be changed or removed in any way. Can only fit a few sentences. Eraser not included." },
 			{ id: "physic-assisted-surgery", name: "Physic-Assisted Surgery & Neuroplasticity Therapy", category: "Auxiliary Items", source: "harpocrates", scrip: 3, kp: null, tags: [],
-				text: "Temerity and Castle approved surgery and physical therapy to repair permanent damage done to the nervous system or brain. Allows you to remove the affliction Severed Nervous System. Also increases your stress cap by +1 but only once." },
+				text: "Temerity and Castle approved surgery and physical therapy to repair permanent damage done to the nervous system or brain. Allows you to remove the affliction Severed Nervous System. Also increases your stress cap by +1 but only once.",
+				modifiers: [{ stat: "maxStress", add: 1 }] },
 	
 			// Blind Eye Terminals (book p154-155): prices are the scrip value of occult items you trade in.
 			{ id: "lappel-du-vide", name: "\"Lappel du Vide\"", category: "Blind Eye Terminals", source: "harpocrates", scrip: 4, kp: 2, tags: ["Conspicuous"],

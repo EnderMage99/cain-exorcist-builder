@@ -356,6 +356,25 @@ window.CAIN = window.CAIN || {};
 		}));
 	}
 
+	// A quirk (Games for Freaks 4) as it reads on a card: name, what it replaces,
+	// its text and any extra rules.
+	function quirkBlock(q, b, cat) {
+		return h("div", { class: "passive quirk-block" },
+			h("div", { class: "entry-name" }, q.name, h("span", { class: "tag stamp" }, "Quirk"), sourceBadge(q, true)),
+			h("p", { class: "tiny quirk-note" }, (q.addsToPassive ? "Added to " : "Replaces ") + b.passive.name + "." +
+				(q.powerSwaps ? " Swaps " + q.powerSwaps.map(function (s) { var p = CAIN.rules.power(b.id, s.replace); return (p ? p.name : s.replace) + " for " + s.power.name; }).join(", ") + "." : "")),
+			richText(q.text, cat),
+			blasExtras(q, cat));
+	}
+
+	// Dropdown of a blasphemy's quirks, or null when it has none.
+	function quirkPicker(b, value, onSet) {
+		var list = CAIN.rules.quirksFor(b.id);
+		if (!list.length) return null;
+		return select(null, value || "", list.map(function (q) { return { value: q.id, label: q.name + (q.addsToPassive ? " (added to " : " (replaces ") + b.passive.name + ")" }; }),
+			function (v) { onSet(v || null); }, { placeholder: "No quirk: " + b.passive.name, aria: b.name + " quirk" });
+	}
+
 	// Fan-made content: a badge naming the supplement, and the class that gives
 	// its cards their own border. Core-book entries get neither.
 	function sourceOf(entry) {
@@ -387,6 +406,8 @@ window.CAIN = window.CAIN || {};
 	CAIN.approvalTag = approvalTag;
 	CAIN.sourceOf = sourceOf;
 	CAIN.blasExtras = blasExtras;
+	CAIN.quirkBlock = quirkBlock;
+	CAIN.quirkPicker = quirkPicker;
 	CAIN.sourceClass = sourceClass;
 	CAIN.sourceBadge = sourceBadge;
 	CAIN.powerHead = powerHead;

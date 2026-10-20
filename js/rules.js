@@ -45,9 +45,38 @@ window.CAIN = window.CAIN || {};
 		return a ? byId(a.abilities, ref.ability) : null;
 	}
 
+	// A blasphemy's own power, or one a quirk swaps in (Void Furnace's Nihil).
 	function power(blasphemyId, powerId) {
 		var b = blasphemy(blasphemyId);
-		return b ? byId(b.powers, powerId) : null;
+		if (!b) return null;
+		var own = byId(b.powers, powerId);
+		if (own) return own;
+		var swapped = null;
+		quirksFor(blasphemyId).forEach(function (q) {
+			(q.powerSwaps || []).forEach(function (s) { if (s.power.id === powerId) swapped = s.power; });
+		});
+		return swapped;
+	}
+
+	// Quirks (Games for Freaks 4): optional alternate passives, one per blasphemy.
+	function quirk(id) {
+		return id ? byId(CAIN.quirks || [], id) : null;
+	}
+
+	function quirksFor(blasphemyId) {
+		return (CAIN.quirks || []).filter(function (q) { return q.blasphemy === blasphemyId; });
+	}
+
+	// The powers an owned blasphemy offers, after its quirk's swaps.
+	function powersFor(owned) {
+		var b = blasphemy(owned.id);
+		if (!b) return [];
+		var q = quirk(owned.quirk);
+		if (!q || !q.powerSwaps) return b.powers;
+		return b.powers.map(function (p) {
+			var s = q.powerSwaps.filter(function (x) { return x.replace === p.id; })[0];
+			return s ? s.power : p;
+		});
 	}
 
 	function sinMarkAbility(markId, roll) {
@@ -188,7 +217,9 @@ window.CAIN = window.CAIN || {};
 		ch.blasphemies.forEach(function (owned) {
 			var b = blasphemy(owned.id);
 			if (!b) return;
-			sources.push({ name: b.passive.name, entry: b.passive, count: 1 });
+			var q = quirk(owned.quirk);
+			if (!q || q.addsToPassive) sources.push({ name: b.passive.name, entry: b.passive, count: 1 });
+			if (q) sources.push({ name: q.name, entry: q, count: 1 });
 			owned.powers.forEach(function (pid) {
 				var p = byId(b.powers, pid);
 				if (p) sources.push({ name: p.name, entry: p, count: 1 });
@@ -444,7 +475,7 @@ window.CAIN = window.CAIN || {};
 		ch.blasphemies.forEach(function (owned) {
 			var b = blasphemy(owned.id);
 			if (!b) return;
-			var open = b.powers.filter(function (p) { return owned.powers.indexOf(p.id) < 0; });
+			var open = powersFor(owned).filter(function (p) { return owned.powers.indexOf(p.id) < 0; });
 			if (open.length) {
 				options.push({ kind: "blasphemyPower", blasphemy: b.id, choices: open.map(function (p) { return p.id; }), mustReplace: powersFull });
 			}
@@ -592,6 +623,9 @@ window.CAIN = window.CAIN || {};
 		purchaseItem: purchaseItem,
 		agendaAbility: agendaAbility,
 		power: power,
+		quirk: quirk,
+		quirksFor: quirksFor,
+		powersFor: powersFor,
 		sinMarkAbility: sinMarkAbility,
 		newCharacter: newCharacter,
 		newHunt: newHunt,

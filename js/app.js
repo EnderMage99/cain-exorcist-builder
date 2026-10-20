@@ -493,6 +493,7 @@ window.CAIN = window.CAIN || {};
 		var path = location.hash.replace(/^#\/?/, "").split("?")[0];
 		var m = /^c\/([^/]+)(?:\/(play|between))?$/.exec(path);
 		if (m) return { id: "sheet:" + m[1] + ":" + (m[2] || ""), nav: "registry", render: function () { return CAIN.screens.sheet.render(decodeURIComponent(m[1]), m[2]); } };
+		if (path === "gm") return { id: "gm", nav: "gm", render: CAIN.screens.gm.render };
 		if (path === "new") return { id: "new", nav: "registry", render: CAIN.screens.registration.render };
 		if (path === "doctrine") return { id: "doctrine", nav: "doctrine", render: renderDoctrineHub };
 		var d = /^doctrine\/([a-z]+)$/.exec(path);
@@ -506,6 +507,8 @@ window.CAIN = window.CAIN || {};
 		var route = currentRoute();
 		document.body.setAttribute("data-page", route.id);
 		var y = window.scrollY;
+		var dockHost = document.getElementById("gm-dock-host");
+		if (dockHost) dockHost.remove();
 		app.textContent = "";
 		CAIN.append(app, route.render());
 		document.querySelectorAll(".nav a[data-route]").forEach(function (a) {
