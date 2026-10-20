@@ -40,6 +40,7 @@
 <script src="../data/sinmarks.js"></script>
 <script src="../data/kit.js"></script>
 <script src="../data/virtues.js"></script>
+<script src="../data/gff3.js"></script>
 <script src="../data/ishmael.js"></script>
 <script src="../data/harpocrates.js"></script>
 <script src="../data/prompts.js"></script>
@@ -673,7 +674,7 @@
 
 		group("Fan-made content");
 		["agendas", "blasphemies", "virtues", "kit"].forEach(function (k) {
-			var fan = CAIN[k].filter(function (x) { return x.source; });
+			var fan = CAIN[k].filter(function (x) { return x.source && CAIN.sources[x.source] && CAIN.sources[x.source].fan; });
 			check("fan " + k + " are loaded and name a known fan book", fan.length > 0 && fan.every(function (x) { return CAIN.sources[x.source] && CAIN.sources[x.source].fan; }));
 			check("Harpocrates " + k + " are loaded", fan.some(function (x) { return x.source === "harpocrates"; }));
 		});
@@ -687,6 +688,9 @@
 		var xk = CAIN.blasphemies.filter(function (b) { return b.group === "XK"; });
 		eq("four XK blasphemies, each with the 66-segment XK talisman", xk.map(function (b) { return b.trackers && b.trackers[0].segments; }), [66, 66, 66, 66]);
 		check("XK and LVL 4 blasphemies need Admin approval", CAIN.blasphemies.filter(function (b) { return b.group === "XK" || b.group === "LVL 4 Clearance"; }).every(function (b) { return b.requiresApproval; }));
+
+		eq("Games for Freaks 3 adds Doll, Cradle, Broken and Tongue, Track, Wire, Mother", CAIN.agendas.concat(CAIN.blasphemies).filter(function (x) { return x.source === "gff3"; }).map(function (x) { return x.id; }), ["doll", "cradle", "broken", "tongue", "track", "wire", "mother"]);
+	check("Games for Freaks 3 is official, not fan-made", !CAIN.sources.gff3.fan);
 
 		group("Virtues");
 		CAIN.virtues.forEach(function (v) {

@@ -50,7 +50,8 @@ window.CAIN = window.CAIN || {};
 			var look = CAIN.agendaLook(x);
 			style = look.style;
 			pic = h("div", { class: "ct-pic ct-emblem " + look.class.replace(/fan-made|src-\S+/g, "") }, img(CAIN.agendaIcon(x)) || h("span", { class: "ag-emblem ag-emblem-blank" }));
-			sub = x.custom ? "Custom agenda" : "Registered agenda";
+			var book = x.source && CAIN.sources[x.source] && !CAIN.sources[x.source].fan ? CAIN.sources[x.source].name : null;
+			sub = x.custom ? "Custom agenda" : book || "Registered agenda";
 			body.push(h("ul", { class: "ct-items" }, x.items.map(function (it) { return h("li", { class: it.bold ? "bold" : null }, it.text); })));
 			body.push(clamp(x.abilities.length + (x.abilities.length === 1 ? " ability: " : " abilities: ") + x.abilities.map(function (a) { return a.name; }).join(", "), 2));
 		} else if (kind === "blasphemy") {

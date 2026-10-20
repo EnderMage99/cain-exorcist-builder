@@ -3675,6 +3675,13 @@ body.viewer-open { overflow: hidden; }
 	padding-left: 34px;
 }
 
+.agenda-look.paper-pink {
+	--paper: #f1b8ef;
+	--paper-2: #e6a3e3;
+	--muted: #5c3358;
+	--line: #c07dbc;
+}
+
 .agenda-look.paper-stamp {
 	--paper: #f4f2ec;
 	border-radius: 6px;

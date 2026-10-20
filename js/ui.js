@@ -242,7 +242,7 @@ window.CAIN = window.CAIN || {};
 
 	// An agenda drawn like its card in the rulebook: the paper it's printed on,
 	// the round emblem, the name in marker pen and "Registered Agenda".
-	var PAPERS = ["grey", "beige", "dark", "gold", "tag", "stamp"];
+	var PAPERS = ["grey", "beige", "dark", "gold", "tag", "stamp", "pink"];
 
 	function agendaLook(a) {
 		var l = (a && a.look) || {};
