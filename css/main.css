@@ -2767,6 +2767,170 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 
 .rules-spread-text { font-size: 15px; line-height: 1.65; }
 
+/* Search box in the top bar, with a dropdown of results. */
+.site-search { position: relative; margin-left: auto; width: min(340px, 40vw); }
+
+.site-search-input {
+	width: 100%;
+	height: 36px;
+	padding: 0 12px 0 34px;
+	border: 1.5px solid #5c0b0e;
+	border-radius: 4px;
+	background: #151515;
+	color: #efece5;
+	font: inherit;
+	font-size: 14px;
+}
+
+.site-search-input::placeholder { color: #8f8a80; }
+
+.site-search-input:focus { outline: none; border-color: #e8141c; box-shadow: 0 0 0 2px rgba(232, 20, 28, 0.25); }
+
+.site-search-icon {
+	position: absolute;
+	left: 11px;
+	top: 50%;
+	width: 13px;
+	height: 13px;
+	margin-top: -8px;
+	border: 2px solid #b9b4a8;
+	border-radius: 50%;
+	pointer-events: none;
+}
+
+.site-search-icon::after { content: ""; position: absolute; right: -6px; bottom: -6px; width: 7px; height: 2px; background: #b9b4a8; transform: rotate(45deg); }
+
+.site-search-list {
+	position: absolute;
+	top: calc(100% + 2px);
+	right: 0;
+	z-index: 50;
+	width: max(100%, 380px);
+	max-height: 70vh;
+	overflow-y: auto;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	background: #1a1a1a;
+	border: 1.5px solid #5c0b0e;
+	box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
+}
+
+.ss-row { display: flex; align-items: center; gap: 12px; padding: 6px 10px; cursor: pointer; color: #e6e3db; border-bottom: 1px solid #262626; }
+
+.ss-row.active { background: #3a2a24; }
+
+.ss-pic { flex: none; width: 40px; height: 40px; border: 1px solid #5c0b0e; background: #0d0d0d; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+.ss-pic img { width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
+
+.ss-pic.ink { background: #e9e6df; }
+
+.ss-pic.ink img { object-fit: contain; }
+
+.ss-pic-text { color: #c9a040; font-size: 18px; font-weight: 700; }
+
+.ss-text { display: flex; flex-direction: column; min-width: 0; }
+
+.ss-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ss-name mark { background: none; color: #f0b232; font-weight: 800; }
+
+.ss-kind { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #8f8a80; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ss-all { border-top: 1.5px solid #5c0b0e; border-bottom: 0; }
+
+@media (max-width: 760px) {
+	.site-search { order: 4; width: 100%; margin-left: 0; }
+	.site-search-list { width: 100%; }
+}
+
+/* Edges: decorated strips down both sides of wide screens, themed per page. */
+.edge { display: none; }
+
+@media (min-width: 1560px) {
+	.edge {
+		display: block;
+		position: fixed;
+		top: 64px;
+		bottom: 0;
+		z-index: 0;
+		width: min(200px, calc((100vw - 1440px) / 2 - 16px));
+		pointer-events: none;
+		overflow: hidden;
+		-webkit-mask: linear-gradient(transparent, #000 12%, #000 85%, transparent);
+		mask: linear-gradient(transparent, #000 12%, #000 85%, transparent);
+	}
+
+	.edge-left { left: 8px; }
+
+	.edge-right { right: 8px; transform: scaleX(-1); }
+
+	.edge::before, .edge::after { content: ""; position: absolute; inset: 0; }
+}
+
+/* Gothic columns, with fog drifting past: home, registration, the Doctrine
+   hub, the CAT scale and glossary, and the virtues' gallery. */
+.edge::before {
+	background:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='90'%3E%3Cg fill='none' stroke='%23999' stroke-opacity='.45' stroke-width='2'%3E%3Cpath d='M8 88H102M14 80H96L84 56H26Z'/%3E%3Cpath d='M26 56Q55 6 84 56M40 56Q55 28 70 56'/%3E%3Cpath d='M55 6V0'/%3E%3C/g%3E%3C/svg%3E") center 0 / 110px 90px no-repeat,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='160'%3E%3Cg fill='none' stroke='%23999' stroke-opacity='.4'%3E%3Cpath stroke-width='2' d='M26 0V160M84 0V160'/%3E%3Cpath d='M38 0V160M50 0V160M60 0V160M72 0V160'/%3E%3Cpath stroke-width='2' d='M26 150Q55 118 84 150'/%3E%3C/g%3E%3C/svg%3E") center 88px / 110px 160px repeat-y;
+}
+
+.edge::after {
+	background: radial-gradient(ellipse 120px 60px at 50% 50%, rgba(160, 150, 140, 0.12), transparent 70%) 0 0 / 100% 340px;
+	animation: fog 26s linear infinite;
+}
+
+@keyframes fog { from { background-position: 0 0; } to { background-position: 0 -340px; } }
+
+/* Agendas: ball chains that sway, like the tags hang from. */
+body[data-page="doctrine:agendas"] .edge::before {
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='16'%3E%3Ccircle cx='30' cy='8' r='5' fill='%23aaa' fill-opacity='.5'/%3E%3Cpath d='M30 13V19' stroke='%23aaa' stroke-opacity='.5' stroke-width='2'/%3E%3C/svg%3E") 50% 0 / 60px 16px repeat-y,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='16'%3E%3Ccircle cx='30' cy='8' r='4' fill='%23aaa' fill-opacity='.3'/%3E%3C/svg%3E") 15% 6px / 60px 16px repeat-y;
+	transform-origin: 50% 0;
+	animation: chain-sway 7s ease-in-out infinite;
+}
+
+body[data-page="doctrine:agendas"] .edge::after { animation: none; background: none; }
+
+@keyframes chain-sway { 0%, 100% { transform: rotate(0.6deg); } 50% { transform: rotate(-0.6deg); } }
+
+/* Blasphemies and the exorcist sheet: thorny vines creeping upward. */
+body[data-page="doctrine:blasphemies"] .edge::before, body[data-page^="sheet"] .edge::before {
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='240'%3E%3Cg fill='none' stroke='%237a1418' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M60 0C20 60 100 120 60 180S20 240 60 240'/%3E%3Cpath stroke-width='2' d='M50 40C30 30 20 40 14 52M72 100C92 92 104 100 108 114M48 160C28 150 18 160 12 172M74 214C92 206 102 214 106 226'/%3E%3C/g%3E%3Cg fill='%237a1418'%3E%3Cpath d='M38 30l-12-6 9 11zM80 72l12-7-9 12zM44 128l-13-4 10 9zM78 190l12-6-9 11zM64 12l7-11-2 13zM56 150l-8-10 2 13z'/%3E%3C/g%3E%3C/svg%3E") 50% 0 / 120px 240px repeat-y;
+	opacity: 0.75;
+	animation: creep 40s linear infinite;
+}
+
+body[data-page="doctrine:blasphemies"] .edge::after, body[data-page^="sheet"] .edge::after {
+	background: radial-gradient(circle, rgba(232, 20, 28, 0.35) 1.5px, transparent 2.5px) 30% 0 / 60px 200px;
+	animation: creep 18s linear infinite;
+}
+
+@keyframes creep { from { background-position-y: 0; } to { background-position-y: -480px; } }
+
+/* Sin marks: red veins that pulse like a heartbeat. */
+body[data-page="doctrine:sinmarks"] .edge::before {
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='260'%3E%3Cg fill='none' stroke='%23a3161b' stroke-linecap='round'%3E%3Cpath stroke-width='3' d='M70 0C50 50 80 90 60 140S70 220 66 260'/%3E%3Cpath stroke-width='1.6' d='M64 40C40 50 30 70 18 74M66 110C90 116 100 132 112 132M62 170C40 180 34 200 20 204M66 224C86 230 96 246 108 248'/%3E%3Cpath stroke-width='1' d='M30 62L14 58M98 126L110 118M34 196L18 192'/%3E%3C/g%3E%3C/svg%3E") 50% 0 / 120px 260px repeat-y;
+	animation: pulse 2.4s ease-in-out infinite;
+}
+
+body[data-page="doctrine:sinmarks"] .edge::after { animation: none; background: none; }
+
+@keyframes pulse { 0%, 100% { opacity: 0.45; } 12% { opacity: 0.9; } 24% { opacity: 0.55; } 36% { opacity: 0.85; } }
+
+/* Kit: a quartermaster's pegboard, with a hook or two swinging. */
+body[data-page="doctrine:kit"] .edge::before {
+	background: radial-gradient(circle, rgba(150, 145, 135, 0.35) 3px, transparent 3.5px) 0 0 / 26px 26px;
+}
+
+body[data-page="doctrine:kit"] .edge::after {
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='300'%3E%3Cg fill='none' stroke='%23aaa' stroke-opacity='.55' stroke-width='2.5'%3E%3Cpath d='M40 30V60Q40 74 52 74'/%3E%3Cpath d='M86 170V196Q86 210 74 210'/%3E%3C/g%3E%3Cg fill='%23d9d4c5' fill-opacity='.35'%3E%3Cpath d='M44 78h30v40h-30z'/%3E%3Cpath d='M56 214h26v34h-26z'/%3E%3C/g%3E%3C/svg%3E") 50% 0 / 120px 300px repeat-y;
+	transform-origin: 50% 0;
+	animation: chain-sway 6s ease-in-out infinite;
+}
+
 /* Doctrine atmosphere and layouts */
 /* Slow background art and drifting embers (js/fx.js), Doctrine pages only. */
 .fx-bg, .fx-motes { position: fixed; pointer-events: none; z-index: 0; }
@@ -2783,7 +2947,9 @@ textarea.input { field-sizing: content; min-height: 3.2em; }
 
 body:not([data-page^="doctrine"]) .fx-bg, body:not([data-page^="doctrine"]) .fx-motes { display: none; }
 
-#app, .masthead, .footer { position: relative; z-index: 1; }
+#app, .footer { position: relative; z-index: 1; }
+
+.masthead { position: relative; z-index: 30; }
 
 body[data-page="doctrine"] .fx-bg { background-image: url("../img/sheet/emblem.png"); }
 body[data-page="doctrine:agendas"] .fx-bg { background-image: url("../img/sheet/daggers.png"); background-size: auto 120vh; }
@@ -3311,7 +3477,7 @@ body.viewer-open { overflow: hidden; }
 .src-harpocrates { --fan-ring: #e8141c; --fan-ink: #ff4a4f; --fan-label: "Fan-made \00b7 Harpocrates"; --fan-glow: transparent; }
 
 .fan-made:is(.src-ishmael, .src-harpocrates) {
-	box-shadow: 0 0 0 2px var(--fan-ring), 0 0 0 5px #0d0d0d, 0 0 0 6px var(--fan-ring), 0 0 16px 4px var(--fan-glow), var(--shadow) !important;
+	box-shadow: 0 0 0 2px var(--fan-ring), 0 0 16px 4px var(--fan-glow), var(--shadow) !important;
 }
 
 .card.fan-made::before,

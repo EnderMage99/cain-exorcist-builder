@@ -540,7 +540,14 @@ window.CAIN = window.CAIN || {};
 	var header = document.querySelector(".masthead");
 	header.insertBefore(skip, header.firstChild);
 
-	CAIN.app = { render: render };
+	// Opens a Doctrine section with its search box already filled in.
+	function searchDoctrine(sectionId, query) {
+		docQuery = query || "";
+		if (location.hash === "#/doctrine/" + sectionId) render();
+		else location.hash = "#/doctrine/" + sectionId;
+	}
+
+	CAIN.app = { render: render, sections: doctrineSections, searchDoctrine: searchDoctrine };
 	window.addEventListener("hashchange", render);
 	render();
 })();

@@ -15,6 +15,13 @@ window.CAIN = window.CAIN || {};
 	canvas.setAttribute("aria-hidden", "true");
 	document.body.insertBefore(canvas, document.body.firstChild);
 	document.body.insertBefore(bg, document.body.firstChild);
+	// Decorated strips down both edges of wide screens; CSS draws them per page.
+	["left", "right"].forEach(function (side) {
+		var edge = document.createElement("div");
+		edge.className = "edge edge-" + side;
+		edge.setAttribute("aria-hidden", "true");
+		document.body.insertBefore(edge, document.body.firstChild);
+	});
 
 	function onDoctrine() { return /^doctrine/.test(document.body.getAttribute("data-page") || ""); }
 
