@@ -428,7 +428,18 @@ window.CAIN = window.CAIN || {};
 							store.clearDraft();
 							draft = null;
 							CAIN.app.render();
-						} }, "Start over"))),
+						} }, "Start over"),
+						h("button", { class: "btn ghost", type: "button", title: "Throw this registration away and go back to the registry", onclick: function (e) {
+							var btn = e.currentTarget;
+							if (!btn.classList.contains("confirming")) {
+								btn.classList.add("confirming");
+								btn.textContent = "Really cancel?";
+								return;
+							}
+							store.clearDraft();
+							draft = null;
+							location.hash = "#/";
+						} }, "Cancel"))),
 				stepBar(),
 				h("div", { class: "reg-body" }, renderers[step.id]()),
 				footer()

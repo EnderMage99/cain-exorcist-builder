@@ -138,7 +138,20 @@ window.CAIN = window.CAIN || {};
 		var d = R.derived(c);
 		var a = c.agenda ? R.agenda(c.agenda) : null;
 		var blas = c.blasphemies.map(function (b) { var x = R.blasphemy(b.id); return x ? x.name : b.id; }).join(" + ");
-		return h("li", null, h("a", { class: "roster-card", href: "#/c/" + c.id },
+		// Delete asks twice; the last deleted exorcist can be brought back.
+		var del = h("button", { class: "mini-btn roster-delete", type: "button", "aria-label": "Delete " + (c.name || "this exorcist"), onclick: function () {
+			if (!del.classList.contains("confirming")) {
+				del.classList.add("confirming");
+				del.textContent = "Really delete?";
+				return;
+			}
+			store.remove(c.id);
+			transferUi.deleted = c;
+			transferUi.message = "";
+			render();
+		} }, "Delete");
+		return h("li", { class: "roster-item" }, h("a", { class: "roster-card", href: "#/c/" + c.id },
+			CAIN.portraitThumb(c, "roster-pt"),
 			h("span", { class: "roster-cat", title: "Category " + d.cat }, h("span", { class: "label" }, "CAT"), String(d.cat)),
 			h("span", { class: "roster-body" },
 				h("span", { class: "roster-name" }, c.name || "Unnamed"),
@@ -146,7 +159,22 @@ window.CAIN = window.CAIN || {};
 			h("span", { class: "roster-stats" },
 				h("span", null, "Sin " + c.sin + "/" + d.sinCap),
 				h("span", null, "Scrip " + c.scrip),
-				h("span", null, c.missionsSurvived + " missions"))));
+				h("span", null, c.missionsSurvived + " missions"))),
+			del);
+	}
+
+	// "Deleted X" with a way to bring them back, until you leave the registry.
+	function deletedNote() {
+		var c = transferUi.deleted;
+		if (!c) return null;
+		return h("div", { class: "card draft-note", role: "status" },
+			h("span", null, "Deleted ", h("strong", null, c.name || "an unnamed exorcist"), "."),
+			h("button", { class: "mini-btn", type: "button", onclick: function () {
+				store.save(c);
+				transferUi.deleted = null;
+				transferUi.message = "Restored " + (c.name || "the exorcist") + ".";
+				render();
+			} }, "Undo"));
 	}
 
 	// A big picture tile (home page and Doctrine hub). art: one picture or a strip
@@ -181,9 +209,19 @@ window.CAIN = window.CAIN || {};
 			} }, "Export all") : null,
 			h("span", { class: "note drop-hint" }, "or drop a file on this page"));
 
+		var discard = draft ? h("button", { class: "mini-btn", type: "button", "aria-label": "Discard the unfinished registration", onclick: function () {
+			if (!discard.classList.contains("confirming")) {
+				discard.classList.add("confirming");
+				discard.textContent = "Really discard?";
+				return;
+			}
+			store.clearDraft();
+			transferUi.message = "Discarded the unfinished registration.";
+			render();
+		} }, "Discard") : null;
 		var draftNote = draft ? h("div", { class: "card draft-note" },
 			h("span", null, "Registration in progress: ", h("strong", null, draft.character.name || "unnamed exorcist"), " (" + draft.step + " step)."),
-			h("a", { class: "mini-btn", href: "#/new" }, "Continue")) : null;
+			h("span", { class: "row-tools" }, h("a", { class: "mini-btn", href: "#/new" }, "Continue"), discard)) : null;
 
 		var list = characters.length
 			? h("ul", { class: "roster" }, characters.map(characterCard))
@@ -210,6 +248,7 @@ window.CAIN = window.CAIN || {};
 			h("h2", { class: "home-banner" }, "Exorcists"),
 			transferBar,
 			transferArea(),
+			deletedNote(),
 			draftNote,
 			list));
 	}
@@ -522,7 +561,7 @@ window.CAIN = window.CAIN || {};
 			void app.offsetWidth;
 			app.classList.add("route-enter");
 			lastRoute = route.id;
-			if (route.id !== "registry") { transferUi.message = ""; transferUi.warnings = []; }
+			if (route.id !== "registry") { transferUi.message = ""; transferUi.warnings = []; transferUi.deleted = null; }
 		} else {
 			window.scrollTo(0, y);
 		}

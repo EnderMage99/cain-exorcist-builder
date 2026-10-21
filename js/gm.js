@@ -149,13 +149,15 @@ window.CAIN = window.CAIN || {};
 			h("a", { class: "gm-dsheet", href: "#/c/" + c.id, title: "Open " + (c.name || "this exorcist") + "'s sheet", "aria-label": "Open " + (c.name || "this exorcist") + "'s sheet" }, "Sheet"),
 			h("button", { class: "gm-dpick", type: "button", "aria-pressed": String(on), onclick: function () { gm.active = c.id; adding = false; rerender(); } },
 			h("span", { class: "gm-dname" }, c.name || "Unnamed"),
+			h("span", { class: "gm-dbody" },
+			CAIN.portraitThumb(c, "gm-dpt"),
 			h("span", { class: "gm-dstats" },
 				stat("STR", "Stress", s.stress, s.maxStress, s.stress >= s.maxStress),
 				stat("INJ", "Injuries", s.injuries, s.maxInjuries, s.injuries >= s.maxInjuries),
 				stat("PB", "Psyche bursts", s.bursts, s.maxBursts, s.bursts === 0),
 				stat("KP", "Kit points left", s.kp, s.maxKp),
 				stat("SIN", "Sin", s.sin, s.sinCap, s.sin >= s.sinCap),
-				stat("HK", "Hooks", c.hunt.hooks.length))));
+				stat("HK", "Hooks", c.hunt.hooks.length)))));
 	}
 
 	function dock(members, current) {
@@ -197,7 +199,8 @@ window.CAIN = window.CAIN || {};
 			h("p", { class: "note" }, "Pick exorcists saved in this browser, or import the files your players export from their sheets (Export file). Importing again replaces the older copy."),
 			others.length ? h("ul", { class: "gm-add-list" }, others.map(function (c) {
 				var d = R.derived(c);
-				return h("li", null, h("button", { class: "option", type: "button", onclick: function () { gm.party.push(c.id); gm.active = c.id; adding = false; rerender(); } },
+				return h("li", null, h("button", { class: "option gm-add-option", type: "button", onclick: function () { gm.party.push(c.id); gm.active = c.id; adding = false; rerender(); } },
+					CAIN.portraitThumb(c, "gm-add-pt"),
 					h("span", { class: "option-body" }, h("span", { class: "entry-name" }, c.name || "Unnamed"), h("span", { class: "note" }, (c.xid || "") + "  /  CAT " + d.cat))));
 			})) : h("p", { class: "note" }, "Everyone saved in this browser is already at the table."),
 			h("div", { class: "btn-row" },
@@ -281,17 +284,18 @@ window.CAIN = window.CAIN || {};
 		var newAff = h("input", { class: "input", type: "text", placeholder: "New affliction", "aria-label": "New affliction for " + (c.name || "this exorcist") });
 		return h("section", { class: "gm-sheet" },
 			h("div", { class: "gm-sheet-head" },
-				h("div", null,
+				CAIN.portraitThumb(c, "gm-head-pt"),
+				h("div", { class: "gm-head-text" },
 					h("div", { class: "kicker" }, [c.xid, "CAT " + s.d.cat, a ? a.name : null, blas].filter(Boolean).join("  /  ")),
 					h("h2", { class: "gm-sheet-name" }, h("a", { href: "#/c/" + c.id, title: "Open the full sheet" }, c.name || "Unnamed"), c.dead ? h("span", { class: "tag stamp" }, "Dead") : null,
 						!c.dead && s.injuries >= s.maxInjuries ? h("span", { class: "tag stamp" }, "At the brink") : null)),
 				h("div", { class: "head-actions" },
 					h("a", { class: "btn small", href: "#/c/" + c.id }, "Open full sheet"),
-					h("button", { class: "btn small ghost", type: "button", title: "Take off the table (the exorcist stays saved)", onclick: function () {
+					h("button", { class: "btn small ghost", type: "button", title: "Remove from the GM desk (the exorcist stays saved in the registry)", onclick: function () {
 						gm.party = gm.party.filter(function (id) { return id !== c.id; });
 						gm.active = null;
 						rerender();
-					} }, "Off the table"))),
+					} }, "Remove"))),
 			h("div", { class: "gm-tracks" },
 				track("Stress", s.stress, s.maxStress, function (v) { set("Stress", s.stress, v, function (x) { hu.stress = x; }); }, { cls: "t-stress" }),
 				track("Injuries", s.injuries, s.maxInjuries, function (v) { set("Injuries", s.injuries, v, function (x) { hu.injuries = x; }); }, { cls: "t-injury" }),

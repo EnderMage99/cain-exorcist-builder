@@ -356,6 +356,15 @@ window.CAIN = window.CAIN || {};
 		}));
 	}
 
+	// A small portrait for lists of exorcists: their photo, or their initials when
+	// they have none. Decorative, since the name is always shown beside it.
+	function portraitThumb(c, cls) {
+		var extra = cls ? " " + cls : "";
+		if (c.portrait) return h("span", { class: "pt" + extra, "aria-hidden": "true" }, h("img", { src: c.portrait, alt: "" }));
+		var initials = String(c.name || "").trim().split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join("");
+		return h("span", { class: "pt pt-initials" + extra, "aria-hidden": "true" }, initials || "?");
+	}
+
 	// A quirk (Games for Freaks 4) as it reads on a card: name, what it replaces,
 	// its text and any extra rules.
 	function quirkBlock(q, b, cat) {
@@ -407,6 +416,7 @@ window.CAIN = window.CAIN || {};
 	CAIN.sourceOf = sourceOf;
 	CAIN.blasExtras = blasExtras;
 	CAIN.quirkBlock = quirkBlock;
+	CAIN.portraitThumb = portraitThumb;
 	CAIN.quirkPicker = quirkPicker;
 	CAIN.sourceClass = sourceClass;
 	CAIN.sourceBadge = sourceBadge;
