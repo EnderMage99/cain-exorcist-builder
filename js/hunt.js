@@ -24,6 +24,13 @@ window.CAIN = window.CAIN || {};
 		if (!ch.custom.agendas) ch.custom.agendas = [];
 		if (!ch.custom.blasphemies) ch.custom.blasphemies = [];
 		if (!Array.isArray(ch.virtues)) ch.virtues = [];
+		// Sin Strike used to be a bind power to pick; it is a free extra (Games for Freaks 4).
+		(ch.blasphemies || []).forEach(function (b) {
+			var at = b.id === "bind" && Array.isArray(b.powers) ? b.powers.indexOf("sin-strike") : -1;
+			if (at < 0) return;
+			b.powers.splice(at, 1);
+			ch.log.unshift({ t: Date.now(), text: "Sin Strike is now free with Bind, so the power pick spent on it is open again." });
+		});
 		if (ch.virtueBonding === undefined) ch.virtueBonding = null;
 		// Bursts start full: a fresh hunt holds null until first shown.
 		if (ch.hunt.bursts === null) ch.hunt.bursts = R.derived(ch).psycheBursts;

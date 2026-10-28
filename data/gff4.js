@@ -270,13 +270,13 @@ CAIN.quirkAdditions = [
 	}
 ];
 
-// Bind's free additions (page 30): Sin Strike joins its power list, the rest
-// become extra rules on the blasphemy.
+// Bind's free additions (page 30): every bind exorcist has them, so they sit
+// with the blasphemy's extra rules rather than among the powers to pick.
 (function () {
 	var bind = CAIN.blasphemies.filter(function (b) { return b.id === "bind"; })[0];
 	if (!bind) return;
 	CAIN.quirkAdditions.forEach(function (x) {
-		if (x.kind === "power") bind.powers.push({ id: x.id, name: x.name, tags: x.tags, burst: x.burst, text: x.text, source: x.source });
-		else (bind.extras = bind.extras || []).push({ title: x.name + " (Games for Freaks 4)", text: x.text });
+		var head = x.kind === "power" ? x.tags.duration + ", " + x.tags.range + ". Free.\n" : "";
+		(bind.extras = bind.extras || []).push({ title: x.name + " (Games for Freaks 4, free)", text: head + x.text });
 	});
 })();
